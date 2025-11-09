@@ -10,13 +10,14 @@ import com.mycompany.quanlythuvien.controller.TaiKhoanController;
 import com.mycompany.quanlythuvien.model.TaiKhoan;
 
 public class JFrame_Login extends javax.swing.JFrame {
-    private final TaiKhoanController controller = new TaiKhoanController();
+    private final TaiKhoanController taiKhoanController = new TaiKhoanController();
 
     /**
      * Creates new form JFrame_Login
      */
     public JFrame_Login() {
         initComponents();
+        this.setLocationRelativeTo(null); // Căn giữa cửa sổ
     }
 
     /**
@@ -29,65 +30,97 @@ public class JFrame_Login extends javax.swing.JFrame {
     private void initComponents() {
 
         jLabel_Email = new javax.swing.JLabel();
-        jLabel_Email1 = new javax.swing.JLabel();
+        jLabel_Password = new javax.swing.JLabel();
         jTextField_Email = new javax.swing.JTextField();
         jButton_Login = new javax.swing.JButton();
         jPasswordField_Password = new javax.swing.JPasswordField();
+        jLabel_Title = new javax.swing.JLabel();
+        jPanel1 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Library Management - Login");
+        setBackground(new java.awt.Color(255, 255, 255));
 
-        jLabel_Email.setText("Email:");
+        jLabel_Email.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
+        jLabel_Email.setText("Email");
 
-        jLabel_Email1.setText("Password:");
+        jLabel_Password.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
+        jLabel_Password.setText("Password");
 
+        jTextField_Email.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
+        jTextField_Email.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(0, 0, 0)));
+
+        jButton_Login.setBackground(new java.awt.Color(0, 102, 204));
+        jButton_Login.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jButton_Login.setForeground(new java.awt.Color(255, 255, 255));
         jButton_Login.setText("LOGIN");
+        jButton_Login.setBorderPainted(false);
+        jButton_Login.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         jButton_Login.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton_LoginActionPerformed(evt);
             }
         });
 
+        jPasswordField_Password.setFont(new java.awt.Font("Segoe UI", 0, 16)); // NOI18N
+        jPasswordField_Password.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(0, 0, 0)));
+
+        jLabel_Title.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        jLabel_Title.setForeground(new java.awt.Color(0, 102, 204));
+        jLabel_Title.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel_Title.setText("QUẢN LÝ THƯ VIỆN");
+
+        jPanel1.setBackground(new java.awt.Color(0, 102, 204));
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 350, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(46, 46, 46)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel_Email, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel_Email1, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButton_Login, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPasswordField_Password, javax.swing.GroupLayout.PREFERRED_SIZE, 480, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(125, Short.MAX_VALUE))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(126, 126, 126)
-                    .addComponent(jTextField_Email, javax.swing.GroupLayout.PREFERRED_SIZE, 479, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(125, Short.MAX_VALUE)))
+                        .addGap(40, 40, 40)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel_Password, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel_Email)
+                            .addComponent(jTextField_Email, javax.swing.GroupLayout.DEFAULT_SIZE, 350, Short.MAX_VALUE)
+                            .addComponent(jPasswordField_Password)
+                            .addComponent(jButton_Login, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addContainerGap(40, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel_Title, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addContainerGap())))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(211, 211, 211)
+                .addGap(60, 60, 60)
+                .addComponent(jLabel_Title)
+                .addGap(50, 50, 50)
                 .addComponent(jLabel_Email)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(35, 35, 35)
-                        .addComponent(jLabel_Email1))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(19, 19, 19)
-                        .addComponent(jPasswordField_Password, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(29, 29, 29)
-                .addComponent(jButton_Login, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(155, Short.MAX_VALUE))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(187, 187, 187)
-                    .addComponent(jTextField_Email, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(273, Short.MAX_VALUE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTextField_Email, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(30, 30, 30)
+                .addComponent(jLabel_Password)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPasswordField_Password, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(50, 50, 50)
+                .addComponent(jButton_Login, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(86, Short.MAX_VALUE))
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
         pack();
@@ -102,10 +135,13 @@ public class JFrame_Login extends javax.swing.JFrame {
             return;
         }
 
-        TaiKhoan tk = controller.login(email, password);
-        if (tk != null) {
-            JOptionPane.showMessageDialog(this, "Đăng nhập thành công! Xin chào " + tk.getHoTen());
-            // TODO: mở MainFrame, hoặc chuyển sang giao diện phù hợp với tk.getRole()
+        TaiKhoan userAccount = taiKhoanController.login(email, password);
+        if (userAccount != null) {
+            JOptionPane.showMessageDialog(this, "Đăng nhập thành công! Xin chào " + userAccount.getHoTen());
+            
+            JFrame_Main mainFrame = new JFrame_Main(userAccount);
+            mainFrame.setVisible(true);
+            
             this.dispose();
         } else {
             JOptionPane.showMessageDialog(this, "Sai email hoặc mật khẩu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -150,7 +186,9 @@ public class JFrame_Login extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton_Login;
     private javax.swing.JLabel jLabel_Email;
-    private javax.swing.JLabel jLabel_Email1;
+    private javax.swing.JLabel jLabel_Password;
+    private javax.swing.JLabel jLabel_Title;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JPasswordField jPasswordField_Password;
     private javax.swing.JTextField jTextField_Email;
     // End of variables declaration//GEN-END:variables
