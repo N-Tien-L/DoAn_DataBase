@@ -1,42 +1,62 @@
 package com.mycompany.quanlythuvien.util;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Properties;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 /**
  *
  * @author Tien
  */
 public class DBConnector {
-    public static Connection getConnection() {
-        Connection conn = null;
+
+    private static HikariDataSource dataSource;
+
+    static {
         try {
-            // Đọc file properties từ classpath
-            Properties props = new Properties();
-            props.load(DBConnector.class.getClassLoader().getResourceAsStream("application.properties"));
+            Properties properties = new Properties();
+            InputStream is = DBConnector.class.getClassLoader().getResourceAsStream("application.properties");
+            properties.load(is);
 
-            String url = props.getProperty("db.url");
-            String user = props.getProperty("db.user");
-            String pass = props.getProperty("db.password");
-            String driver = props.getProperty("db.driver");
+            HikariConfig config = new HikariConfig();
 
-            Class.forName(driver);
+            String user = properties.getProperty("db.user");
+            String password = properties.getProperty("db.password");
+            String url = properties.getProperty("db.url");
 
-            if(user != null && !user.isEmpty()) { //dùng SQL Auth
-                conn = DriverManager.getConnection(url, user, pass);
-            } else { // dùng Windows Auth
-                if(!url.contains("integratedSecurity=true")) {
-                    url += ";integratedSecurity=true";
+            config.setDriverClassName(properties.getProperty("db.driver"));
+            config.setJdbcUrl(url);
+
+            if(user != null && !user.isEmpty()) {
+                // SQL server Auth
+                config.setUsername(user);
+                config.setPassword(password);
+            } else {
+                // Window Auth
+                if (!url.contains("integratedSecurity=true")) {
+                    config.setJdbcUrl(url + ";integratedSecurity=true;encrypt=true;trustServerCertificate=true;");
                 }
-                conn = DriverManager.getConnection(url);
             }
 
-            System.out.println("Kết nối DB thành công!");
+            // cấu hình pool
+            config.setMaximumPoolSize(10);
+            config.setMinimumIdle(2);
+            config.setIdleTimeout(30000);
+            config.setConnectionTimeout(20000);
+
+            dataSource = new HikariDataSource(config);
+
+            System.out.println("Connection pool initialized successfully!");
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
-        return conn;
+    public static Connection getConnection() throws Exception {
+       return dataSource.getConnection();
     }
 }

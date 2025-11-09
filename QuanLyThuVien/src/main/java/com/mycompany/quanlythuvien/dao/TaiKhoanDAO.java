@@ -12,20 +12,21 @@ import com.mycompany.quanlythuvien.util.DBConnector;
  * @author Tien
  */
 public class TaiKhoanDAO {
-    public TaiKhoan checkLogin(String email, String password) {
-        TaiKhoan tk = null;
-        String sql = "SELECT * FROM TAIKHOAN WHERE Email = ? AND [Password] = ?";
 
+    private static final String SQL_LOGIN = "SELECT * FROM TAIKHOAN WHERE Email = ? AND [Password] = ?";
+
+
+    public TaiKhoan checkLogin(String email, String password) {
         // try-with-resource (tự động đóng conn, rs, ps)
         try (Connection conn = DBConnector.getConnection()) {
-            PreparedStatement ps = conn.prepareStatement(sql);
+            PreparedStatement ps = conn.prepareStatement(SQL_LOGIN);
 
             ps.setString(1, email);
             ps.setString(2, password);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                tk = new TaiKhoan(
+                return new TaiKhoan(
                     rs.getString("Email"),
                     rs.getString("Password"),
                     rs.getString("HoTen"),
@@ -36,6 +37,6 @@ public class TaiKhoanDAO {
             e.printStackTrace();
         }
 
-        return tk;
+        return null;
     }
 }
