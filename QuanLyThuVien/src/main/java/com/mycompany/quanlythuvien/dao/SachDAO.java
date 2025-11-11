@@ -44,7 +44,8 @@ public class SachDAO {
     
     //them sach
     public boolean insert(Sach s) throws Exception {
-        String sql = "INSERT INTO SACH (ISBN, TenSach, TacGia, MaTheLoai, NamXuatBan, DinhDang, MoTa, MaNXB, GiaBia, SoLuongTon, SoTrang) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+        // SoLuongTon được quản lý tự động bởi trigger TRG_BANSAO_Update_SoLuongTon
+        String sql = "INSERT INTO SACH (ISBN, TenSach, TacGia, MaTheLoai, NamXuatBan, DinhDang, MoTa, MaNXB, GiaBia, SoTrang) VALUES (?,?,?,?,?,?,?,?,?,?)";
 
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)) 
@@ -58,8 +59,7 @@ public class SachDAO {
             ps.setString(7, s.getMoTa());
             ps.setObject(8, s.getMaNXB(), java.sql.Types.INTEGER);
             ps.setBigDecimal(9, s.getGiaBia());
-            ps.setObject(10, s.getSoLuongTon(), java.sql.Types.INTEGER);
-            ps.setObject(11, s.getSoTrang(), java.sql.Types.INTEGER);
+            ps.setObject(10, s.getSoTrang(), java.sql.Types.INTEGER);
             
             return ps.executeUpdate() > 0;
         }
@@ -67,10 +67,11 @@ public class SachDAO {
     
     //cap nhat sach
     public boolean update(Sach s) throws Exception {
+        // SoLuongTon được quản lý tự động bởi trigger TRG_BANSAO_Update_SoLuongTon
         String sql = """
             UPDATE SACH
             SET TenSach=?, TacGia=?, MaTheLoai=?, NamXuatBan=?,
-                DinhDang=?, MoTa=?, MaNXB=?, GiaBia=?, SoLuongTon=?, SoTrang=?
+                DinhDang=?, MoTa=?, MaNXB=?, GiaBia=?, SoTrang=?
             WHERE ISBN=?
         """;
         
@@ -85,9 +86,8 @@ public class SachDAO {
             ps.setString(6, s.getMoTa());
             ps.setObject(7, s.getMaNXB(), java.sql.Types.INTEGER);
             ps.setBigDecimal(8, s.getGiaBia());
-            ps.setObject(9, s.getSoLuongTon(), java.sql.Types.INTEGER);
-            ps.setObject(10, s.getSoTrang(), java.sql.Types.INTEGER);
-            ps.setString(11, s.getISBN());
+            ps.setObject(9, s.getSoTrang(), java.sql.Types.INTEGER);
+            ps.setString(10, s.getISBN());
             
             return ps.executeUpdate() > 0;
         }
