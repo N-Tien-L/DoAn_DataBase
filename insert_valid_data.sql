@@ -21,7 +21,7 @@ GO
 
 -- 1. bảng TAIKHOAN
 INSERT INTO TAIKHOAN (Email, [Password], HoTen, [Role]) VALUES
-('admin@thuvien.com', '1', N'Nguyễn Văn Admin', 'Admin'),
+('lede', '1', N'Nguyễn Văn Admin', 'Admin'),
 ('thuthu1@thuvien.com', 'hashed_pass_2', N'Trần Thị Thủ Thư', 'ThuThu'),
 ('thuthu2@thuvien.com', 'hashed_pass_3', N'Lê Văn C', 'ThuThu');
 GO
