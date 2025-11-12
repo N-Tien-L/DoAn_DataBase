@@ -6,7 +6,6 @@ dist/
 nbdist/
 .nb-gradle/
 
-
 *.log
 *.class
 *.jar
