@@ -17,10 +17,14 @@ public class Phat {
     private LocalDate ngayGhiNhan;
     private String trangThai;
 
+    // additional
+    private int idBD;
+
     public Phat() {
     }
 
-    public Phat(int idPhat, int idPM, int maBanSao, String loaiPhat, BigDecimal soTien, LocalDate ngayGhiNhan, String trangThai) {
+    public Phat(int idPhat, int idPM, int maBanSao, String loaiPhat, BigDecimal soTien, LocalDate ngayGhiNhan,
+            String trangThai) {
         this.idPhat = idPhat;
         this.idPM = idPM;
         this.maBanSao = maBanSao;
@@ -84,6 +88,14 @@ public class Phat {
 
     public void setTrangThai(String trangThai) {
         this.trangThai = trangThai;
+    }
+
+    public void setIdBD(int idBD) {
+        this.idBD = idBD;
+    }
+
+    public int getIdBD() {
+        return idBD;
     }
 
 }
