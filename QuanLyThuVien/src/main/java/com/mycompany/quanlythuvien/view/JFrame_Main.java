@@ -43,7 +43,7 @@ public class JFrame_Main extends javax.swing.JFrame {
     /**
      * Creates new form JFrame_Main
      */
-    public JFrame_Main(TaiKhoan user) {
+    public JFrame_Main(TaiKhoan user) throws Exception {
         initComponents();
         this.currentUser = user;
 
@@ -125,7 +125,7 @@ public class JFrame_Main extends javax.swing.JFrame {
     /**
      * Cài đặt CardLayout và các panel con.
      */
-    private void setupCardLayoutAndUI() {
+    private void setupCardLayoutAndUI() throws Exception {
         cardLayout = new CardLayout();
         jPanel_Content.setLayout(cardLayout);
 
