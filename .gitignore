@@ -18,5 +18,5 @@ nbdist/
 .DS_Store
 Thumbs.db
 
-src/main/resources/application.properties
-!src/main/resources/application-example.properties
+/.vscode
+QuanLyThuVien/src/main/resources/application.properties
