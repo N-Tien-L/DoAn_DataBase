@@ -8,6 +8,7 @@ import com.mycompany.quanlythuvien.controller.BanDocController;
 import com.mycompany.quanlythuvien.model.BanDoc;
 import java.awt.Frame;
 import java.util.*;
+import java.util.stream.Collectors;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -21,6 +22,7 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
      * Creates new form QuanLyBanDocPanel
      */
     BanDocController cur;
+    String txtSearchPrv = "";
     public QuanLyBanDocPanel() throws Exception {
         initComponents();
         cur = new BanDocController();
@@ -31,6 +33,41 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi khi load dữ liệu:\n" + ex.getMessage());
         }
+    }
+    private ArrayList<BanDoc> filterList(String KEYFIELD, String KEYTXT) {
+        ArrayList<BanDoc> newDsBanDoc = new ArrayList<BanDoc>(); 
+        
+        switch(KEYFIELD) {
+            case "Họ Tên":
+                newDsBanDoc = (ArrayList<BanDoc>) cur.getDsBanDoc().stream()
+                            .filter(x -> x.getHoTen() != null && x.getHoTen().toLowerCase().startsWith(KEYTXT))
+                            .collect(Collectors.toList());
+                break;
+
+            case "Email":
+                newDsBanDoc = (ArrayList<BanDoc>) cur.getDsBanDoc().stream()
+                            .filter(x -> x.getEmail() != null && x.getEmail().toLowerCase().startsWith(KEYTXT))
+                            .collect(Collectors.toList());
+                break;
+
+            case "SĐT":
+                newDsBanDoc = (ArrayList<BanDoc>) cur.getDsBanDoc().stream()
+                            .filter(x -> x.getSdt() != null && x.getSdt().toLowerCase().startsWith(KEYTXT))
+                            .collect(Collectors.toList());
+                break;
+
+            case "Địa Chỉ":
+                newDsBanDoc = (ArrayList<BanDoc>) cur.getDsBanDoc().stream()
+                            .filter(x -> x.getDiaChi() != null && x.getDiaChi().toLowerCase().startsWith(KEYTXT))
+                            .collect(Collectors.toList());
+                break;
+            case "ID":
+                newDsBanDoc = (ArrayList<BanDoc>) cur.getDsBanDoc().stream()
+                            .filter(x -> Integer.toString(x.getIdBD()).startsWith(KEYTXT))
+                            .collect(Collectors.toList());
+                break;
+        }
+        return newDsBanDoc;
     }
     private void showList(ArrayList<BanDoc> list) {
         String[] cols = {"ID", "Họ tên", "Email", "SDT", "Địa chỉ"};
@@ -80,9 +117,9 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         btnEdit = new javax.swing.JButton();
         btnDelete = new javax.swing.JButton();
         btnView = new javax.swing.JButton();
-        btnRefresh = new javax.swing.JButton();
         Search = new javax.swing.JLabel();
         txtSearch = new javax.swing.JTextField();
+        searchByCombo = new javax.swing.JComboBox<>();
         scrollPaneUsers = new javax.swing.JScrollPane();
         tblUsers = new javax.swing.JTable();
 
@@ -124,14 +161,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         btnView.setText("View");
         jToolBar1.add(btnView);
 
-        btnRefresh.setText("Refresh");
-        btnRefresh.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnRefreshActionPerformed(evt);
-            }
-        });
-        jToolBar1.add(btnRefresh);
-
         Search.setText("Search:");
         jToolBar1.add(Search);
 
@@ -141,6 +170,14 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             }
         });
         jToolBar1.add(txtSearch);
+
+        searchByCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ID", "Họ Tên", "Email", "SĐT", "Địa Chỉ" }));
+        searchByCombo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                searchByComboActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(searchByCombo);
 
         tblUsers.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -265,12 +302,25 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btnDeleteActionPerformed
 
     private void txtSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchActionPerformed
-        // TODO add your handling code here:
+        String fieldSearchCur = searchByCombo.getSelectedItem().toString();
+        String txtSearchCur = txtSearch.getText().toString().toLowerCase().trim();
+        if(txtSearchCur.equals("")) {
+            showList(cur.getDsBanDoc());
+            return;
+        }
+        if(txtSearchCur != txtSearchPrv) {
+            showList(filterList(fieldSearchCur, txtSearchCur));
+            txtSearchPrv = txtSearchCur;
+        }
     }//GEN-LAST:event_txtSearchActionPerformed
 
-    private void btnRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefreshActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnRefreshActionPerformed
+    private void searchByComboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchByComboActionPerformed
+        if(txtSearchPrv.equals("")) return;
+        String fieldSearchCur = searchByCombo.getSelectedItem().toString();
+     
+        showList(filterList(fieldSearchCur, txtSearchPrv.toLowerCase().trim()));
+        
+    }//GEN-LAST:event_searchByComboActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -278,10 +328,10 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     private javax.swing.JButton btnAdd;
     private javax.swing.JButton btnDelete;
     private javax.swing.JButton btnEdit;
-    private javax.swing.JButton btnRefresh;
     private javax.swing.JButton btnView;
     private javax.swing.JToolBar jToolBar1;
     private javax.swing.JScrollPane scrollPaneUsers;
+    private javax.swing.JComboBox<String> searchByCombo;
     private javax.swing.JTable tblUsers;
     private javax.swing.JTextField txtSearch;
     // End of variables declaration//GEN-END:variables
