@@ -130,7 +130,9 @@ public class JFrame_Main extends javax.swing.JFrame {
         jPanel_Content.add(new QuanLyBanDocPanel(), "QuanLyBanDoc");
         jPanel_Content.add(new QuanLyPhieuMuonPanel(), "QuanLyPhieuMuon");
         jPanel_Content.add(new ThongKePanel(), "ThongKe");
-        jPanel_Content.add(new QuanLyTaiKhoanPanel(), "QuanLyTaiKhoan");
+        if(currentUser.getRole().equalsIgnoreCase("admin")) {
+            jPanel_Content.add(new QuanLyTaiKhoanPanel(currentUser.getRole()), "QuanLyTaiKhoan");
+        }
 
         // Hiển thị panel mặc định
         cardLayout.show(jPanel_Content, "Welcome");

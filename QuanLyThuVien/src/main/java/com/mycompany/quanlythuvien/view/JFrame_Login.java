@@ -18,6 +18,10 @@ public class JFrame_Login extends javax.swing.JFrame {
     public JFrame_Login() {
         initComponents();
         this.setLocationRelativeTo(null); // Căn giữa cửa sổ
+        
+        // Cho phép ấn Enter để login
+        jTextField_Email.addActionListener(evt -> jButton_Login.doClick());
+        jPasswordField_Password.addActionListener(evt -> jButton_Login.doClick());
     }
 
     /**
@@ -137,8 +141,6 @@ public class JFrame_Login extends javax.swing.JFrame {
 
         TaiKhoan userAccount = taiKhoanController.login(email, password);
         if (userAccount != null) {
-            JOptionPane.showMessageDialog(this, "Đăng nhập thành công! Xin chào " + userAccount.getHoTen());
-            
             JFrame_Main mainFrame = new JFrame_Main(userAccount);
             mainFrame.setVisible(true);
             
