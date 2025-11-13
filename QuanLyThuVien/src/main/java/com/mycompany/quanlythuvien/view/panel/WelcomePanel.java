@@ -12,25 +12,25 @@ public class WelcomePanel extends JPanel {
     public WelcomePanel() {
         setLayout(new GridBagLayout());
         setBackground(new Color(245, 245, 245));
-        
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.insets = new Insets(20, 20, 20, 20);
-        
+
         // Icon hoặc logo
         JLabel iconLabel = new JLabel("≡");
         iconLabel.setFont(new Font("Segoe UI", Font.BOLD, 120));
         iconLabel.setForeground(new Color(0, 102, 204));
         add(iconLabel, gbc);
-        
+
         // Tiêu đề chào mừng
         gbc.gridy = 1;
         JLabel titleLabel = new JLabel("Chào mừng đến với Hệ Thống Quản Lý Thư Viện");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
         titleLabel.setForeground(new Color(0, 102, 204));
         add(titleLabel, gbc);
-        
+
         // Hướng dẫn
         gbc.gridy = 2;
         gbc.insets = new Insets(10, 20, 5, 20);
@@ -40,31 +40,31 @@ public class WelcomePanel extends JPanel {
         guideLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         guideLabel.setForeground(new Color(100, 100, 100));
         add(guideLabel, gbc);
-        
+
         // Danh sách chức năng
         gbc.gridy = 3;
         gbc.insets = new Insets(30, 20, 20, 20);
         JPanel featuresPanel = createFeaturesPanel();
         add(featuresPanel, gbc);
     }
-    
+
     private JPanel createFeaturesPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-            BorderFactory.createEmptyBorder(20, 30, 20, 30)
-        ));
-        
+                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+                BorderFactory.createEmptyBorder(20, 30, 20, 30)));
+
         String[] features = {
-            "▸ Quản Lý Sách - Thêm, sửa, xóa thông tin sách",
-            "▸ Quản Lý Bạn Đọc - Quản lý thông tin độc giả",
-            "▸ Quản Lý Phiếu Mượn - Theo dõi mượn/trả sách",
-            "▸ Thống Kê - Xem báo cáo và thống kê",
-            "▸ Quản Lý Tài Khoản (Admin only) - Quản lý người dùng hệ thống"
+                "▸ Quản Lý Sách - Thêm, sửa, xóa thông tin sách",
+                "▸ Quản Lý Bạn Đọc - Quản lý thông tin độc giả",
+                "▸ Quản Lý Phiếu Mượn - Theo dõi mượn/trả sách",
+                "▸ Quản Lý Phiếu Phạt - Phạt khi trả sách quá ngày hẹn/ làm hư hao sách",
+                "▸ Thống Kê - Xem báo cáo và thống kê",
+                "▸ Quản Lý Tài Khoản (Admin only) - Quản lý người dùng hệ thống"
         };
-        
+
         for (String feature : features) {
             JLabel featureLabel = new JLabel(feature);
             featureLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
@@ -73,7 +73,7 @@ public class WelcomePanel extends JPanel {
             featureLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             panel.add(featureLabel);
         }
-        
+
         return panel;
     }
 }

@@ -22,6 +22,13 @@ public class BanDoc {
         this.diaChi = diaChi;
         this.sdt = sdt;
     }
+    public BanDoc(String hoTen, String email, String diaChi, String sdt) {
+        this.hoTen = hoTen;
+        this.email = email;
+        this.diaChi = diaChi;
+        this.sdt = sdt;
+    }
+
 
     public int getIdBD() {
         return idBD;

@@ -62,7 +62,11 @@ public class JFrame_Login extends javax.swing.JFrame {
         jButton_Login.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         jButton_Login.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton_LoginActionPerformed(evt);
+                try {
+                    jButton_LoginActionPerformed(evt);
+                } catch (Exception ex) {
+                    System.getLogger(JFrame_Login.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+                }
             }
         });
 
@@ -130,7 +134,7 @@ public class JFrame_Login extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton_LoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton_LoginActionPerformed
+    private void jButton_LoginActionPerformed(java.awt.event.ActionEvent evt) throws Exception {//GEN-FIRST:event_jButton_LoginActionPerformed
         String email = jTextField_Email.getText().trim();
         String password = new String(jPasswordField_Password.getPassword()).trim();
         
