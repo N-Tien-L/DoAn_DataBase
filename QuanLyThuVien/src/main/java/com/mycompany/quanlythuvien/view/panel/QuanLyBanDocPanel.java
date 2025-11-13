@@ -245,12 +245,13 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             return;
         }
         int modelRow = tblUsers.convertRowIndexToModel(viewRow);
-
+        Object idObj = tblUsers.getModel().getValueAt(modelRow, 0);
         Object nameObj = tblUsers.getModel().getValueAt(modelRow, 1);
         Object emailObj = tblUsers.getModel().getValueAt(modelRow, 2);
         Object sdtObj = tblUsers.getModel().getValueAt(modelRow, 3);
         Object diaChiObj = tblUsers.getModel().getValueAt(modelRow, 4);
 
+        final String id = nameObj == null ? "" : idObj.toString();
         final String name = nameObj == null ? "" : nameObj.toString();
         final String email = emailObj == null ? "" : emailObj.toString();
         final String sdt = sdtObj == null ? "" : sdtObj.toString();
@@ -259,6 +260,7 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         int choice = JOptionPane.showConfirmDialog(
                 this,
                 "Bạn có chắc muốn xóa bạn đọc:\n" +
+                "ID: " + id + "\n" +        
                 "Họ tên: " + name + "\n" +
                 "Email: " + email + "\n" +
                 "SĐT: " + sdt + "\n" +
@@ -274,6 +276,7 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
 
         try {
             BanDoc bdToDelete = new BanDoc();
+            bdToDelete.setIdBD(Integer.parseInt(id));
             bdToDelete.setHoTen(name);
             bdToDelete.setEmail(email);
             bdToDelete.setSdt(sdt);

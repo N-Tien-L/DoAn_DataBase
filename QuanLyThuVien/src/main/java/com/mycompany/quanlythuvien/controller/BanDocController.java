@@ -27,11 +27,7 @@ public class BanDocController {
     public Boolean delete(BanDoc cur) throws Exception {
         if(dao.deleteDAO(cur)) {
             this.dsBanDoc.removeIf(bd -> {
-                String h = bd.getHoTen() == null ? "" : bd.getHoTen();
-                String e = bd.getEmail() == null ? "" : bd.getEmail();
-                String s = bd.getSdt() == null ? "" : bd.getSdt();
-                String d = bd.getDiaChi() == null ? "" : bd.getDiaChi();
-                return h.equals(cur.getHoTen()) && e.equals(cur.getEmail()) && s.equals(cur.getSdt()) && d.equals(cur.getDiaChi());
+                return bd.getIdBD() == cur.getIdBD();
             });
             return true;
         }

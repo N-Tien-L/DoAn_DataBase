@@ -76,17 +76,15 @@ public class BanDocDAO {
     }
     private static final String SQL_DELETE =
         "DELETE FROM BANDOC \n" +
-"WHERE HoTen = ? AND Email = ? AND DiaChi = ? AND SDT = ?;";
+"WHERE IdBD = ?";
     public Boolean deleteDAO(BanDoc cur) throws Exception {
         if (cur == null) return false;
 
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement ps = conn.prepareStatement(SQL_DELETE)) {
 
-            ps.setString(1, cur.getHoTen());
-            ps.setString(2, cur.getEmail());
-            ps.setString(3, cur.getDiaChi());
-            ps.setString(4, cur.getSdt());
+            ps.setString(1, Integer.toString(cur.getIdBD()));
+
 
             int affected = ps.executeUpdate();
             if (affected == 0) {
