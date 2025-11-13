@@ -97,4 +97,28 @@ public class BanDocDAO {
         }
         return true;
     }
+    
+    private static final String SQL_GET_BY_ID =
+        "SELECT * FROM BANDOC WHERE IdBD = ?";
+    public BanDoc getBanDocById(int id) throws Exception {
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_GET_BY_ID)) {
+
+            ps.setString(1, Integer.toString(id)); 
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    BanDoc bd = new BanDoc();
+                    bd.setIdBD(rs.getInt("idbd"));
+                    bd.setHoTen(rs.getString("hoten"));
+                    bd.setEmail(rs.getString("email"));
+                    bd.setDiaChi(rs.getString("diachi"));
+                    bd.setSdt(rs.getString("sdt"));
+                    return bd;
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
 }
