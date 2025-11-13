@@ -44,6 +44,7 @@ public class BanDocDAO {
         }
         return true;
     }
+    
 
     private static final String SQL_READ =
         "SELECT * FROM BANDOC";
@@ -73,5 +74,29 @@ public class BanDocDAO {
             return false;
         }
     }
+    private static final String SQL_DELETE =
+        "DELETE FROM BANDOC \n" +
+"WHERE HoTen = ? AND Email = ? AND DiaChi = ? AND SDT = ?;";
+    public Boolean deleteDAO(BanDoc cur) throws Exception {
+        if (cur == null) return false;
 
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_DELETE)) {
+
+            ps.setString(1, cur.getHoTen());
+            ps.setString(2, cur.getEmail());
+            ps.setString(3, cur.getDiaChi());
+            ps.setString(4, cur.getSdt());
+
+            int affected = ps.executeUpdate();
+            if (affected == 0) {
+                return false;
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+        return true;
+    }
 }

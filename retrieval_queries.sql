@@ -23,7 +23,7 @@ GO
 SELECT 
     S.ISBN, 
     S.TenSach, 
-    S.TacGia, 
+    S.MaTacGia, 
     T.TenTheLoai, 
     N.TenNXB,
     S.NamXuatBan,

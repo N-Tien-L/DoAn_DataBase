@@ -6,6 +6,7 @@ package com.mycompany.quanlythuvien.view.panel;
 
 import com.mycompany.quanlythuvien.controller.BanDocController;
 import com.mycompany.quanlythuvien.model.BanDoc;
+import java.awt.Frame;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -180,7 +181,20 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
-        // TODO add your handling code here:
+        BanDocFormDialog dlg = new BanDocFormDialog((Frame) SwingUtilities.getWindowAncestor(this), true);
+        dlg.setLocationRelativeTo(this);
+        dlg.setVisible(true);
+        if (dlg.isSaved()) {
+            BanDoc newBd = dlg.getBanDoc();
+            System.out.println(newBd.getHoTen());
+            try {
+                cur.add(newBd); 
+            } catch (Exception ex) {
+                
+            }
+            showList(cur.getDsBanDoc());
+            JOptionPane.showMessageDialog(this, "Thêm bạn đọc thành công.");
+        }
     }//GEN-LAST:event_btnAddActionPerformed
 
     private void btnEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditActionPerformed
@@ -188,7 +202,66 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btnEditActionPerformed
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
-        // TODO add your handling code here:
+        int viewRow = tblUsers.getSelectedRow();
+        if (viewRow == -1) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn 1 bạn đọc để xóa.", "Chú ý", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        int modelRow = tblUsers.convertRowIndexToModel(viewRow);
+
+        Object nameObj = tblUsers.getModel().getValueAt(modelRow, 1);
+        Object emailObj = tblUsers.getModel().getValueAt(modelRow, 2);
+        Object sdtObj = tblUsers.getModel().getValueAt(modelRow, 3);
+        Object diaChiObj = tblUsers.getModel().getValueAt(modelRow, 4);
+
+        final String name = nameObj == null ? "" : nameObj.toString();
+        final String email = emailObj == null ? "" : emailObj.toString();
+        final String sdt = sdtObj == null ? "" : sdtObj.toString();
+        final String diaChi = diaChiObj == null ? "" : diaChiObj.toString();
+
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc muốn xóa bạn đọc:\n" +
+                "Họ tên: " + name + "\n" +
+                "Email: " + email + "\n" +
+                "SĐT: " + sdt + "\n" +
+                "Địa chỉ: " + diaChi,
+                "Xác nhận xóa",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (choice != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try {
+            BanDoc bdToDelete = new BanDoc();
+            bdToDelete.setHoTen(name);
+            bdToDelete.setEmail(email);
+            bdToDelete.setSdt(sdt);
+            bdToDelete.setDiaChi(diaChi);
+
+            boolean deleted = false;
+
+            try {
+
+                deleted = cur.delete(bdToDelete); 
+            } catch (NoSuchMethodError | AbstractMethodError err) {
+
+            }
+
+            if (deleted) {
+                showList(cur.getDsBanDoc());
+                JOptionPane.showMessageDialog(this, "Xóa thành công.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy bản ghi phù hợp hoặc xóa thất bại.", "Thất bại", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi khi xóa:\n" + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnDeleteActionPerformed
 
     private void txtSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchActionPerformed
