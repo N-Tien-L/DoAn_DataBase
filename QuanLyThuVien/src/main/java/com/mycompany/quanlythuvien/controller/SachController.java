@@ -64,4 +64,13 @@ public class SachController {
             return null;
         }
     }
+    
+    public List<Sach> search(String keyword, String tieuChi) {
+        try {
+            return sachDAO.search(keyword, tieuChi);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
 }
