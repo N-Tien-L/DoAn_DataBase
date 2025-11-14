@@ -56,7 +56,7 @@ CREATE TABLE SACH (
 	MaTacGia INT,
     MaTheLoai INT,
     NamXuatBan INT,
-	DinhDang VARCHAR(20) NOT NULL DEFAULT 'Bản in',
+	DinhDang NVARCHAR(20) NOT NULL DEFAULT N'Bản in',
 	MoTa NVARCHAR(MAX),
     MaNXB INT,
     GiaBia DECIMAL(10, 2),
