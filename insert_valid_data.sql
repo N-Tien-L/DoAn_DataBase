@@ -66,15 +66,25 @@ INSERT INTO BANDOC (IdBD, HoTen, Email, DiaChi, SDT) VALUES
 SET IDENTITY_INSERT BANDOC OFF;
 GO
 
--- 6. Bảng SACH
-INSERT INTO SACH (ISBN, TenSach, MaTacGia, MaTheLoai, NamXuatBan, DinhDang, MoTa, MaNXB, GiaBia, SoLuongTon, SoTrang) VALUES
-('978-604-58-1541-0', N'Đắc Nhân Tâm', 1, 1, 2018, N'Bản in', N'Sách về nghệ thuật ứng xử...', 1, 120000.00, 3, 350),
-('978-604-68-1234-5', N'Nhà Giả Kim', 2, 2, 2015, N'Bản in', N'Một tiểu thuyết phiêu lưu...', 4, 85000.00, 2, 250),
-('978-006-112008-4', N'To Kill a Mockingbird (eBook)', 3, 2, 2006, N'eBook', N'Tiểu thuyết kinh điển của Mỹ...', 1, 0.00, 0, NULL),
-('978-604-2-06915-0', N'Dế Mèn Phiêu Lưu Ký', 4, 4, 2010, N'Bản in', N'Truyện thiếu nhi nổi tiếng...', 3, 50000.00, 5, 150);
+-- 5. Bảng TACGIA
+SET IDENTITY_INSERT TACGIA ON;
+INSERT INTO TACGIA (MaTacGia, TenTacGia, Website, GhiChu) VALUES
+(1, N'Dale Carnegie', 'https://www.dalecarnegie.com', N'Tác giả nổi tiếng người Mỹ, chuyên viết về kỹ năng giao tiếp.'),
+(2, N'Paulo Coelho', 'https://paulocoelhoblog.com', N'Nhà văn người Brazil, tác giả của "Nhà Giả Kim".'),
+(3, N'Harper Lee', NULL, N'Tác giả người Mỹ, nổi tiếng với tiểu thuyết "To Kill a Mockingbird".'),
+(4, N'Tô Hoài', NULL, N'Nhà văn Việt Nam, tác giả "Dế Mèn Phiêu Lưu Ký".');
+SET IDENTITY_INSERT TACGIA OFF;
 GO
 
--- 7. Bảng BANSAO
+-- 6. Bảng SACH (đã đổi sang dùng MaTacGia)
+INSERT INTO SACH (ISBN, TenSach, MaTacGia, MaTheLoai, NamXuatBan, DinhDang, MoTa, MaNXB, GiaBia, SoLuongTon, SoTrang) VALUES
+('978-604-58-1541-0', N'Đắc Nhân Tâm', 1, 1, 2018, N'Bản in', N'Sách về nghệ thuật ứng xử, giao tiếp và thuyết phục.', 1, 120000.00, 3, 350),
+('978-604-68-1234-5', N'Nhà Giả Kim', 2, 2, 2015, N'Bản in', N'Tiểu thuyết phiêu lưu mang đậm màu sắc triết lý.', 4, 85000.00, 2, 250),
+('978-006-112008-4', N'To Kill a Mockingbird (eBook)', 3, 2, 2006, N'eBook', N'Tác phẩm kinh điển về nạn phân biệt chủng tộc tại Mỹ.', 1, 0.00, 0, NULL),
+('978-604-2-06915-0', N'Dế Mèn Phiêu Lưu Ký', 4, 4, 2010, N'Bản in', N'Truyện thiếu nhi nổi tiếng của Việt Nam.', 3, 50000.00, 5, 150);
+GO
+
+-- 7. bảng BANSAO
 SET IDENTITY_INSERT BANSAO ON;
 INSERT INTO BANSAO (MaBanSao, ISBN, SoThuTuTrongKho, TinhTrang, NgayNhapKho, ViTriLuuTru) VALUES
 (1, '978-604-58-1541-0', 1, N'Tốt', '2023-01-10', 'KNS-A1'),
@@ -86,7 +96,7 @@ INSERT INTO BANSAO (MaBanSao, ISBN, SoThuTuTrongKho, TinhTrang, NgayNhapKho, ViT
 SET IDENTITY_INSERT BANSAO OFF;
 GO
 
--- 8. Bảng PHIEUMUON
+-- 8. bảng PHIEUMUON
 SET IDENTITY_INSERT PHIEUMUON ON;
 INSERT INTO PHIEUMUON (IdPM, IdBD, EmailNguoiLap, NgayMuon, HanTra) VALUES
 (1, 101, 'thuthu1@thuvien.com', '2025-10-20', '2025-11-03'),

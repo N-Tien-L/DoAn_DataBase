@@ -20,3 +20,4 @@ Thumbs.db
 
 /.vscode
 QuanLyThuVien/src/main/resources/application.properties
+QuanLyThuVien/src/main/resources/mail.properties

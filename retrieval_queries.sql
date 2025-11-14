@@ -19,21 +19,25 @@ GO
 SELECT * FROM SACH;
 GO
 
--- 4. Xem thông tin Sách chi tiết (kèm Tên NXB, Tên Thể Loại)
+-- 4. Xem thông tin Sách chi tiết (kèm Tên NXB, Tên Thể Loại, Tác Giả)
 SELECT 
     S.ISBN, 
     S.TenSach, 
-    S.MaTacGia, 
+    TG.TenTacGia, 
     T.TenTheLoai, 
     N.TenNXB,
     S.NamXuatBan,
-    S.SoTrang
+    S.SoTrang,
+	S.DinhDang,
+	S.GiaBia
 FROM 
     SACH AS S
 LEFT JOIN 
     THELOAI AS T ON S.MaTheLoai = T.MaTheLoai
 LEFT JOIN 
-    NHAXUATBAN AS N ON S.MaNXB = N.MaNXB;
+    NHAXUATBAN AS N ON S.MaNXB = N.MaNXB
+LEFT JOIN
+	TACGIA AS TG ON S.MaTacGia = TG.MaTacGia;
 GO
 
 -- 5. Tìm các bản sao vật lý của một cuốn sách cụ thể
