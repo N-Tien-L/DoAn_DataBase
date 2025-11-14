@@ -19,23 +19,35 @@ DELETE FROM BANDOC;
 DELETE FROM TAIKHOAN;
 GO
 
--- 1. bảng TAIKHOAN
+-- 1. Bảng TAIKHOAN
 INSERT INTO TAIKHOAN (Email, [Password], HoTen, [Role]) VALUES
 ('admin@thuvien.com', 'hashed_pass_1', N'Nguyễn Văn Admin', 'Admin'),
 ('thuthu1@thuvien.com', 'hashed_pass_2', N'Trần Thị Thủ Thư', 'ThuThu'),
 ('thuthu2@thuvien.com', 'hashed_pass_3', N'Lê Văn C', 'ThuThu');
 GO
 
--- 2. bảng BANDOC
-SET IDENTITY_INSERT BANDOC ON;
-INSERT INTO BANDOC (IdBD, HoTen, Email, DiaChi, SDT) VALUES
-(101, N'Phạm Minh Duy', 'duy@sv.com', N'203 CMT8, Q.10, HCM', '0901234567'),
-(102, N'Vũ Kim Anh', 'anh@sv.com', N'1A Lê Lợi, Q.1, HCM', '0918765432'),
-(103, N'Hoàng Trung', 'trung@sv.com', N'Ký túc xá B, Thủ Đức', '0987654321');
-SET IDENTITY_INSERT BANDOC OFF;
+-- 2. Bảng THELOAI
+SET IDENTITY_INSERT THELOAI ON;
+INSERT INTO THELOAI (MaTheLoai, TenTheLoai) VALUES
+(1, N'Kỹ năng sống'),
+(2, N'Tiểu thuyết'),
+(3, N'Văn học'),
+(4, N'Sách thiếu nhi'),
+(5, N'Khoa học');
+SET IDENTITY_INSERT THELOAI OFF;
 GO
 
--- 3. Bảng NHAXUATBAN
+-- 3. Bảng TACGIA
+SET IDENTITY_INSERT TACGIA ON;
+INSERT INTO TACGIA (MaTacGia, TenTacGia, Website, GhiChu) VALUES
+(1, N'Dale Carnegie', 'https://dalecarnegie.com', N'Tác giả sách Đắc Nhân Tâm'),
+(2, N'Paulo Coelho', 'https://paulocoelho.com', N'Tác giả sách Nhà Giả Kim'),
+(3, N'Harper Lee', 'https://harperlee.com', N'Tác giả sách To Kill a Mockingbird'),
+(4, N'Tô Hoài', 'https://tohoai.vn', N'Tác giả sách Dế Mèn');
+SET IDENTITY_INSERT TACGIA OFF;
+GO
+
+-- 4. Bảng NHAXUATBAN
 SET IDENTITY_INSERT NHAXUATBAN ON;
 INSERT INTO NHAXUATBAN (MaNXB, TenNXB) VALUES
 (1, N'NXB Trẻ'),
@@ -45,15 +57,13 @@ INSERT INTO NHAXUATBAN (MaNXB, TenNXB) VALUES
 SET IDENTITY_INSERT NHAXUATBAN OFF;
 GO
 
--- 4. Bảng THELOAI
-SET IDENTITY_INSERT THELOAI ON;
-INSERT INTO THELOAI (MaTheLoai, TenTheLoai) VALUES
-(1, N'Kỹ năng sống'),
-(2, N'Tiểu thuyết'),
-(3, N'Văn học'),
-(4, N'Sách thiếu nhi'),
-(5, N'Khoa học');
-SET IDENTITY_INSERT THELOAI OFF;
+-- 5. Bảng BANDOC
+SET IDENTITY_INSERT BANDOC ON;
+INSERT INTO BANDOC (IdBD, HoTen, Email, DiaChi, SDT) VALUES
+(101, N'Phạm Minh Duy', 'duy@sv.com', N'203 CMT8, Q.10, HCM', '0901234567'),
+(102, N'Vũ Kim Anh', 'anh@sv.com', N'1A Lê Lợi, Q.1, HCM', '0918765432'),
+(103, N'Hoàng Trung', 'trung@sv.com', N'Ký túc xá B, Thủ Đức', '0987654321');
+SET IDENTITY_INSERT BANDOC OFF;
 GO
 
 -- 5. Bảng TACGIA
@@ -77,40 +87,35 @@ GO
 -- 7. bảng BANSAO
 SET IDENTITY_INSERT BANSAO ON;
 INSERT INTO BANSAO (MaBanSao, ISBN, SoThuTuTrongKho, TinhTrang, NgayNhapKho, ViTriLuuTru) VALUES
-(1, '978-604-58-1541-0', 1, N'Tốt', '2023-01-10', 'KNS-A1'), -- Đắc Nhân Tâm 1
-(2, '978-604-58-1541-0', 2, N'Cũ', '2023-01-10', 'KNS-A1'), -- Đắc Nhân Tâm 2
-(3, '978-604-58-1541-0', 3, N'Tốt', '2024-05-20', 'KNS-A1'), -- Đắc Nhân Tâm 3
-(4, '978-604-68-1234-5', 1, N'Tốt', '2023-02-01', 'TN-B3'), -- Nhà Giả Kim 1
-(5, '978-604-68-1234-5', 2, N'Tốt', '2023-02-01', 'TN-B3'), -- Nhà Giả Kim 2
-(6, '978-604-2-06915-0', 1, N'Mới', '2023-03-03', 'TTN-C1'); -- Dế Mèn 1
+(1, '978-604-58-1541-0', 1, N'Tốt', '2023-01-10', 'KNS-A1'),
+(2, '978-604-58-1541-0', 2, N'Cũ', '2023-01-10', 'KNS-A1'),
+(3, '978-604-58-1541-0', 3, N'Tốt', '2024-05-20', 'KNS-A1'),
+(4, '978-604-68-1234-5', 1, N'Tốt', '2023-02-01', 'TN-B3'),
+(5, '978-604-68-1234-5', 2, N'Tốt', '2023-02-01', 'TN-B3'),
+(6, '978-604-2-06915-0', 1, N'Mới', '2023-03-03', 'TTN-C1');
 SET IDENTITY_INSERT BANSAO OFF;
 GO
 
 -- 8. bảng PHIEUMUON
 SET IDENTITY_INSERT PHIEUMUON ON;
 INSERT INTO PHIEUMUON (IdPM, IdBD, EmailNguoiLap, NgayMuon, HanTra) VALUES
-(1, 101, 'thuthu1@thuvien.com', '2025-10-20', '2025-11-03'), -- Duy mượn
-(2, 102, 'thuthu2@thuvien.com', '2025-10-25', '2025-11-08'); -- Kim Anh mượn
+(1, 101, 'thuthu1@thuvien.com', '2025-10-20', '2025-11-03'),
+(2, 102, 'thuthu2@thuvien.com', '2025-10-25', '2025-11-08');
 SET IDENTITY_INSERT PHIEUMUON OFF;
 GO
 
 -- 9. Bảng CT_PM
 INSERT INTO CT_PM (IdPM, MaBanSao, NgayTraThucTe, TinhTrangKhiTra, EmailNguoiNhan) VALUES
--- Phiếu 1 (Duy):
-(1, 1, '2025-11-01', N'Tốt', 'thuthu1@thuvien.com'),  -- Đắc Nhân Tâm 1 (Đã trả)
-(1, 4, NULL, NULL, NULL),                            -- Nhà Giả Kim 1 (Đang mượn)
-
--- Phiếu 2 (Kim Anh):
-(2, 2, '2025-11-01', N'Cũ hơn', 'thuthu2@thuvien.com'), -- Đắc Nhân Tâm 2 (Đã trả)
-(2, 6, NULL, NULL, NULL);                           -- Dế Mèn 1 (Đang mượn)
+(1, 1, '2025-11-01', N'Tốt', 'thuthu1@thuvien.com'),
+(1, 4, NULL, NULL, NULL),
+(2, 2, '2025-11-01', N'Cũ hơn', 'thuthu2@thuvien.com'),
+(2, 6, NULL, NULL, NULL);
 GO
 
 -- 10. Bảng PHAT
 INSERT INTO PHAT (IdPM, MaBanSao, LoaiPhat, SoTien, NgayGhiNhan, TrangThai) VALUES
--- Giả sử cuốn Nhà Giả Kim (IdPM=1, MaBanSao=4) bị hỏng khi đang mượn
-(1, 4, 'Hong sach', 50000.00, '2025-10-30', 'Chua dong'),
--- Giả sử cuốn Đắc Nhân Tâm (IdPM=2, MaBanSao=2) bị trả trễ hạn
-(2, 2, 'Tre han', 15000.00, '2025-11-01', 'Da dong');
+(1, 4, 'Hong sach', 50000, '2025-10-30', 'Chua dong'),
+(2, 2, 'Tre han', 15000, '2025-11-01', 'Da dong');
 GO
 
 PRINT '*** ĐÃ CHÈN DỮ LIỆU HỢP LỆ THÀNH CÔNG ***';

@@ -2,7 +2,6 @@ package com.mycompany.quanlythuvien.dao;
 
 import com.mycompany.quanlythuvien.model.Sach;
 import com.mycompany.quanlythuvien.util.DBConnector;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,17 +11,16 @@ import java.util.List;
 
 /**
  *
- * @author Tien
+ * @author Bố
  */
 public class SachDAO {
-    //lay toan bo sach
+    // lay toan bo sach
     public List<Sach> getAll() throws Exception {
         List<Sach> list = new ArrayList<>();
         String sql = "SELECT * FROM SACH";
         try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()) 
-        {
+                PreparedStatement ps = con.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Sach s = new Sach(
                     rs.getString("ISBN"),
@@ -42,15 +40,14 @@ public class SachDAO {
         }
         return list;
     }
-    
-    //them sach
+
+    // them sach
     public boolean insert(Sach s) throws Exception {
         // SoLuongTon được quản lý tự động bởi trigger TRG_BANSAO_Update_SoLuongTon
         String sql = "INSERT INTO SACH (ISBN, TenSach, MaTacGia, MaTheLoai, NamXuatBan, DinhDang, MoTa, MaNXB, GiaBia, SoTrang) VALUES (?,?,?,?,?,?,?,?,?,?)";
 
         try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) 
-        {
+                PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, s.getISBN());
             ps.setString(2, s.getTenSach());
             ps.setObject(3, s.getMaTacGia(), java.sql.Types.INTEGER);
@@ -68,8 +65,8 @@ public class SachDAO {
             throw new Exception("ISBN đã tồn tại trong hệ thống!");
         }
     }
-    
-    //cap nhat sach
+
+    // cap nhat sach
     public boolean update(Sach s) throws Exception {
         // SoLuongTon được quản lý tự động bởi trigger TRG_BANSAO_Update_SoLuongTon
         String sql = """
@@ -98,8 +95,8 @@ public class SachDAO {
             throw new Exception("Lỗi ràng buộc dữ liệu khi cập nhật!");
         }
     }
-    
-    //Xoa sach
+
+    // Xoa sach
     public boolean delete(String isbn) throws Exception {
         String check = "SELECT COUNT(*) FROM BANSAO WHERE ISBN = ?";
         String sql = "DELETE FROM SACH WHERE ISBN = ?";
@@ -120,13 +117,12 @@ public class SachDAO {
             }
         }
     }
-    
-    //Lay so luong ban sao hien co
+
+    // Lay so luong ban sao hien co
     public Integer getBanSaoHienCo(String isbn) throws Exception {
         String sql = "SELECT COUNT(*) FROM BANSAO WHERE ISBN = ? AND TinhTrang = N'Có sẵn'";
         try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) 
-        {
+                PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, isbn);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -136,8 +132,8 @@ public class SachDAO {
             }
         }
     }
-    
-    //Tim sach theo ID
+
+    // Tim sach theo ID
     public Sach findByISBN(String isbn) throws Exception {
         String sql = """
             SELECT S.*, TG.TenTacGia, NXB.TenNXB, TL.TenTheLoai
@@ -148,8 +144,7 @@ public class SachDAO {
             WHERE S.ISBN = ?
                      """;
         try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql))
-        {
+                PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, isbn);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {

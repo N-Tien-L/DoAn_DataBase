@@ -31,7 +31,7 @@ public class DBConnector {
             config.setDriverClassName(properties.getProperty("db.driver"));
             config.setJdbcUrl(url);
 
-            if(user != null && !user.isEmpty()) {
+            if (user != null && !user.isEmpty()) {
                 // SQL server Auth
                 config.setUsername(user);
                 config.setPassword(password);
@@ -57,6 +57,6 @@ public class DBConnector {
     }
 
     public static Connection getConnection() throws Exception {
-       return dataSource.getConnection();
+        return dataSource.getConnection();
     }
 }
