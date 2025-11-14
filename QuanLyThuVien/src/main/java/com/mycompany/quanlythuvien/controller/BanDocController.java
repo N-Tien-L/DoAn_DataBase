@@ -15,9 +15,20 @@ public class BanDocController {
     public ArrayList<BanDoc> getDsBanDoc() {
         return dsBanDoc;
     }
+
     public Boolean add(BanDoc cur) throws Exception {
+        
         if(dao.addDAO(cur)) {
-//            dsBanDoc
+            this.dsBanDoc.add(cur);
+            return true;
+        }
+        return false;
+    }
+    public Boolean delete(BanDoc cur) throws Exception {
+        if(dao.deleteDAO(cur)) {
+            this.dsBanDoc.removeIf(bd -> {
+                return bd.getIdBD() == cur.getIdBD();
+            });
             return true;
         }
         return false;

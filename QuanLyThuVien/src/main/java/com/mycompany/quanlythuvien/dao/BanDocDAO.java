@@ -44,6 +44,7 @@ public class BanDocDAO {
         }
         return true;
     }
+    
 
     private static final String SQL_READ =
         "SELECT * FROM BANDOC";
@@ -73,5 +74,51 @@ public class BanDocDAO {
             return false;
         }
     }
+    private static final String SQL_DELETE =
+        "DELETE FROM BANDOC \n" +
+"WHERE IdBD = ?";
+    public Boolean deleteDAO(BanDoc cur) throws Exception {
+        if (cur == null) return false;
 
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_DELETE)) {
+
+            ps.setString(1, Integer.toString(cur.getIdBD()));
+
+
+            int affected = ps.executeUpdate();
+            if (affected == 0) {
+                return false;
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+    
+    private static final String SQL_GET_BY_ID =
+        "SELECT * FROM BANDOC WHERE IdBD = ?";
+    public BanDoc getBanDocById(int id) throws Exception {
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_GET_BY_ID)) {
+
+            ps.setString(1, Integer.toString(id)); 
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    BanDoc bd = new BanDoc();
+                    bd.setIdBD(rs.getInt("idbd"));
+                    bd.setHoTen(rs.getString("hoten"));
+                    bd.setEmail(rs.getString("email"));
+                    bd.setDiaChi(rs.getString("diachi"));
+                    bd.setSdt(rs.getString("sdt"));
+                    return bd;
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
 }

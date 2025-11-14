@@ -77,14 +77,6 @@
             <Property name="text" type="java.lang.String" value="View"/>
           </Properties>
         </Component>
-        <Component class="javax.swing.JButton" name="btnRefresh">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="Refresh"/>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnRefreshActionPerformed"/>
-          </Events>
-        </Component>
         <Component class="javax.swing.JLabel" name="Search">
           <Properties>
             <Property name="text" type="java.lang.String" value="Search:"/>
@@ -94,6 +86,25 @@
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtSearchActionPerformed"/>
           </Events>
+        </Component>
+        <Component class="javax.swing.JComboBox" name="searchByCombo">
+          <Properties>
+            <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+              <StringArray count="5">
+                <StringItem index="0" value="ID"/>
+                <StringItem index="1" value="H&#x1ecd; T&#xea;n"/>
+                <StringItem index="2" value="Email"/>
+                <StringItem index="3" value="S&#x110;T"/>
+                <StringItem index="4" value="&#x110;&#x1ecb;a Ch&#x1ec9;"/>
+              </StringArray>
+            </Property>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="searchByComboActionPerformed"/>
+          </Events>
+          <AuxValues>
+            <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
+          </AuxValues>
         </Component>
       </SubComponents>
     </Container>
