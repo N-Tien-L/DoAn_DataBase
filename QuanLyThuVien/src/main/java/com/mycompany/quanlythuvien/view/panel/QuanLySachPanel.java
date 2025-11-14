@@ -4,8 +4,8 @@
  */
 package com.mycompany.quanlythuvien.view.panel;
 
+import com.mycompany.quanlythuvien.controller.SachController;
 import com.mycompany.quanlythuvien.dialog.ThongTinSachDialog;
-import com.mycompany.quanlythuvien.dao.SachDAO;
 import com.mycompany.quanlythuvien.dialog.DanhSachBanSaoDialog;
 import com.mycompany.quanlythuvien.model.Sach;
 import java.util.List;
@@ -22,7 +22,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
      * Creates new form QuanLySachPanel
      */
     private DefaultTableModel tableModel = new DefaultTableModel();
-    private SachDAO sachDAO = new SachDAO();
+    private SachController sachController = new SachController();
     
     public QuanLySachPanel() {
         initComponents();
@@ -163,7 +163,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     
     private void loadDataToTable() {
         try {
-            List<Sach> list = sachDAO.getAllForTable();
+            List<Sach> list = sachController.getAllForTable();
             tableModel.setRowCount(0);
             
             for (Sach s : list) {
@@ -209,15 +209,16 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
         String isbn = (String) tableModel.getValueAt(r, 0);
         try {
-            Sach sach = sachDAO.findByISBN(isbn); // lay thon tin sach
-            ThongTinSachDialog dialog = new ThongTinSachDialog(
-                null, true, sach, true, false
-            ); // sua: truyen sach, isEditMode=true
-            dialog.setLocationRelativeTo(this);
-            dialog.setVisible(true);
-            loadDataToTable();
+            Sach sach = sachController.findByISBN(isbn); // lay thon tin sach
+            if (sach != null) {
+                ThongTinSachDialog dialog = new ThongTinSachDialog(null, true, sach, true, false); // sua: truyen sach, isEditMode=true
+                dialog.setLocationRelativeTo(this);
+                dialog.setVisible(true);
+                loadDataToTable();
+            }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi tải sách: " + e.getMessage());
+            e.printStackTrace();
         }
     }//GEN-LAST:event_btnSuaActionPerformed
 
@@ -232,7 +233,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         int confirm = JOptionPane.showConfirmDialog(this, "Xóa sách " + isbn + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                if (sachDAO.delete(isbn)) {
+                if (sachController.delete(isbn)) {
                     JOptionPane.showMessageDialog(this, "Xóa thành công");
                     loadDataToTable();
                 } else {
@@ -261,11 +262,13 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         
         String isbn = (String) tableModel.getValueAt(r, 0);
         try {
-            Sach sach = sachDAO.findByISBN(isbn);
-            ThongTinSachDialog dialog = new ThongTinSachDialog(null, true, sach, false, true);
-            dialog.setLocationRelativeTo(this);
-            dialog.setVisible(true);
-            loadDataToTable();
+            Sach sach = sachController.findByISBN(isbn);
+            if (sach != null) {
+                ThongTinSachDialog dialog = new ThongTinSachDialog(null, true, sach, false, true);
+                dialog.setLocationRelativeTo(this);
+                dialog.setVisible(true);
+                //loadDataToTable();
+            }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi tải chi tiết sách" + e.getMessage());
         }
@@ -290,14 +293,12 @@ public class QuanLySachPanel extends javax.swing.JPanel {
             String keyword = txtTimKiem.getText().trim();
             String tieuChi = cboTieuChi.getSelectedItem().toString();
             
-            SachDAO dao = new SachDAO();
-            List<Sach> list = dao.search(keyword, tieuChi);
-            
-            DefaultTableModel model = (DefaultTableModel) tblSach.getModel();
-            model.setRowCount(0);
+            List<Sach> list = sachController.search(keyword, tieuChi);
+           
+            tableModel.setRowCount(0);
             
             for (Sach s : list) {
-                model.addRow(new Object[] {
+                tableModel.addRow(new Object[] {
                     s.getISBN(),
                     s.getTenSach(),
                     s.getTenTacGia(),

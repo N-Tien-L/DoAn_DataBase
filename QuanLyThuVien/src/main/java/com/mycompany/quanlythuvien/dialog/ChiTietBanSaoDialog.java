@@ -4,7 +4,7 @@
  */
 package com.mycompany.quanlythuvien.dialog;
 
-import com.mycompany.quanlythuvien.dao.BanSaoDAO;
+import com.mycompany.quanlythuvien.controller.BanSaoController;
 import com.mycompany.quanlythuvien.model.BanSao;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -19,7 +19,7 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ChiTietBanSaoDialog.class.getName());
     private String isbn;
     private BanSao bansao; //null -> them moi
-    private BanSaoDAO dao = new BanSaoDAO();
+    private BanSaoController controller = new BanSaoController();
     /**
      * Creates new form ChiTietBanSaoDialog
      */
@@ -140,15 +140,7 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
             String tinhTrang = txtTinhTrang.getText().trim();
             String viTri = txtViTriLuuTru.getText().trim();
             int soThuTu = Integer.parseInt(txtSoThuTuTrongKho.getText().trim());
-            LocalDate ngayNhap = null;
-            if (!txtNgayNhapKho.getText().isEmpty()) {
-                try {
-                    ngayNhap = LocalDate.parse(txtNgayNhapKho.getText().trim());
-                } catch (DateTimeParseException ex){
-                    JOptionPane.showMessageDialog(this, "Ngày nhập không hợp lệ! Định dạng: yyyy-MM-dd");
-                    return;
-                }
-            }
+            LocalDate ngayNhap = controller.parseDate(txtNgayNhapKho.getText().trim());
                     
             BanSao b = new BanSao(
                     (bansao != null) ? bansao.getMaBanSao() : 0,
@@ -159,13 +151,10 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
                     viTri
             );
             
-            if (bansao == null) dao.insert(b);
-            else dao.update(b);
+            controller.save(b);
             
             JOptionPane.showMessageDialog(this, "Lưu thành công");
             dispose();
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Số thứ tự trong kho phải là số nguyên!");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi lưu: " + e.getMessage());
         }

@@ -132,7 +132,7 @@ public class SachDAO {
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
-                return null;
+                return 0;
             }
         }
     }
@@ -210,47 +210,47 @@ public class SachDAO {
     //Tim kiem theo tieu chi (All/Tac gia/Ten sach/NXB/The Loai/ISBN)
     public List<Sach> search(String keyword, String tieuChi) throws Exception {
         List<Sach> list = new ArrayList<>();
-        String sql = """
-            SELECT S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
-            FROM SACH AS S
-            LEFT JOIN TACGIA AS TG ON S.MaTacGia = TG.MaTacGia
-            LEFT JOIN NHAXUATBAN AS NXB ON S.MaNXB = NXB.MaNXB
-            LEFT JOIN THELOAI AS TL ON S.MaTheLoai = TL.MaTheLoai
-            WHERE 1 = 1
-                     """;
-        
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai ");
+        sql.append("FROM SACH AS S ");
+        sql.append("LEFT JOIN TACGIA AS TG ON S.MaTacGia = TG.MaTacGia ");
+        sql.append("LEFT JOIN NHAXUATBAN AS NXB ON S.MaNXB = NXB.MaNXB ");
+        sql.append("LEFT JOIN THELOAI AS TL ON S.MaTheLoai = TL.MaTheLoai ");
+
+        List<String> conditions = new ArrayList<>();
         if (keyword != null && !keyword.isBlank()) {
             keyword = "%" + keyword.trim() + "%";
             switch (tieuChi) {
-                case "Tên sách" -> sql += " AND S.TenSach LIKE ?";
-                case "Tác giả" -> sql += " AND TG.TenTacGia LIKE ?";
-                case "Nhà xuất bản" -> sql += " AND NXB.TenNXB LIKE ?";
-                case "Thể loại" -> sql += " AND TL.TenTheLoai LIKE ?";
-                case "ISBN" -> sql += " AND S.ISBN LIKE ?";
-                default -> sql += """
-                    AND (
-                        S.ISBN LIKE ? OR S.TenSach LIKE ? OR TG.TenTacGia LIKE ?
-                        OR NXB.TenNXB LIKE ? OR TL.TenTheLoai LIKE ?
-                        )
-                    """;
+                case "Tất cả":
+                    conditions.add("S.TenSach LIKE ?");
+                    conditions.add("TG.TenTacGia LIKE ?");
+                    conditions.add("NXB.TenNXB LIKE ?");
+                    conditions.add("TL.TenTheLoai LIKE ?");
+                    conditions.add("S.ISBN LIKE ?");
+                    break;
+                case "Tên sách": conditions.add("S.TenSach LIKE ?"); break;
+                case "Tác giả": conditions.add("TG.TenTacGia LIKE ?"); break;
+                case "Nhà xuất bản": conditions.add("NXB.TenNXB LIKE ?"); break;
+                case "Thể loại": conditions.add("TL.TenTheLoai LIKE ?"); break;
+                case "ISBN": conditions.add("S.ISBN LIKE ?"); break;
             }
         }
-        
+
+        if (!conditions.isEmpty()) {
+            sql.append(" WHERE ");
+            sql.append(String.join(" OR ", conditions));
+        }
+
         try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) 
+             PreparedStatement ps = con.prepareStatement(sql.toString())) 
         {
-            if (keyword != null && !keyword.isBlank()) {
-                if ("Tất cả".equals(tieuChi)) {
-                    for (int i = 1; i <= 5; i++) {
-                        ps.setString(i, keyword);
-                    }
-                } else {
-                        ps.setString(1, keyword);
-                    }
+            if (!conditions.isEmpty()) {
+                for (int i = 0; i < conditions.size(); i++) {
+                    ps.setString(i + 1, keyword);
+                }
             }
-            
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
+                while(rs.next()) {
                     Sach s = new Sach();
                     s.setISBN(rs.getString("ISBN"));
                     s.setTenSach(rs.getString("TenSach"));
@@ -264,4 +264,24 @@ public class SachDAO {
         }
         return list;
     }
+    
+    // Kiểm tra ISBN đã tồn tại chưa
+    public boolean existsByISBN(String isbn) {
+        String sql = "SELECT COUNT(*) FROM Sach WHERE ISBN = ?";
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, isbn);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    return count > 0; // true nếu ISBN đã tồn tại
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false; // nếu có lỗi coi như chưa tồn tại
+    }
+
 }

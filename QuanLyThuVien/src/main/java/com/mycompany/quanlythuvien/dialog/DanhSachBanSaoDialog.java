@@ -4,7 +4,7 @@
  */
 package com.mycompany.quanlythuvien.dialog;
 
-import com.mycompany.quanlythuvien.dao.BanSaoDAO;
+import com.mycompany.quanlythuvien.controller.BanSaoController;
 import com.mycompany.quanlythuvien.model.BanSao;
 import java.util.List;
 import javax.swing.JOptionPane;
@@ -20,7 +20,8 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(DanhSachBanSaoDialog.class.getName());
     private String isbn; //id cua sach goc
-    private BanSaoDAO banSaoDAO = new BanSaoDAO();
+    private BanSaoController banSaoController = new BanSaoController();
+
     /**
      * Creates new form DanhSachBanSaoDialog
      */
@@ -139,7 +140,7 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         
         int maBanSao = (int) tblBanSao.getValueAt(row, 0);
         try {
-            BanSao b = banSaoDAO.findById(maBanSao);
+            BanSao b = banSaoController.findById(maBanSao);
             new ChiTietBanSaoDialog(this, true, isbn, b).setVisible(true);
             loadBanSao();
         } catch (Exception e) {
@@ -157,7 +158,7 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         int maBanSao = (int) tblBanSao.getValueAt(row, 0);
         if (JOptionPane.showConfirmDialog(this, "Xóa bản sao này?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
             try {
-                banSaoDAO.delete(maBanSao);
+                banSaoController.delete(maBanSao);
                 loadBanSao();
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Lỗi khi xóa: " + e.getMessage());
@@ -176,7 +177,7 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     
     private void loadBanSao() {
         try {
-            List<BanSao> list = banSaoDAO.getByISBN(isbn);
+            List<BanSao> list = banSaoController.getByISBN(isbn);
             DefaultTableModel model = (DefaultTableModel) tblBanSao.getModel();
             model.setRowCount(0);
             
@@ -190,7 +191,6 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
                 });
             }
         } catch (Exception e) {
-            e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi tải danh sách bản sao: " + e.getMessage());
         }
     }

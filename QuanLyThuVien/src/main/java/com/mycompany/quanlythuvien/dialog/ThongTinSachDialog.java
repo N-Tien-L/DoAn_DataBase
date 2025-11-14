@@ -4,14 +4,12 @@
  */
 package com.mycompany.quanlythuvien.dialog;
 
-import com.mycompany.quanlythuvien.dao.NhaXuatBanDAO;
-import com.mycompany.quanlythuvien.dao.SachDAO;
-import com.mycompany.quanlythuvien.dao.TacGiaDAO;
-import com.mycompany.quanlythuvien.dao.TheLoaiDAO;
+import com.mycompany.quanlythuvien.controller.SachController;
 import com.mycompany.quanlythuvien.model.NhaXuatBan;
 import com.mycompany.quanlythuvien.model.Sach;
 import com.mycompany.quanlythuvien.model.TacGia;
 import com.mycompany.quanlythuvien.model.TheLoai;
+
 import java.math.BigDecimal;
 import java.util.List;
 import javax.swing.JComboBox;
@@ -25,10 +23,9 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
     private Sach sach;
     private boolean isEditMode;
     private boolean isViewMode;
+    private SachController sachController = new SachController();
 
-    private List<TacGia> listTacGia;
-    private List<TheLoai> listTheLoai;
-    private List<NhaXuatBan> listNXB;
+    private static final String DINH_DANG_BAN_IN = "Bản in";
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ThongTinSachDialog.class.getName());
 
     /**
@@ -321,36 +318,26 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
 
     private void loadComboBoxes() {
         try {
-            //load tac gia
-            TacGiaDAO tgDAO = new TacGiaDAO();
-            listTacGia = tgDAO.getAll();
             cboMaTacGia.removeAllItems();
             cboMaTacGia.addItem("Không xác định");
-            for (var tg : listTacGia) {
-                cboMaTacGia.addItem(tg.getTenTacGia()); //hien thi ten tac gia
+            for (var tg : sachController.getAllTacGia()){
+                cboMaTacGia.addItem(tg.getTenTacGia());
             }
             
-            //load NXB
-            NhaXuatBanDAO nxbDAO = new NhaXuatBanDAO();
-            listNXB = nxbDAO.getAll();
             cboMaNXB.removeAllItems();
             cboMaNXB.addItem("Không xác định");
-            for (var nxb : listNXB) {
+            for (var nxb : sachController.getAllNXB()){
                 cboMaNXB.addItem(nxb.getTenNXB());
             }
             
-            //load the loai
-            TheLoaiDAO tlDAO = new TheLoaiDAO();
-            listTheLoai = tlDAO.getAll();
             cboMaTheLoai.removeAllItems();
             cboMaTheLoai.addItem("Không xác định");
-            for (var tl : listTheLoai) {
+            for (var tl : sachController.getAllTheLoai()) {
                 cboMaTheLoai.addItem(tl.getTenTheLoai());
             }
             
-            //so luong ton ko cho chinh sua (trigger tu cap nhat)
-            txtSoLuongTon.setEnabled(false);
-        } catch (Exception e) {
+            txtSoLuongTon.setEnabled(false); // chỉ hiển thị
+        }catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi load dữ liệu combobox: " + e.getMessage());
         }
     }
@@ -365,10 +352,9 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         txtMoTa.setText(sach.getMoTa());
         txtSoLuongTon.setText(String.valueOf(sach.getSoLuongTon()));
         
-        //chon dung combobox theo ID
-        selectComboBoxById(listTacGia, cboMaTacGia, sach.getMaTacGia());
-        selectComboBoxById(listTheLoai, cboMaTheLoai, sach.getMaTheLoai());
-        selectComboBoxById(listNXB, cboMaNXB, sach.getMaNXB());
+        selectComboBoxById(cboMaTacGia, sach.getMaTacGia(), sachController.getAllTacGia());
+        selectComboBoxById(cboMaNXB, sach.getMaNXB(), sachController.getAllNXB());
+        selectComboBoxById(cboMaTheLoai, sach.getMaTheLoai(), sachController.getAllTheLoai());
     }
     
     private void setViewMode() {
@@ -389,15 +375,20 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         btnHuy.setText("Đóng");
     }
     
-    private <T> void selectComboBoxById(List<T> list, JComboBox<String> combo, int id) {
-        for (int i = 0; i < list.size(); i++) {
-            Object item = list.get(i);
-            if ((item instanceof TacGia && ((TacGia) item).getMaTacGia() == id) ||
-                (item instanceof TheLoai && ((TheLoai) item).getMaTheLoai() == id) ||
-                (item instanceof NhaXuatBan && ((NhaXuatBan) item).getMaNXB() == id)) {
-                combo.setSelectedIndex(i);
-                return;
+    private <T> void selectComboBoxById(JComboBox<String> combo, Integer id, List<T> list) {
+        if (id == null || id == 0) {
+            combo.setSelectedIndex(0); // Không xác định
+        } else {
+            for (int i = 0; i < list.size(); i++) {
+                Object item = list.get(i);
+                if ((item instanceof TacGia && ((TacGia) item).getMaTacGia() == id) ||
+                    (item instanceof NhaXuatBan && ((NhaXuatBan) item).getMaNXB() == id) ||
+                    (item instanceof TheLoai && ((TheLoai) item).getMaTheLoai() == id)) {
+                    combo.setSelectedIndex(i + 1); // +1 vì 0 là "Không xác định"
+                    return;
+                }
             }
+            combo.setSelectedIndex(0); // Không tìm thấy
         }
     }
     
@@ -416,60 +407,56 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
     private void txtSoLuongTonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSoLuongTonActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_txtSoLuongTonActionPerformed
+private Sach getSachFromForm() throws NumberFormatException {
+    Sach s = new Sach();
+
+    s.setISBN(txtISBN.getText().trim());
+    s.setTenSach(txtTenSach.getText().trim());
+
+    // Parse số
+    String namStr = txtNamXuatBan.getText().trim();
+    s.setNamXuatBan(namStr.isEmpty() ? null : Integer.parseInt(namStr));
+
+    String giaStr = txtGiaBia.getText().trim();
+    s.setGiaBia(giaStr.isEmpty() ? null : new BigDecimal(giaStr));
+
+    String trangStr = txtSoTrang.getText().trim();
+    s.setSoTrang(trangStr.isEmpty() ? null : Integer.parseInt(trangStr));
+
+    s.setDinhDang(txtDinhDang.getText().trim().isEmpty() ? "Bản in" : txtDinhDang.getText().trim());
+    s.setMoTa(txtMoTa.getText().trim());
+    s.setSoLuongTon(null); // trigger update
+
+    // Combobox -> id
+    int indexTG = cboMaTacGia.getSelectedIndex();
+    s.setMaTacGia(indexTG <= 0 ? null : sachController.getAllTacGia().get(indexTG - 1).getMaTacGia());
+
+    int indexNXB = cboMaNXB.getSelectedIndex();
+    s.setMaNXB(indexNXB <= 0 ? null : sachController.getAllNXB().get(indexNXB - 1).getMaNXB());
+
+    int indexTL = cboMaTheLoai.getSelectedIndex();
+    s.setMaTheLoai(indexTL <= 0 ? null : sachController.getAllTheLoai().get(indexTL - 1).getMaTheLoai());
+
+    return s;
+}
 
     private void btnLuuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLuuActionPerformed
         // TODO add your handling code here:
         try {
-            if (sach == null) sach = new Sach();
-
-            sach.setISBN(txtISBN.getText().trim());
-            sach.setTenSach(txtTenSach.getText().trim());
-            
-            //trong -> set null
-            String namStr = txtNamXuatBan.getText().trim();
-            sach.setNamXuatBan(namStr.isEmpty() ? null : Integer.parseInt(namStr));
-            
-            String giaStr = txtGiaBia.getText().trim();
-            sach.setGiaBia(giaStr.isEmpty() ? null : new BigDecimal(giaStr));
-            
-            String trangStr = txtSoTrang.getText().trim();
-            sach.setSoTrang(trangStr.isEmpty() ? null : Integer.parseInt(trangStr));
-            
-            sach.setDinhDang(txtDinhDang.getText().trim().isEmpty() ? "Bản in" : txtDinhDang.getText().trim());
-            sach.setMoTa(txtMoTa.getText().trim());
-            
-            sach.setSoLuongTon(null); //trigger tu update => bo qua
-
-            int indexTG = cboMaTacGia.getSelectedIndex();
-            int indexNXB = cboMaNXB.getSelectedIndex();
-            int indexTL = cboMaTheLoai.getSelectedIndex();
-
-            sach.setMaTacGia((indexTG <= 0) ? null : listTacGia.get(indexTG - 1).getMaTacGia());
-            sach.setMaNXB((indexNXB <= 0) ? null : listNXB.get(indexNXB - 1).getMaNXB());
-            sach.setMaTheLoai((indexTL <= 0) ? null : listTheLoai.get(indexTL - 1).getMaTheLoai());
-
-            if (sach.getDinhDang().trim().equalsIgnoreCase("Bản in") && (sach.getSoTrang() == null || sach.getSoTrang() < 0)) {
-                JOptionPane.showMessageDialog(this, "Sách bản in phải có số trang > 0!");
-                return;
-            } else {
-                sach.setSoTrang(null);
-            }
-            
-            //luu xuong database
-            SachDAO dao = new SachDAO();
+            Sach sach = getSachFromForm(); // Lấy dữ liệu
             if (isEditMode) {
-                dao.update(sach);
+                sachController.update(sach);
                 JOptionPane.showMessageDialog(this, "Cập nhật sách thành công!");
             } else {
-                dao.insert(sach);
+                sachController.insert(sach);
                 JOptionPane.showMessageDialog(this, "Thêm sách mới thành công!");
             }
             dispose();
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng định dạng số!");
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi lưu sách: " + e.getMessage());
-            e.printStackTrace();
+        } catch (NumberFormatException nfEx) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng định dạng số!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }//GEN-LAST:event_btnLuuActionPerformed
 
