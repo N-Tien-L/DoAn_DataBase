@@ -21,6 +21,13 @@ public class TaiKhoan {
         this.role = role;
     }
 
+    // Constructor không có password (dùng khi lấy danh sách tài khoản)
+    public TaiKhoan(String email, String hoTen, String role) {
+        this.email = email;
+        this.hoTen = hoTen;
+        this.role = role;
+    }
+
     public String getEmail() {
         return email;
     }
