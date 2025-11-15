@@ -118,7 +118,7 @@ CREATE TABLE CT_PM (
     PRIMARY KEY (IdPM, MaBanSao),
     FOREIGN KEY (IdPM) REFERENCES PHIEUMUON(IdPM) ON DELETE CASCADE, -- Xóa phiếu thì xóa chi tiết
     FOREIGN KEY (MaBanSao) REFERENCES BANSAO(MaBanSao) ON DELETE NO ACTION, -- không cho xóa bản sao đang có người mượn
-    FOREIGN KEY (EmailNguoiNhan) REFERENCES TAIKHOAN(Email)
+    FOREIGN KEY (EmailNguoiNhan) REFERENCES BANDOC(Email)
 );
 GO
 

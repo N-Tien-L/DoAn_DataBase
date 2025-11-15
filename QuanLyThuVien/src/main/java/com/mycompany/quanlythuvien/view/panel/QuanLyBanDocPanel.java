@@ -212,8 +212,8 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(scrollPaneUsers, javax.swing.GroupLayout.DEFAULT_SIZE, 340, Short.MAX_VALUE)
-                .addGap(40, 40, 40))
+                .addComponent(scrollPaneUsers, javax.swing.GroupLayout.PREFERRED_SIZE, 323, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(57, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -235,7 +235,40 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btnAddActionPerformed
 
     private void btnEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditActionPerformed
-        // TODO add your handling code here:
+        int viewRow = tblUsers.getSelectedRow();
+        if (viewRow == -1) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn 1 bạn đọc để sửa.", "Chú ý", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        int modelRow = tblUsers.convertRowIndexToModel(viewRow);
+        Object idObj = tblUsers.getModel().getValueAt(modelRow, 0);
+        Object nameObj = tblUsers.getModel().getValueAt(modelRow, 1);
+        Object emailObj = tblUsers.getModel().getValueAt(modelRow, 2);
+        Object sdtObj = tblUsers.getModel().getValueAt(modelRow, 3);
+        Object diaChiObj = tblUsers.getModel().getValueAt(modelRow, 4);
+        final String id = nameObj == null ? "" : idObj.toString();
+        final String name = nameObj == null ? "" : nameObj.toString();
+        final String email = emailObj == null ? "" : emailObj.toString();
+        final String sdt = sdtObj == null ? "" : sdtObj.toString();
+        final String diaChi = diaChiObj == null ? "" : diaChiObj.toString();
+        BanDoc tmp = new BanDoc(Integer.parseInt(id), name, email, diaChi, sdt);
+        BanDocFormDialog dlg = new BanDocFormDialog((Frame) SwingUtilities.getWindowAncestor(this), true);
+        dlg.setBanDoc(tmp);
+        dlg.setLocationRelativeTo(this);
+        dlg.setVisible(true);
+        if (dlg.isSaved()) {
+            BanDoc ntmp = dlg.getBanDoc();
+            ntmp.setIdBD(Integer.parseInt(id));
+            if(tmp.equals(ntmp)) return;
+            System.out.println(ntmp.getHoTen());
+            try {
+                cur.update(ntmp);
+            } catch (Exception ex) {
+                
+            }
+            showList(cur.getDsBanDoc());
+            JOptionPane.showMessageDialog(this, "Sửa bạn đọc thành công.");
+        }
     }//GEN-LAST:event_btnEditActionPerformed
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed

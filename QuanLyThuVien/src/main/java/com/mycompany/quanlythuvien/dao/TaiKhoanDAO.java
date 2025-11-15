@@ -16,11 +16,12 @@ public class TaiKhoanDAO {
 
     private static final String SQL_LOGIN = "SELECT * FROM TAIKHOAN WHERE Email = ?";
     private static final String SQL_CREATE_ACCOUNT = "INSERT INTO TAIKHOAN (Email, [Password], HoTen, [Role]) VALUES (?, ?, ?, ?)";
-    private static final String SQL_GET_ALL_ACCOUNTS = "SELECT Email, HoTen, [Role] FROM TAIKHOAN ORDER BY Email OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
     private static final String SQL_COUNT_ACCOUNTS = "SELECT COUNT(*) as Total FROM TAIKHOAN";
     private static final String SQL_UPDATE = "UPDATE TAIKHOAN SET HoTen = ?, [Role] = ? WHERE Email = ?";
     private static final String SQL_DELETE = "DELETE FROM TAIKHOAN WHERE Email = ?";
     private static final String SQL_UPDATE_PASSWORD = "UPDATE TAIKHOAN SET [Password] = ? WHERE Email = ?";
+    private static final String SQL_GET_ACCOUNTS_FIRST_PAGE = "SELECT TOP (?) Email, HoTen, [Role] FROM TAIKHOAN ORDER BY Email ASC";
+    private static final String SQL_GET_ACCOUNTS_NEXT_PAGE = "SELECT TOP (?) Email, HoTen, [Role] FROM TAIKHOAN WHERE Email > ? ORDER BY Email ASC";
 
     public TaiKhoan checkLogin(String email, String password) {
         // try-with-resource (tự động đóng conn, rs, ps)
@@ -144,19 +145,26 @@ public class TaiKhoanDAO {
         return false;
     }
     
-    public java.util.List<TaiKhoan> getAllAccounts(int page, int pageSize) {
+    public java.util.List<TaiKhoan> getAllAccounts(String lastEmailCursor, int pageSize) {
         java.util.List<TaiKhoan> accounts = new java.util.ArrayList<>();
-        int offset = (page - 1) * pageSize;
         
+        boolean isFirstPage = (lastEmailCursor == null || lastEmailCursor.trim().isEmpty());
+        String sql = isFirstPage ? SQL_GET_ACCOUNTS_FIRST_PAGE : SQL_GET_ACCOUNTS_NEXT_PAGE;
+
         try (Connection conn = DBConnector.getConnection()) {
-            PreparedStatement ps = conn.prepareStatement(SQL_GET_ALL_ACCOUNTS);
-            ps.setInt(1, offset);
-            ps.setInt(2, pageSize);
-            
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            if(isFirstPage) {
+                ps.setInt(1, pageSize);
+            } else {
+                // TOP (?) requires pageSize first, then WHERE Email > ? requires cursor
+                ps.setInt(1, pageSize);
+                ps.setString(2, lastEmailCursor);
+            }
+
             ResultSet rs = ps.executeQuery();
-            
+
             while (rs.next()) {
-                // Sử dụng constructor không có password
                 TaiKhoan taiKhoan = new TaiKhoan(
                     rs.getString("Email"),
                     rs.getString("HoTen"),
@@ -164,8 +172,8 @@ public class TaiKhoanDAO {
                 );
                 accounts.add(taiKhoan);
             }
-            
-            System.out.println("Retrieved " + accounts.size() + " accounts");
+
+            System.out.println("Retrieved " + accounts.size() + " accounts (cursor: " + lastEmailCursor + ")");
             
         } catch (Exception e) {
             e.printStackTrace();
