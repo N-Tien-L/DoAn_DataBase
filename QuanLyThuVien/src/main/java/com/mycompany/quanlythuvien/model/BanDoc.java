@@ -1,5 +1,7 @@
 package com.mycompany.quanlythuvien.model;
 
+import java.util.Objects;
+
 /**
  *
  * @author Tien
@@ -69,6 +71,36 @@ public class BanDoc {
     public void setSdt(String sdt) {
         this.sdt = sdt;
     }
+
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final BanDoc other = (BanDoc) obj;
+        if (this.idBD != other.idBD) {
+            return false;
+        }
+        if (!Objects.equals(this.hoTen, other.hoTen)) {
+            return false;
+        }
+        if (!Objects.equals(this.email, other.email)) {
+            return false;
+        }
+        if (!Objects.equals(this.diaChi, other.diaChi)) {
+            return false;
+        }
+        return Objects.equals(this.sdt, other.sdt);
+    }
+
+
 
     
 
