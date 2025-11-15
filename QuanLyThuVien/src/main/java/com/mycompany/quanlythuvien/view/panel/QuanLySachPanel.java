@@ -5,8 +5,8 @@
 package com.mycompany.quanlythuvien.view.panel;
 
 import com.mycompany.quanlythuvien.controller.SachController;
-import com.mycompany.quanlythuvien.dialog.ThongTinSachDialog;
-import com.mycompany.quanlythuvien.dialog.DanhSachBanSaoDialog;
+import com.mycompany.quanlythuvien.view.dialog.ThongTinSachDialog;
+import com.mycompany.quanlythuvien.view.dialog.DanhSachBanSaoDialog;
 import com.mycompany.quanlythuvien.model.Sach;
 import java.util.List;
 import javax.swing.JOptionPane;
