@@ -211,22 +211,18 @@ public class TaiKhoanController {
      * @param pageSize Số bản ghi mỗi trang
      * @return List các tài khoản, hoặc null nếu không có quyền
      */
-    public java.util.List<TaiKhoan> getAllAccounts(String currentUserRole, int page, int pageSize) {
+    public java.util.List<TaiKhoan> getAllAccounts(String currentUserRole, String lastEmailCursor, int pageSize) {
         // Kiểm tra quyền admin
         if (currentUserRole == null || !currentUserRole.equalsIgnoreCase("admin")) {
             System.out.println("Chỉ admin mới có quyền xem danh sách tài khoản");
             return null;
         }
         
-        // Validation
-        if (page < 1) {
-            page = 1;
-        }
         if (pageSize < 1 || pageSize > 100) {
             pageSize = 10; // Default page size
         }
         
-        return dao.getAllAccounts(page, pageSize);
+        return dao.getAllAccounts(lastEmailCursor, pageSize);
     }
     
     /**
