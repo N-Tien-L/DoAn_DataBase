@@ -14,33 +14,28 @@ import java.util.List;
  * @author Bố
  */
 public class SachDAO {
-    // lay toan bo sach
-    public List<Sach> getAll() throws Exception {
-        List<Sach> list = new ArrayList<>();
-        String sql = "SELECT * FROM SACH";
-        try (Connection con = DBConnector.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                Sach s = new Sach(
-                    rs.getString("ISBN"),
-                    rs.getString("TenSach"),
-                    rs.getObject("MaTacGia", Integer.class),
-                    rs.getObject("MaTheLoai", Integer.class),
-                    rs.getObject("NamXuatBan", Integer.class),
-                    rs.getString("DinhDang"),
-                    rs.getString("MoTa"),
-                    rs.getObject("MaNXB", Integer.class),
-                    rs.getBigDecimal("GiaBia"),
-                    rs.getObject("SoLuongTon", Integer.class),
-                    rs.getObject("SoTrang", Integer.class)
-                );
-                list.add(s);
-            }
-        }
-        return list;
-    }
+    private static final String SQL_GET_FIRST_PAGE = """
+        SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
+        FROM SACH AS S
+        LEFT JOIN TACGIA AS TG ON S.MaTacGia = TG.MaTacGia
+        LEFT JOIN NHAXUATBAN AS NXB ON S.MaNXB = NXB.MaNXB
+        LEFT JOIN THELOAI AS TL ON S.MaTheLoai = TL.MaTheLoai
+        ORDER BY S.ISBN ASC                            
+    """;
 
+    private static final String SQL_GET_NEXT_PAGE = """
+        SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
+        FROM SACH AS S
+        LEFT JOIN TACGIA AS TG ON S.MaTacGia = TG.MaTacGia
+        LEFT JOIN NHAXUATBAN AS NXB ON S.MaNXB = NXB.MaNXB
+        LEFT JOIN THELOAI AS TL ON S.MaTheLoai = TL.MaTheLoai
+        WHERE S.ISBN > ?
+        ORDER BY S.ISBN ASC
+    """;
+    
+    private static final String SQL_COUNT_TOTAL = "SELECT COUNT(*) FROM SACH";
+    
+    
     // them sach
     public boolean insert(Sach s) throws Exception {
         // SoLuongTon được quản lý tự động bởi trigger TRG_BANSAO_Update_SoLuongTon
@@ -172,34 +167,51 @@ public class SachDAO {
     }
     
     // du lieu de hien thi len table
-    public List<Sach> getAllForTable() throws Exception {
+    public List<Sach> getAllForTable(String lastISBNCursor, int pageSize) {
+        boolean isFirstPage = (lastISBNCursor == null || lastISBNCursor.isEmpty());
+        String sql = isFirstPage ? SQL_GET_FIRST_PAGE : SQL_GET_NEXT_PAGE;
         List<Sach> list = new ArrayList<>();
         
-        String sql = """
-            SELECT S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
-            FROM SACH AS S
-            LEFT JOIN TACGIA AS TG ON S.MaTacGia = TG.MaTacGia
-            LEFT JOIN NHAXUATBAN AS NXB ON S.MaNXB = NXB.MaNXB
-            LEFT JOIN THELOAI AS TL ON S.MaTheLoai = TL.MaTheLoai
-            ORDER BY S.TenSach
-                     """;
-        
         try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()) 
+            PreparedStatement ps = con.prepareStatement(sql))
         {
-            while (rs.next()) {
-                Sach s = new Sach();
-                s.setISBN(rs.getString("ISBN"));
-                s.setTenSach(rs.getString("TenSach"));
-                s.setTenTacGia(rs.getString("TenTacGia"));
-                s.setTenNXB(rs.getString("TenNXB"));
-                s.setNamXuatBan(rs.getInt("NamXuatBan"));
-                s.setTenTheLoai(rs.getString("TenTheLoai"));
-                list.add(s);
+            if (isFirstPage) {
+                ps.setInt(1, pageSize);
+            }else {
+                ps.setInt(1, pageSize);
+                ps.setString(2, lastISBNCursor);
             }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Sach s = new Sach();
+                    s.setISBN(rs.getString("ISBN"));
+                    s.setTenSach(rs.getString("TenSach"));
+                    s.setTenTacGia(rs.getString("TenTacGia"));
+                    s.setTenNXB(rs.getString("TenNXB"));
+                    s.setNamXuatBan(rs.getInt("NamXuatBan"));
+                    s.setTenTheLoai(rs.getString("TenTheLoai"));
+                    list.add(s);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return list;
+    }
+    
+    public int countTotal() {
+        try (Connection con = DBConnector.getConnection();
+            PreparedStatement ps = con.prepareStatement(SQL_COUNT_TOTAL);
+            ResultSet rs = ps.executeQuery())
+        {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
     
     //Tim kiem theo tieu chi (All/Tac gia/Ten sach/NXB/The Loai/ISBN)

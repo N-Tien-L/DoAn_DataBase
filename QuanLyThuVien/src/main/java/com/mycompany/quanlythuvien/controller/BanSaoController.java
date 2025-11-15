@@ -14,18 +14,29 @@ import java.util.List;
 public class BanSaoController {
     private BanSaoDAO banSaoDAO = new BanSaoDAO();
     
+    // Lấy bản sao theo ISBN với phân trang
+    public List<BanSao> getPage(String isbn, int pageSize, Integer lastMaBanSao) {
+        if (isbn == null || isbn.isBlank()) return new ArrayList<>();
+        if (pageSize < 1 || pageSize > 100) pageSize = 10;
+        return banSaoDAO.getPage(isbn, pageSize, lastMaBanSao);
+    }
+    
+    // Lấy tổng số trang theo ISBN
+    public int getTotalPages(String isbn, int pageSize) {
+        if (isbn == null || isbn.isBlank()) return 0;
+        if (pageSize < 1 || pageSize > 100) pageSize = 10;
+        return banSaoDAO.getTotalPages(isbn, pageSize);
+    }
+    
     // Lấy tất cả bản sao theo ISBN
-    public List<BanSao> getByISBN(String isbn) {
-        try {
-            return banSaoDAO.getByISBN(isbn);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
+    public List<BanSao> getAllByISBN(String isbn) {
+        if (isbn == null || isbn.isBlank()) return new ArrayList<>();
+        return banSaoDAO.getAllByISBN(isbn);
     }
 
     // Tìm bản sao theo ID
     public BanSao findById(int id) {
+        if (id <= 0) return null;
         try {
             return banSaoDAO.findById(id);
         } catch (Exception e) {

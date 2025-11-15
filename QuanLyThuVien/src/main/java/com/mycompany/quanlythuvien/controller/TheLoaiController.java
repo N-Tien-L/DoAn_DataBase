@@ -3,56 +3,63 @@ package com.mycompany.quanlythuvien.controller;
 import com.mycompany.quanlythuvien.dao.TheLoaiDAO;
 import com.mycompany.quanlythuvien.model.TheLoai;
 import java.util.List;
+import java.util.Optional;
 
 /**
  *
  * @author Tien
  */
 public class TheLoaiController {
-    private final TheLoaiDAO theLoaiDAO = new TheLoaiDAO();
+    private final TheLoaiDAO theLoaiDAO;
     
-    public List<TheLoai> getAllTheLoai() {
-        try {
-            return theLoaiDAO.getAll();
-        } catch (Exception e){
-            e.printStackTrace();
-            return null;
-        }
+    public TheLoaiController(){
+        this.theLoaiDAO = new TheLoaiDAO();
     }
     
-    public boolean themTheLoai(TheLoai tl) {
-        try {
-            return theLoaiDAO.insert(tl);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public List<TheLoai> getAllTheLoai(int lastMaTLCursor, int pageSize) {
+        return theLoaiDAO.getAll(lastMaTLCursor, pageSize);
+    }
+    public int getTotalTheLoai() {
+        return theLoaiDAO.getTotalTL();
+    }
+    public boolean addTheLoai(TheLoai tl) {
+        if (tl.getTenTheLoai() == null || tl.getTenTheLoai().trim().isEmpty()){
+            System.out.println("Tên thể loại không được để trống!");
             return false;
         }
+        return theLoaiDAO.insert(tl);
     }
     
-    public boolean capNhatTheLoai(TheLoai tl) {
-        try {
-            return theLoaiDAO.update(tl);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public boolean updateTheLoai(TheLoai tl) {
+        if (tl.getMaTheLoai() <= 0) {
+            System.out.println("Mã thể loại không hợp lệ!");
             return false;
         }
-    }
-    
-    public boolean xoaTheLoai(int maTheLoai) {
-        try {
-            return theLoaiDAO.delete(maTheLoai);
-        } catch (Exception e) {
-            e.printStackTrace();
+        
+        if (tl.getTenTheLoai() == null || tl.getTenTheLoai().trim().isEmpty()) {
+            System.out.print("Tên thể loại không được để trống!");
             return false;
         }
+        return theLoaiDAO.update(tl);
     }
     
-    public TheLoai timTheLoaiTheoId(int id) {
-        try {
-            return theLoaiDAO.findById(id);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+    public boolean deleteTheLoai(int maTheLoai) {
+        if (maTheLoai <= 0) {
+            System.out.println("Mã thể loại không hợp lệ!");
+            return false;
         }
+        return theLoaiDAO.delete(maTheLoai);
+    }
+    
+    public List<TheLoai> searchTheLoai(String keyword, String column) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return theLoaiDAO.getAll(0, getTotalTheLoai());
+        }
+        return theLoaiDAO.search(keyword, column);
+    }
+    
+    public Optional<TheLoai> getTheLoaiById(int id) {
+        if (id <= 0) return Optional.empty();
+        return theLoaiDAO.getById(id);
     }
 }

@@ -14,34 +14,69 @@ import java.util.List;
  *
  * @author Tien
  */
-public class BanSaoDAO {
-    public List<BanSao> getAll() throws Exception {
-        
-        //lay toan bo BAN SAO
+public class BanSaoDAO {    
+    public List<BanSao> getPage(String isbn, int pageSize, Integer lastMaBanSao) {
         List<BanSao> list = new ArrayList<>();
-        String sql = "SELECT * FROM BANSAO";
+        if (pageSize < 1 || pageSize > 100) pageSize = 10;
+        
+        String sql;
+        if (lastMaBanSao == null) {
+            sql = "SELECT TOP (?) * FROM BANSAO WHERE ISBN = ? ORDER BY MaBanSao";
+        } else {
+            sql = "SELECT TOP (?) * FROM BANSAO WHERE ISBN = ? AND MaBanSao > ? ORDER BY MaBanSao";
+        }
         
         try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery())
+            PreparedStatement ps = con.prepareStatement(sql))
         {
-            while (rs.next()) {
-                BanSao b = new BanSao(
-                        rs.getInt("MaBanSao"),
-                        rs.getString("ISBN"),
-                        rs.getInt("SoThuTuTrongKho"),
-                        rs.getString("TinhTrang"),
-                        (rs.getDate("NgayNhapKho") != null) ? rs.getDate("NgayNhapKho").toLocalDate() : null,
-                        rs.getString("ViTriLuuTru")
-                );
-                list.add(b);
+            ps.setInt(1, pageSize);
+            ps.setString(2, isbn);
+            if (lastMaBanSao != null) ps.setInt(3, lastMaBanSao);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    BanSao b = new BanSao(
+                            rs.getInt("MaBanSao"),
+                            rs.getString("ISBN"),
+                            rs.getInt("SoThuTuTrongKho"),
+                            rs.getString("TinhTrang"),
+                            rs.getDate("NgayNhapKho") != null ? rs.getDate("NgayNhapKho").toLocalDate() : null,
+                            rs.getString("ViTriLuuTru")
+                    );
+                    list.add(b);
+                }
             }
+        }catch (Exception e) {
+            e.printStackTrace();
         }
         
         return list;
     }
+    //tổng số bản sao theo ISBN
+    public int getTotalCount(String isbn) {
+        String sql = "SELECT COUNT(*) FROM BANSAO WHERE ISBN = ?";
+        try (Connection con = DBConnector.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql))
+        {
+            ps.setString(1, isbn);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
     
-    //them ban sao moi
+    //tổng số trang theo ISBN
+    public int getTotalPages(String isbn, int pageSize) {
+        int total = getTotalCount(isbn);
+        if (total <= 0) return 0;
+        return (int) Math.ceil((double) total / pageSize);
+    }
+    public List<BanSao> getAllByISBN(String isbn) {
+        return getPage(isbn, Integer.MAX_VALUE, null);
+    }
     public boolean insert(BanSao b) throws Exception {
         String sql = """
             INSERT INTO BANSAO (ISBN, SoThuTuTrongKho, TinhTrang, NgayNhapKho, ViTriLuuTru)
@@ -106,33 +141,6 @@ public class BanSaoDAO {
         }
     }
     
-    //lay ds ban sao theo ISBN cua sach goc
-    public List<BanSao> getByISBN(String isbn) throws Exception {
-        List<BanSao> list = new ArrayList<>();
-        String sql = "SELECT * FROM BANSAO WHERE ISBN = ?";
-        
-        try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) 
-        {
-            ps.setString(1, isbn);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    BanSao b = new BanSao(
-                            rs.getInt("MaBanSao"),
-                            rs.getString("ISBN"),
-                            rs.getInt("SoThuTuTrongKho"),
-                            rs.getString("TinhTrang"),
-                            (rs.getDate("NgayNhapKho") != null) ? rs.getDate("NgayNhapKho").toLocalDate() : null,
-                            rs.getString("ViTriLuuTru")
-                    );
-                    list.add(b);
-                }
-            }
-        }
-        
-        return list;
-    }
-    
     //Tim 1 ban sao theo ID
     public BanSao findById(int maBanSao) throws Exception {
         String sql = "SELECT * FROM BANSAO Where MaBanSao = ?";
@@ -156,5 +164,4 @@ public class BanSaoDAO {
         }
         return null;
     }
-    
 }

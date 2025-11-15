@@ -22,15 +22,22 @@ public class SachController {
     private TacGiaDAO tacGiaDAO = new TacGiaDAO();
     private NhaXuatBanDAO nxbDAO = new NhaXuatBanDAO();
     private TheLoaiDAO theLoaiDAO = new TheLoaiDAO();
+    private TacGiaController tacGiaController = new TacGiaController();
+    private NhaXuatBanController nxbController = new NhaXuatBanController();
+    private TheLoaiController theLoaiController = new TheLoaiController();
     
     //lấy toàn bộ ds sách (cho table)
-    public List<Sach> getAllForTable() {
+    public List<Sach> getAllForTable(String lastISBNCursor, int pageSize) {
         try {
-            return sachDAO.getAllForTable();
+            return sachDAO.getAllForTable(lastISBNCursor, pageSize);
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
         }
+    }
+    
+    public int countTotal(){
+        return sachDAO.countTotal();
     }
     
     // Thêm sách
@@ -54,7 +61,7 @@ public class SachController {
             if (isbn == null || isbn.isBlank()) return false;
             
             //kiem tra con ban sao ko
-            List<BanSao> listBanSao = new BanSaoController().getByISBN(isbn);
+            List<BanSao> listBanSao = new BanSaoController().getAllByISBN(isbn);
             if (!listBanSao.isEmpty()) {
                 throw new Exception("Không thể xóa sách vì còn bản sao!");
             }
@@ -132,28 +139,44 @@ public class SachController {
         if (s.getMoTa() == null) s.setMoTa("");
     }
     
-    public List<TacGia> getAllTacGia() {
+    public List<TacGia> getAllTacGia(int pageSize) {
         try {
-            return tacGiaDAO.getAll();
+            int firstPageCursor = 0;
+            return tacGiaDAO.getAll(firstPageCursor, pageSize);
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
         }
     }
-    public List<NhaXuatBan> getAllNXB() {
+    
+    public int getTotalTacGia() {
+        return tacGiaController.getTotalTacGia();
+    }
+    
+    public List<NhaXuatBan> getAllNXB(int pageSize) {
         try {
-            return nxbDAO.getAll();
+            int firstPageCursor = 0;
+            return nxbDAO.getAll(firstPageCursor, pageSize);
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
         }
     }
-    public List<TheLoai> getAllTheLoai() {
+    public int getTotalNXB() {
+        return nxbController.getTotalNXB();
+    }
+    
+    public List<TheLoai> getAllTheLoai(int pageSize) {
         try {
-            return theLoaiDAO.getAll();
+            int firstPageCursor = 0;
+            return theLoaiDAO.getAll(firstPageCursor, pageSize);
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
         }
+    }
+    
+    public int getTotalTheLoai() {
+        return theLoaiController.getTotalTheLoai();
     }
 }

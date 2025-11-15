@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JDialog.java to edit this template
  */
-package com.mycompany.quanlythuvien.dialog;
+package com.mycompany.quanlythuvien.view.dialog;
 
 import com.mycompany.quanlythuvien.controller.SachController;
 import com.mycompany.quanlythuvien.model.NhaXuatBan;
@@ -24,7 +24,11 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
     private boolean isEditMode;
     private boolean isViewMode;
     private SachController sachController = new SachController();
-
+    
+    private List<TacGia> listTacGia;
+    private List<NhaXuatBan> listNXB;
+    private List<TheLoai> listTheLoai;
+    
     private static final String DINH_DANG_BAN_IN = "Bản in";
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ThongTinSachDialog.class.getName());
 
@@ -320,19 +324,28 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         try {
             cboMaTacGia.removeAllItems();
             cboMaTacGia.addItem("Không xác định");
-            for (var tg : sachController.getAllTacGia()){
+            
+            int totalTacGia = sachController.getTotalTacGia();
+            listTacGia = sachController.getAllTacGia(totalTacGia);
+            for (var tg : listTacGia){
                 cboMaTacGia.addItem(tg.getTenTacGia());
             }
             
             cboMaNXB.removeAllItems();
             cboMaNXB.addItem("Không xác định");
-            for (var nxb : sachController.getAllNXB()){
+            
+            int totalNXB = sachController.getTotalNXB();
+            listNXB = sachController.getAllNXB(totalTacGia);
+            for (var nxb : listNXB){
                 cboMaNXB.addItem(nxb.getTenNXB());
             }
             
             cboMaTheLoai.removeAllItems();
             cboMaTheLoai.addItem("Không xác định");
-            for (var tl : sachController.getAllTheLoai()) {
+            
+            int totalTheLoai = sachController.getTotalTheLoai();
+            listTheLoai = sachController.getAllTheLoai(totalTheLoai);
+            for (var tl : listTheLoai) {
                 cboMaTheLoai.addItem(tl.getTenTheLoai());
             }
             
@@ -352,9 +365,9 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         txtMoTa.setText(sach.getMoTa());
         txtSoLuongTon.setText(String.valueOf(sach.getSoLuongTon()));
         
-        selectComboBoxById(cboMaTacGia, sach.getMaTacGia(), sachController.getAllTacGia());
-        selectComboBoxById(cboMaNXB, sach.getMaNXB(), sachController.getAllNXB());
-        selectComboBoxById(cboMaTheLoai, sach.getMaTheLoai(), sachController.getAllTheLoai());
+        selectComboBoxById(cboMaTacGia, sach.getMaTacGia(), listTacGia);
+        selectComboBoxById(cboMaNXB, sach.getMaNXB(), listNXB);
+        selectComboBoxById(cboMaTheLoai, sach.getMaTheLoai(), listTheLoai);
     }
     
     private void setViewMode() {
@@ -429,13 +442,13 @@ private Sach getSachFromForm() throws NumberFormatException {
 
     // Combobox -> id
     int indexTG = cboMaTacGia.getSelectedIndex();
-    s.setMaTacGia(indexTG <= 0 ? null : sachController.getAllTacGia().get(indexTG - 1).getMaTacGia());
+    s.setMaTacGia(indexTG <= 0 ? null : listTacGia.get(indexTG - 1).getMaTacGia());
 
     int indexNXB = cboMaNXB.getSelectedIndex();
-    s.setMaNXB(indexNXB <= 0 ? null : sachController.getAllNXB().get(indexNXB - 1).getMaNXB());
+    s.setMaNXB(indexNXB <= 0 ? null : listNXB.get(indexNXB - 1).getMaNXB());
 
     int indexTL = cboMaTheLoai.getSelectedIndex();
-    s.setMaTheLoai(indexTL <= 0 ? null : sachController.getAllTheLoai().get(indexTL - 1).getMaTheLoai());
+    s.setMaTheLoai(indexTL <= 0 ? null : listTheLoai.get(indexTL - 1).getMaTheLoai());
 
     return s;
 }

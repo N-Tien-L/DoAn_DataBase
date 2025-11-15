@@ -2,11 +2,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JDialog.java to edit this template
  */
-package com.mycompany.quanlythuvien.dialog;
+package com.mycompany.quanlythuvien.view.dialog;
 
+import com.mycompany.quanlythuvien.view.dialog.ChiTietBanSaoDialog;
 import com.mycompany.quanlythuvien.controller.BanSaoController;
 import com.mycompany.quanlythuvien.model.BanSao;
 import java.util.List;
+import java.util.Stack;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -21,7 +23,9 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(DanhSachBanSaoDialog.class.getName());
     private String isbn; //id cua sach goc
     private BanSaoController banSaoController = new BanSaoController();
-
+    private Integer lastMaBanSao = null;
+    private int pageSize = 10;
+    private Stack<Integer> cursorStack = new Stack<>();
     /**
      * Creates new form DanhSachBanSaoDialog
      */
@@ -40,6 +44,34 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         loadBanSao();
     }
 
+    private void loadBanSaoPage(Integer cursor) {
+        try {
+            List<BanSao> list = banSaoController.getPage(isbn, pageSize, cursor);
+            DefaultTableModel model = (DefaultTableModel) tblBanSao.getModel();
+            model.setRowCount(0);
+            
+            for (BanSao b : list) {
+                model.addRow(new Object[]{
+                        b.getMaBanSao(),
+                        b.getSoThuTuTrongKho(),
+                        b.getTinhTrang(),
+                        b.getNgayNhapKho(),
+                        b.getViTriLuuTru()     
+                });
+            }
+            
+            if (!list.isEmpty()) {
+                lastMaBanSao = list.get(list.size() - 1).getMaBanSao();
+            }
+            
+            btnBSSau.setEnabled(list.size() == pageSize);
+            btnBSTruoc.setEnabled(!cursorStack.isEmpty());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi tải danh sách bản sao: " + e.getMessage());
+        }
+    }
+    
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -51,8 +83,13 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
 
         jPanel1 = new javax.swing.JPanel();
         lblTieuDe = new javax.swing.JLabel();
+        jPanel3 = new javax.swing.JPanel();
+        jPanel4 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblBanSao = new javax.swing.JTable();
+        jPanel5 = new javax.swing.JPanel();
+        btnBSTruoc = new javax.swing.JButton();
+        btnBSSau = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         btnThem = new javax.swing.JButton();
         btnSua = new javax.swing.JButton();
@@ -66,6 +103,10 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         jPanel1.add(lblTieuDe);
 
         getContentPane().add(jPanel1, java.awt.BorderLayout.PAGE_START);
+
+        jPanel3.setLayout(new java.awt.BorderLayout());
+
+        jPanel4.setLayout(new javax.swing.BoxLayout(jPanel4, javax.swing.BoxLayout.LINE_AXIS));
 
         tblBanSao.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         tblBanSao.setModel(new javax.swing.table.DefaultTableModel(
@@ -81,7 +122,29 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         ));
         jScrollPane1.setViewportView(tblBanSao);
 
-        getContentPane().add(jScrollPane1, java.awt.BorderLayout.CENTER);
+        jPanel4.add(jScrollPane1);
+
+        jPanel3.add(jPanel4, java.awt.BorderLayout.PAGE_START);
+
+        btnBSTruoc.setText("Trước");
+        btnBSTruoc.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBSTruocActionPerformed(evt);
+            }
+        });
+        jPanel5.add(btnBSTruoc);
+
+        btnBSSau.setText("Sau");
+        btnBSSau.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBSSauActionPerformed(evt);
+            }
+        });
+        jPanel5.add(btnBSSau);
+
+        jPanel3.add(jPanel5, java.awt.BorderLayout.CENTER);
+
+        getContentPane().add(jPanel3, java.awt.BorderLayout.CENTER);
 
         btnThem.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         btnThem.setText("Thêm");
@@ -171,29 +234,34 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         dispose();
     }//GEN-LAST:event_btnDongActionPerformed
 
+    
+    private void btnBSTruocActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBSTruocActionPerformed
+        // TODO add your handling code here:
+        if (!cursorStack.isEmpty()) {
+            Integer prevCursor = cursorStack.pop();
+            loadBanSaoPage(prevCursor);
+        }
+    }//GEN-LAST:event_btnBSTruocActionPerformed
+
+    private void loadBanSao() {
+        cursorStack.clear();
+        lastMaBanSao = null;
+        loadBanSaoPage(lastMaBanSao);
+    }
+    
+    private void btnBSSauActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBSSauActionPerformed
+        // TODO add your handling code here:
+        if (lastMaBanSao != null) {
+            cursorStack.push(lastMaBanSao);
+        }
+        loadBanSaoPage(lastMaBanSao);
+    }//GEN-LAST:event_btnBSSauActionPerformed
+
     /**
      * @param args the command line arguments
      */
     
-    private void loadBanSao() {
-        try {
-            List<BanSao> list = banSaoController.getByISBN(isbn);
-            DefaultTableModel model = (DefaultTableModel) tblBanSao.getModel();
-            model.setRowCount(0);
-            
-            for (BanSao b : list) {
-                model.addRow(new Object[] {
-                    b.getMaBanSao(),
-                    b.getSoThuTuTrongKho(),
-                    b.getTinhTrang(),
-                    b.getNgayNhapKho(),
-                    b.getViTriLuuTru()
-                });
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi tải danh sách bản sao: " + e.getMessage());
-        }
-    }
+
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -229,12 +297,17 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnBSSau;
+    private javax.swing.JButton btnBSTruoc;
     private javax.swing.JButton btnDong;
     private javax.swing.JButton btnSua;
     private javax.swing.JButton btnThem;
     private javax.swing.JButton btnXoa;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblTieuDe;
     private javax.swing.JTable tblBanSao;

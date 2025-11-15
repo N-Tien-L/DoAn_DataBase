@@ -24,6 +24,12 @@ public class TacGia {
         this.ghiChu = ghiChu;
     }
 
+    public TacGia(String tenTacGia, String website, String ghiChu) {
+        this.tenTacGia = tenTacGia;
+        this.website = website;
+        this.ghiChu = ghiChu;
+    }
+
     public int getMaTacGia() {
         return maTacGia;
     }
