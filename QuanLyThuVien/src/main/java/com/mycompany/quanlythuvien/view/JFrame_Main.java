@@ -13,6 +13,7 @@ import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 
 import com.mycompany.quanlythuvien.model.TaiKhoan;
+import com.mycompany.quanlythuvien.view.dialog.HoSoDialog;
 import com.mycompany.quanlythuvien.view.panel.QuanLyBanDocPanel;
 import com.mycompany.quanlythuvien.view.panel.QuanLyPhieuMuonPanel;
 import com.mycompany.quanlythuvien.view.panel.QuanLySachPanel;
@@ -86,6 +87,7 @@ public class JFrame_Main extends javax.swing.JFrame {
         jButton_QuanLyPhat.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
         jButton_ThongKe.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
         jButton_QuanLyTaiKhoan.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
+        jButton_HoSo.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
         jButton_Logout.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
 
         // Thêm lại các components vào Menu với BoxLayout
@@ -105,18 +107,14 @@ public class JFrame_Main extends javax.swing.JFrame {
         jPanel_Menu.add(Box.createRigidArea(new java.awt.Dimension(0, 15)));
         jPanel_Menu.add(jButton_QuanLyTaiKhoan);
         jPanel_Menu.add(Box.createVerticalGlue()); // Đẩy nút Logout xuống dưới
+        jPanel_Menu.add(jButton_HoSo);
+        jPanel_Menu.add(Box.createRigidArea(new java.awt.Dimension(0, 30)));
         jPanel_Menu.add(jButton_Logout);
         jPanel_Menu.add(Box.createRigidArea(new java.awt.Dimension(0, 30)));
 
-        // Style nút Đăng xuất
-        jButton_Logout.setBackground(LOGOUT_BTN_COLOR);
-        jButton_Logout.setForeground(TEXT_COLOR_LIGHT);
-        jButton_Logout.setFont(new java.awt.Font("Segoe UI", 1, 18));
-        jButton_Logout.setBorderPainted(false);
-        jButton_Logout.setFocusPainted(false);
-        jButton_Logout.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        jButton_Logout.setPreferredSize(new java.awt.Dimension(280, 50));
-        jButton_Logout.setMaximumSize(new java.awt.Dimension(280, 50));
+        // Style nút Hồ sơ và Đăng xuất
+        styleProfileButton();
+        styleLogoutButton();
 
         // Style Panel Nội dung
         jPanel_Content.setBackground(CONTENT_BACKGROUND_COLOR);
@@ -137,7 +135,7 @@ public class JFrame_Main extends javax.swing.JFrame {
         jPanel_Content.add(new QuanLyPhatPanel(), "QuanLyPhat");
         jPanel_Content.add(new ThongKePanel(), "ThongKe");
         if(currentUser.getRole().equalsIgnoreCase("admin")) {
-            jPanel_Content.add(new QuanLyTaiKhoanPanel(currentUser.getRole()), "QuanLyTaiKhoan");
+            jPanel_Content.add(new QuanLyTaiKhoanPanel(currentUser.getRole(), currentUser.getEmail()), "QuanLyTaiKhoan");
         }
 
         // Hiển thị panel mặc định
@@ -185,6 +183,51 @@ public class JFrame_Main extends javax.swing.JFrame {
         } catch (Exception e) {
             System.err.println("Icon not found: " + iconPath);
         }
+    }
+
+    /**
+     * Style cho nút Hồ sơ.
+     */
+    private void styleProfileButton() {
+        jButton_HoSo.setFont(new java.awt.Font("Segoe UI", 1, 14));
+        jButton_HoSo.setForeground(TEXT_COLOR_LIGHT);
+        jButton_HoSo.setBackground(new Color(70, 130, 180));
+        
+        jButton_HoSo.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jButton_HoSo.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jButton_HoSo.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jButton_HoSo.setIconTextGap(8);
+        
+        jButton_HoSo.setBorderPainted(false);
+        jButton_HoSo.setFocusPainted(false);
+        jButton_HoSo.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        
+        jButton_HoSo.setPreferredSize(new java.awt.Dimension(280, 70));
+        jButton_HoSo.setMinimumSize(new java.awt.Dimension(280, 70));
+        jButton_HoSo.setMaximumSize(new java.awt.Dimension(280, 70));
+        
+        // Tải icon
+        try {
+            jButton_HoSo.setIcon(new ImageIcon(getClass().getResource("/icons/32x32/user.png")));
+        } catch (Exception e) {
+            System.err.println("Icon not found: /icons/32x32/user.png");
+        }
+    }
+
+    /**
+     * Style cho nút Đăng xuất.
+     */
+    private void styleLogoutButton() {
+        jButton_Logout.setFont(new java.awt.Font("Segoe UI", 1, 18));
+        jButton_Logout.setForeground(TEXT_COLOR_LIGHT);
+        jButton_Logout.setBackground(LOGOUT_BTN_COLOR);
+        
+        jButton_Logout.setBorderPainted(false);
+        jButton_Logout.setFocusPainted(false);
+        jButton_Logout.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        
+        jButton_Logout.setPreferredSize(new java.awt.Dimension(280, 50));
+        jButton_Logout.setMaximumSize(new java.awt.Dimension(280, 50));
     }
 
     /**
@@ -280,6 +323,7 @@ public class JFrame_Main extends javax.swing.JFrame {
         jButton_ThongKe = new javax.swing.JButton();
         jButton_QuanLyTaiKhoan = new javax.swing.JButton();
         jButton_Logout = new javax.swing.JButton();
+        jButton_HoSo = new javax.swing.JButton();
         jPanel_Content = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -331,11 +375,14 @@ public class JFrame_Main extends javax.swing.JFrame {
             }
         });
 
-        jButton_Logout.setBackground(new java.awt.Color(255, 102, 102));
-        jButton_Logout.setForeground(new java.awt.Color(255, 255, 255));
+        jButton_HoSo.setText("Hồ sơ");
+        jButton_HoSo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton_HoSoPerformed(evt);
+            }
+        });
+
         jButton_Logout.setText("Đăng Xuất");
-        jButton_Logout.setBorderPainted(false);
-        jButton_Logout.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         jButton_Logout.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton_LogoutActionPerformed(evt);
@@ -458,6 +505,11 @@ public class JFrame_Main extends javax.swing.JFrame {
         setSelectedButton(jButton_QuanLyTaiKhoan);
     }// GEN-LAST:event_jButton_QuanLyTaiKhoanActionPerformed
 
+    private void jButton_HoSoPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton_HoSoPerformed
+        HoSoDialog hoSoDialog = new HoSoDialog(javax.swing.SwingUtilities.getWindowAncestor(this), currentUser);
+        hoSoDialog.setVisible(true);
+    }// GEN-LAST:event_jButton_HoSoPerformed
+
     private void jButton_LogoutActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton_LogoutActionPerformed
         this.dispose();
 
@@ -518,6 +570,7 @@ public class JFrame_Main extends javax.swing.JFrame {
     private javax.swing.JButton jButton_QuanLyPhat;
     private javax.swing.JButton jButton_QuanLyTaiKhoan;
     private javax.swing.JButton jButton_ThongKe;
+    private javax.swing.JButton jButton_HoSo;
     private javax.swing.JLabel jLabel_Welcome;
     private javax.swing.JPanel jPanel_Content;
     private javax.swing.JPanel jPanel_Menu;

@@ -33,6 +33,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
     // Controller
     private final TaiKhoanController controller;
     private final String currentUserRole;
+    private final String currentUserEmail;
     
     // UI Components
     private JTable tblTaiKhoan;
@@ -42,14 +43,17 @@ public class QuanLyTaiKhoanPanel extends JPanel {
     private JButton btnPrevious, btnNext;
     private JLabel lblPageInfo, lblTotalRecords;
     
-    // Pagination
-    private int currentPage = 1;
+    // Cursor-based pagination
+    private String currentCursor = null; // Cursor used to load the current page
+    private String lastEmailOnPage = null; // Email of last item on current page (becomes cursor for next page)
     private final int pageSize = 10;
-    private int totalPages = 0;
+    private boolean hasNextPage = false;
+    private java.util.Stack<String> cursorHistory = new java.util.Stack<>(); // Stack to track cursor for each page
     
-    public QuanLyTaiKhoanPanel(String currentUserRole) {
+    public QuanLyTaiKhoanPanel(String currentUserRole, String currentUserEmail) {
         this.controller = new TaiKhoanController();
         this.currentUserRole = currentUserRole;
+        this.currentUserEmail = currentUserEmail;
         
         initComponents();
         loadData();
@@ -91,7 +95,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         btnEdit.addActionListener(e -> handleEdit());
         btnDelete.addActionListener(e -> handleDelete());
         btnResetPassword.addActionListener(e -> handleResetPassword());
-        btnRefresh.addActionListener(e -> loadData());
+        btnRefresh.addActionListener(e -> resetPaginationAndLoad());
         
         toolbarPanel.add(btnAdd);
         toolbarPanel.add(btnEdit);
@@ -149,6 +153,58 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
         tblTaiKhoan.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
         
+        // Custom renderer to highlight current user row
+        DefaultTableCellRenderer highlightRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                java.awt.Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                String emailAtRow = (String) table.getValueAt(row, 0);
+                if (emailAtRow != null && emailAtRow.equals(currentUserEmail)) {
+                    if (!isSelected) {
+                        c.setBackground(new Color(255, 255, 200)); // Light yellow
+                        c.setFont(c.getFont().deriveFont(Font.BOLD));
+                    }
+                } else {
+                    if (!isSelected) {
+                        c.setBackground(Color.WHITE);
+                        c.setFont(c.getFont().deriveFont(Font.PLAIN));
+                    }
+                }
+                return c;
+            }
+        };
+        
+        // Apply highlight renderer to all columns
+        tblTaiKhoan.getColumnModel().getColumn(0).setCellRenderer(highlightRenderer);
+        tblTaiKhoan.getColumnModel().getColumn(1).setCellRenderer(highlightRenderer);
+        
+        // For Role column, combine center alignment with highlighting
+        DefaultTableCellRenderer centerHighlightRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                java.awt.Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setHorizontalAlignment(SwingConstants.CENTER);
+                
+                String emailAtRow = (String) table.getValueAt(row, 0);
+                if (emailAtRow != null && emailAtRow.equals(currentUserEmail)) {
+                    if (!isSelected) {
+                        c.setBackground(new Color(255, 255, 200)); // Light yellow
+                        c.setFont(c.getFont().deriveFont(Font.BOLD));
+                    }
+                } else {
+                    if (!isSelected) {
+                        c.setBackground(Color.WHITE);
+                        c.setFont(c.getFont().deriveFont(Font.PLAIN));
+                    }
+                }
+                return c;
+            }
+        };
+        tblTaiKhoan.getColumnModel().getColumn(2).setCellRenderer(centerHighlightRenderer);
+        
         // Column widths
         tblTaiKhoan.getColumnModel().getColumn(0).setPreferredWidth(250); // Email
         tblTaiKhoan.getColumnModel().getColumn(1).setPreferredWidth(200); // Họ tên
@@ -193,22 +249,34 @@ public class QuanLyTaiKhoanPanel extends JPanel {
     }
     
     private void loadData() {      
-        // Load data from controller
-        List<TaiKhoan> danhSach = controller.getAllAccounts(currentUserRole, currentPage, pageSize);
+        List<TaiKhoan> danhSach = controller.getAllAccounts(currentUserRole, currentCursor, pageSize + 1);
         
         if (danhSach != null) {
+            // Check if there's a next page
+            hasNextPage = danhSach.size() > pageSize;
+            
+            // If we got more than pageSize, remove the extra one (it's just for checking hasNext)
+            if (hasNextPage) {
+                danhSach.remove(danhSach.size() - 1);
+            }
+            
+            // Store last email for next page navigation
+            if (!danhSach.isEmpty()) {
+                lastEmailOnPage = danhSach.get(danhSach.size() - 1).getEmail();
+            }
+            
             tableModel.setData(danhSach);
             
             // Update pagination info
             int totalRecords = controller.getTotalAccounts(currentUserRole);
-            totalPages = controller.getTotalPages(currentUserRole, pageSize);
+            int currentPageNum = cursorHistory.size() + 1;
             
             lblTotalRecords.setText("Tổng: " + totalRecords + " tài khoản");
-            lblPageInfo.setText("Trang " + currentPage + "/" + (totalPages > 0 ? totalPages : 1));
+            lblPageInfo.setText("Trang " + currentPageNum + "/" + controller.getTotalPages(currentUserRole, pageSize));
             
             // Enable/disable navigation buttons
-            btnPrevious.setEnabled(currentPage > 1);
-            btnNext.setEnabled(currentPage < totalPages);
+            btnPrevious.setEnabled(!cursorHistory.isEmpty());
+            btnNext.setEnabled(hasNextPage);
             
             // Enable/disable action buttons based on selection
             updateButtonStates();
@@ -220,16 +288,26 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         }
     }
     
+    private void resetPaginationAndLoad() {
+        currentCursor = null;
+        lastEmailOnPage = null;
+        hasNextPage = false;
+        cursorHistory.clear();
+        loadData();
+    }
+    
     private void previousPage() {
-        if (currentPage > 1) {
-            currentPage--;
+        if (!cursorHistory.isEmpty()) {
+            currentCursor = cursorHistory.pop();
             loadData();
         }
     }
     
     private void nextPage() {
-        if (currentPage < totalPages) {
-            currentPage++;
+        if (hasNextPage) {
+            cursorHistory.push(currentCursor);
+        
+            currentCursor = lastEmailOnPage;
             loadData();
         }
     }
@@ -242,7 +320,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         dialog.setVisible(true);
         
         if (dialog.isSuccess()) {
-            loadData(); // Refresh table nếu thêm thành công
+            resetPaginationAndLoad();
         }
     }
     
@@ -281,6 +359,15 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         
         TaiKhoan selected = tableModel.getTaiKhoanAt(selectedRow);
         
+        // Prevent deleting own account
+        if (selected.getEmail().equals(currentUserEmail)) {
+            JOptionPane.showMessageDialog(this,
+                "Bạn không thể xóa tài khoản của chính mình!",
+                "Cảnh báo",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
         // Xác nhận xóa
         int confirm = JOptionPane.showConfirmDialog(this,
             "Bạn có chắc chắn muốn xóa tài khoản:\n" +
@@ -298,7 +385,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
                     "Xóa tài khoản thành công!",
                     "Thành công",
                     JOptionPane.INFORMATION_MESSAGE);
-                loadData(); // Refresh table
+                resetPaginationAndLoad();
             } else {
                 JOptionPane.showMessageDialog(this,
                     "Xóa tài khoản thất bại!",
@@ -352,7 +439,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         String keyword = txtSearch.getText().trim();
         
         if (keyword.isEmpty()) {
-            loadData(); // Load all if search is empty
+            resetPaginationAndLoad();
             return;
         }
         
@@ -365,9 +452,19 @@ public class QuanLyTaiKhoanPanel extends JPanel {
     }
     
     private void updateButtonStates() {
-        boolean hasSelection = tblTaiKhoan.getSelectedRow() >= 0;
+        int selectedRow = tblTaiKhoan.getSelectedRow();
+        boolean hasSelection = selectedRow >= 0;
+        
         btnEdit.setEnabled(hasSelection);
-        btnDelete.setEnabled(hasSelection);
         btnResetPassword.setEnabled(hasSelection);
+        
+        // Disable delete if current user is selected
+        if (hasSelection) {
+            TaiKhoan selected = tableModel.getTaiKhoanAt(selectedRow);
+            boolean isCurrentUser = selected != null && selected.getEmail().equals(currentUserEmail);
+            btnDelete.setEnabled(!isCurrentUser);
+        } else {
+            btnDelete.setEnabled(false);
+        }
     }
 }
