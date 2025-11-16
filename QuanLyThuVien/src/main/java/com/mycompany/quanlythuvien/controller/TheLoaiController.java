@@ -17,11 +17,19 @@ public class TheLoaiController {
     }
     
     public List<TheLoai> getAllTheLoai(int lastMaTLCursor, int pageSize) {
+        if (pageSize < 1 || pageSize > 100) pageSize = 10;
         return theLoaiDAO.getAll(lastMaTLCursor, pageSize);
     }
     public int getTotalTheLoai() {
         return theLoaiDAO.getTotalTL();
     }
+    
+    public int getTotalPages(int pageSize) {
+        int total = getTotalTheLoai();
+        if (total <= 0) return 0;
+        return (int) Math.ceil((double) total / pageSize);
+    }
+    
     public boolean addTheLoai(TheLoai tl) {
         if (tl.getTenTheLoai() == null || tl.getTenTheLoai().trim().isEmpty()){
             System.out.println("Tên thể loại không được để trống!");

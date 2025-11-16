@@ -28,7 +28,7 @@ public class BanSaoDAO {
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql))
         {
-            ps.setInt(1, pageSize + 1);
+            ps.setInt(1, pageSize);
             ps.setString(2, isbn);
             if (lastMaBanSao != null) ps.setInt(3, lastMaBanSao);
             

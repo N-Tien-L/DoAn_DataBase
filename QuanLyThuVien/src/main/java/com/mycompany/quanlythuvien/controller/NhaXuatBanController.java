@@ -17,6 +17,7 @@ public class NhaXuatBanController {
     }
     
     public List<NhaXuatBan> getAllNXB(int lastMaNXBCursor, int pageSize){
+        if (pageSize < 1 || pageSize > 100) pageSize = 20;
         return nxbDAO.getAll(lastMaNXBCursor, pageSize);
     }
     public int getTotalNXB() {
@@ -60,7 +61,7 @@ public class NhaXuatBanController {
         return nxbDAO.search(keyword, column);
     }
     
-    public Optional<NhaXuatBan> getNXBBYId(int id) {
+    public Optional<NhaXuatBan> getNXBById(int id) {
         if (id <= 0) return Optional.empty();
         return nxbDAO.getById(id);
     }
