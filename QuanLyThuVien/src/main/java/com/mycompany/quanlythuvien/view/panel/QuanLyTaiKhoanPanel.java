@@ -2,7 +2,9 @@ package com.mycompany.quanlythuvien.view.panel;
 
 import com.mycompany.quanlythuvien.controller.TaiKhoanController;
 import com.mycompany.quanlythuvien.model.TaiKhoan;
+import com.mycompany.quanlythuvien.model.TaiKhoanProfile;
 import com.mycompany.quanlythuvien.view.dialog.TaiKhoanDialog;
+import com.mycompany.quanlythuvien.view.dialog.TaiKhoanProfileDialog;
 import com.mycompany.quanlythuvien.view.model.TaiKhoanTableModel;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -39,7 +41,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
     private JTable tblTaiKhoan;
     private TaiKhoanTableModel tableModel;
     private JTextField txtSearch;
-    private JButton btnAdd, btnEdit, btnDelete, btnRefresh, btnResetPassword;
+    private JButton btnAdd, btnEdit, btnDelete, btnRefresh, btnResetPassword, btnViewProfile;
     private JButton btnPrevious, btnNext;
     private JLabel lblPageInfo, lblTotalRecords;
     
@@ -85,28 +87,32 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         // Toolbar
         JPanel toolbarPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         
-        btnAdd = new JButton("➡️ Thêm mới");
-        btnEdit = new JButton("✏️ Sửa");
-        btnDelete = new JButton("🗑️ Xóa");
-        btnResetPassword = new JButton("🔐 Cấp lại mật khẩu");
-        btnRefresh = new JButton("🔄 Làm mới");
+        btnAdd = new JButton("[+] Thêm mới");
+        btnEdit = new JButton("[✎] Sửa");
+        btnDelete = new JButton("[-] Xóa");
+        btnViewProfile = new JButton("[i] Xem chi tiết");
+        btnResetPassword = new JButton("[…] Cấp lại mật khẩu");
+        btnRefresh = new JButton("[↻] Làm mới");
         
         btnAdd.addActionListener(e -> handleAdd());
         btnEdit.addActionListener(e -> handleEdit());
         btnDelete.addActionListener(e -> handleDelete());
+        btnViewProfile.addActionListener(e -> handleViewProfile());
         btnResetPassword.addActionListener(e -> handleResetPassword());
         btnRefresh.addActionListener(e -> resetPaginationAndLoad());
         
         toolbarPanel.add(btnAdd);
         toolbarPanel.add(btnEdit);
         toolbarPanel.add(btnDelete);
+        toolbarPanel.add(btnViewProfile);
         toolbarPanel.add(btnResetPassword);
         toolbarPanel.add(btnRefresh);
         
         // Search Panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        JLabel lblSearch = new JLabel("🔍 Tìm kiếm:");
+        JLabel lblSearch = new JLabel("[⌕] Tìm kiếm:");
         txtSearch = new JTextField(20);
+        
         JButton btnSearch = new JButton("Tìm");
         
         btnSearch.addActionListener(e -> handleSearch());
@@ -315,7 +321,8 @@ public class QuanLyTaiKhoanPanel extends JPanel {
     private void handleAdd() {
         TaiKhoanDialog dialog = new TaiKhoanDialog(
             javax.swing.SwingUtilities.getWindowAncestor(this),
-            currentUserRole
+            currentUserRole,
+            currentUserEmail
         );
         dialog.setVisible(true);
         
@@ -338,6 +345,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         TaiKhoanDialog dialog = new TaiKhoanDialog(
             javax.swing.SwingUtilities.getWindowAncestor(this),
             currentUserRole,
+            currentUserEmail,
             selected
         );
         dialog.setVisible(true);
@@ -395,6 +403,36 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         }
     }
     
+    private void handleViewProfile() {
+        int selectedRow = tblTaiKhoan.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this,
+                "Vui lòng chọn một tài khoản để xem chi tiết!",
+                "Cảnh báo",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        TaiKhoan selected = tableModel.getTaiKhoanAt(selectedRow);
+        
+        TaiKhoanProfile profile = 
+            controller.getAccountProfile(currentUserRole, selected.getEmail());
+        
+        if (profile != null && profile.getEmail() != null) {
+            TaiKhoanProfileDialog dialog = 
+                new TaiKhoanProfileDialog(
+                    javax.swing.SwingUtilities.getWindowAncestor(this),
+                    profile
+                );
+            dialog.setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                "Không thể tải thông tin chi tiết tài khoản!",
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
     private void handleResetPassword() {
         int selectedRow = tblTaiKhoan.getSelectedRow();
         if (selectedRow < 0) {
@@ -438,17 +476,53 @@ public class QuanLyTaiKhoanPanel extends JPanel {
     private void handleSearch() {
         String keyword = txtSearch.getText().trim();
         
+        // Nếu không có keyword, load tất cả
         if (keyword.isEmpty()) {
             resetPaginationAndLoad();
             return;
         }
         
-        // TODO: Implement search in controller
-        JOptionPane.showMessageDialog(this,
-            "Chức năng tìm kiếm sẽ được implement sau\n" +
-            "Từ khóa: " + keyword,
-            "Thông báo",
-            JOptionPane.INFORMATION_MESSAGE);
+        // Reset pagination và tìm kiếm
+        currentCursor = null;
+        lastEmailOnPage = null;
+        hasNextPage = false;
+        cursorHistory.clear();
+        
+        List<TaiKhoan> danhSach = controller.searchAccounts(currentUserRole, keyword, currentCursor, pageSize + 1);
+        
+        if (danhSach != null) {
+            // Check if there's a next page
+            hasNextPage = danhSach.size() > pageSize;
+            
+            if (hasNextPage) {
+                danhSach.remove(danhSach.size() - 1);
+            }
+            
+            if (!danhSach.isEmpty()) {
+                lastEmailOnPage = danhSach.get(danhSach.size() - 1).getEmail();
+            }
+            
+            tableModel.setData(danhSach);
+            
+            lblTotalRecords.setText("Tìm thấy: " + danhSach.size() + " kết quả");
+            lblPageInfo.setText("Trang 1/?");
+            btnPrevious.setEnabled(false);
+            btnNext.setEnabled(hasNextPage);
+            
+            updateButtonStates();
+            
+            if (danhSach.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                    "Không tìm thấy tài khoản nào với từ khóa: " + keyword,
+                    "Thông báo",
+                    JOptionPane.INFORMATION_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this,
+                "Có lỗi xảy ra khi tìm kiếm!",
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     private void updateButtonStates() {
@@ -456,6 +530,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         boolean hasSelection = selectedRow >= 0;
         
         btnEdit.setEnabled(hasSelection);
+        btnViewProfile.setEnabled(hasSelection);
         btnResetPassword.setEnabled(hasSelection);
         
         // Disable delete if current user is selected

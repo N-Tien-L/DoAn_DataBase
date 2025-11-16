@@ -31,6 +31,7 @@ public class TaiKhoanDialog extends JDialog {
     
     private final TaiKhoanController controller;
     private final String currentUserRole;
+    private final String currentUserEmail;
     private final Mode mode;
     private TaiKhoan taiKhoan;
     
@@ -46,25 +47,26 @@ public class TaiKhoanDialog extends JDialog {
     /**
      * Constructor cho chế độ ADD
      */
-    public TaiKhoanDialog(Window parent, String currentUserRole) {
-        this(parent, currentUserRole, Mode.ADD, null);
+    public TaiKhoanDialog(Window parent, String currentUserRole, String currentUserEmail) {
+        this(parent, currentUserRole, currentUserEmail, Mode.ADD, null);
     }
     
     /**
      * Constructor cho chế độ EDIT
      */
-    public TaiKhoanDialog(Window parent, String currentUserRole, TaiKhoan taiKhoan) {
-        this(parent, currentUserRole, Mode.EDIT, taiKhoan);
+    public TaiKhoanDialog(Window parent, String currentUserRole, String currentUserEmail, TaiKhoan taiKhoan) {
+        this(parent, currentUserRole, currentUserEmail, Mode.EDIT, taiKhoan);
     }
     
     /**
      * Constructor chính
      */
-    private TaiKhoanDialog(Window parent, String currentUserRole, Mode mode, TaiKhoan taiKhoan) {
+    private TaiKhoanDialog(Window parent, String currentUserRole, String currentUserEmail, Mode mode, TaiKhoan taiKhoan) {
         super(parent, mode == Mode.ADD ? "Thêm tài khoản mới" : "Chỉnh sửa tài khoản", ModalityType.APPLICATION_MODAL);
         
         this.controller = new TaiKhoanController();
         this.currentUserRole = currentUserRole;
+        this.currentUserEmail = currentUserEmail;
         this.mode = mode;
         this.taiKhoan = taiKhoan;
         
@@ -163,8 +165,8 @@ public class TaiKhoanDialog extends JDialog {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         
-        btnSave = new JButton(mode == Mode.ADD ? "💾 Tạo tài khoản" : "💾 Cập nhật");
-        btnCancel = new JButton("✖️ Hủy");
+        btnSave = new JButton(mode == Mode.ADD ? "[✓] Tạo tài khoản" : "[✓] Cập nhật");
+        btnCancel = new JButton("[X] Hủy");
         
         btnSave.setFont(new Font("Arial", Font.BOLD, 13));
         btnCancel.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -231,7 +233,7 @@ public class TaiKhoanDialog extends JDialog {
         boolean result;
         
         if (mode == Mode.ADD) {
-            result = controller.createAccount(currentUserRole, email, hoTen, role);
+            result = controller.createAccount(currentUserRole, currentUserEmail, email, hoTen, role);
             
             if (result) {
                 JOptionPane.showMessageDialog(this,

@@ -2,6 +2,7 @@ package com.mycompany.quanlythuvien.controller;
 
 import com.mycompany.quanlythuvien.dao.TaiKhoanDAO;
 import com.mycompany.quanlythuvien.model.TaiKhoan;
+import com.mycompany.quanlythuvien.model.TaiKhoanProfile;
 import com.mycompany.quanlythuvien.util.PasswordUtil;
 import com.mycompany.quanlythuvien.util.EmailSender;
 import java.util.Random;
@@ -15,10 +16,11 @@ public class TaiKhoanController {
 
     public TaiKhoan login(String email, String password) {
         return dao.checkLogin(email, password);
-//         return new TaiKhoan(email, "Admin Tiên", "Admin"); // bypass real login to SEEDING test account (admin)
+        // return new TaiKhoan("admin@thuvien.com", "Seeded Admin", "Admin"); // bypass real login to SEEDING test account (admin)
     }
     
-    public boolean createAccount(String currentUserRole, String email, String hoTen, String role) {
+    public boolean createAccount(String currentUserRole, String currentUserEmail, String email, String hoTen, String role) {
+        System.out.println(currentUserRole);
         // Kiểm tra quyền admin
         if (currentUserRole == null || !currentUserRole.equalsIgnoreCase("admin")) {
             System.out.println("Chỉ admin mới có quyền tạo tài khoản");
@@ -39,7 +41,7 @@ public class TaiKhoanController {
         String hashedPassword = PasswordUtil.hashPassword(generatedPassword);
         
         TaiKhoan taiKhoan = new TaiKhoan(email, hashedPassword, hoTen, role);
-        boolean result = dao.createAccount(taiKhoan);
+        boolean result = dao.createAccount(taiKhoan, currentUserEmail);
         
         // Gửi email nếu tạo tài khoản thành công
         if (result) {
@@ -252,5 +254,43 @@ public class TaiKhoanController {
             return 0;
         }
         return (int) Math.ceil((double) total / pageSize);
+    }
+    
+    /**
+     * Tìm kiếm tài khoản theo keyword với phân trang
+     * @param currentUserRole Role của user hiện tại (phải là admin)
+     * @param keyword Từ khóa tìm kiếm (Email hoặc HoTen)
+     * @param lastEmailCursor Email cuối cùng của trang trước (null = trang đầu)
+     * @param pageSize Số lượng record trên 1 trang
+     * @return Danh sách tài khoản, hoặc empty list nếu không có quyền
+     */
+    public java.util.List<TaiKhoan> searchAccounts(String currentUserRole, String keyword, String lastEmailCursor, int pageSize) {
+        // Kiểm tra quyền admin
+        if (currentUserRole == null || !currentUserRole.equalsIgnoreCase("admin")) {
+            System.out.println("Chỉ admin mới có quyền tìm kiếm tài khoản");
+            return java.util.Collections.emptyList();
+        }
+        
+        if (pageSize < 1 || pageSize > 100) {
+            pageSize = 10; // Default page size
+        }
+        
+        return dao.searchAccounts(keyword, lastEmailCursor, pageSize);
+    }
+    
+    /**
+     * Lấy profile chi tiết của 1 tài khoản (bao gồm thống kê)
+     * @param currentUserRole Role của user hiện tại (phải là admin)
+     * @param email Email của tài khoản cần xem
+     * @return Map chứa thông tin chi tiết, hoặc empty map nếu không có quyền
+     */
+    public TaiKhoanProfile getAccountProfile(String currentUserRole, String email) {
+        // Kiểm tra quyền admin
+        if (currentUserRole == null || !currentUserRole.equalsIgnoreCase("admin")) {
+            System.out.println("Chỉ admin mới có quyền xem chi tiết tài khoản");
+            return new TaiKhoanProfile();
+        }
+        
+        return dao.getAccountProfile(email);
     }
 }
