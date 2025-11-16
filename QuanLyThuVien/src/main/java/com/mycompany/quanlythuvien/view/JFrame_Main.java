@@ -135,7 +135,7 @@ public class JFrame_Main extends javax.swing.JFrame {
         jPanel_Content.add(new QuanLyPhatPanel(), "QuanLyPhat");
         jPanel_Content.add(new ThongKePanel(), "ThongKe");
         if(currentUser.getRole().equalsIgnoreCase("admin")) {
-            jPanel_Content.add(new QuanLyTaiKhoanPanel(currentUser.getRole(), currentUser.getEmail()), "QuanLyTaiKhoan");
+            jPanel_Content.add(new QuanLyTaiKhoanPanel(currentUser), "QuanLyTaiKhoan");
         }
 
         // Hiển thị panel mặc định

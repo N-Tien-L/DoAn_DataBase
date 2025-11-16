@@ -3,7 +3,10 @@ package com.mycompany.quanlythuvien.dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.mycompany.quanlythuvien.exceptions.TaiKhoanException;
 import com.mycompany.quanlythuvien.model.TaiKhoan;
 import com.mycompany.quanlythuvien.model.TaiKhoanProfile;
 import com.mycompany.quanlythuvien.util.DBConnector;
@@ -35,8 +38,7 @@ public class TaiKhoanDAO {
     // Lấy profile chi tiết từ view
     private static final String SQL_GET_PROFILE = "SELECT * FROM VW_TAIKHOAN_ProfileStats WHERE Email = ?";
 
-    public TaiKhoan checkLogin(String email, String password) {
-        // try-with-resource (tự động đóng conn, rs, ps)
+    public TaiKhoan checkLogin(String email, String password) throws TaiKhoanException {
         try (Connection conn = DBConnector.getConnection()) {
             PreparedStatement ps = conn.prepareStatement(SQL_LOGIN);
 
@@ -47,23 +49,22 @@ public class TaiKhoanDAO {
                 String hashedPassword = rs.getString("Password");
 
                 if(PasswordUtil.checkPassword(password, hashedPassword)) {
-                        System.out.println("Login successfully");
-                        return new TaiKhoan(
+                    System.out.println("Login successfully");
+                    return new TaiKhoan(
                         rs.getString("Email"),
                         rs.getString("HoTen"),
                         rs.getString("Role")
                     );
                 }
             }
+            
+            return null; // Invalid credentials
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new TaiKhoanException("Lỗi khi kiểm tra đăng nhập: " + e.getMessage(), e);
         }
-
-        System.out.println("Login failed");
-        return null;
     }
 
-    public boolean createAccount(TaiKhoan taiKhoan, String createdBy) {
+    public boolean createAccount(TaiKhoan taiKhoan, String createdBy) throws TaiKhoanException {
         try (Connection conn = DBConnector.getConnection()) {
             PreparedStatement ps = conn.prepareStatement(SQL_CREATE_ACCOUNT);
 
@@ -78,19 +79,23 @@ public class TaiKhoanDAO {
                 System.out.println("Insert account successfully (created by: " + createdBy + ")");
                 return true;
             }
-
+            
+            throw new TaiKhoanException("Không thể tạo tài khoản");
+        } catch (java.sql.SQLException e) {
+            if (e.getMessage().contains("duplicate") || e.getMessage().contains("UNIQUE")) {
+                throw new TaiKhoanException("Email đã tồn tại trong hệ thống", e);
+            }
+            throw new TaiKhoanException("Lỗi khi tạo tài khoản: " + e.getMessage(), e);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new TaiKhoanException("Lỗi khi tạo tài khoản: " + e.getMessage(), e);
         }
-
-        return false;
     }
 
     /**
      * Cập nhật thông tin tài khoản (chỉ HoTen và Role)
      * Không update Password - dùng updatePassword() riêng
      */
-    public boolean updateAccount(TaiKhoan taiKhoan) {
+    public boolean updateAccount(TaiKhoan taiKhoan) throws TaiKhoanException {
         try (Connection conn = DBConnector.getConnection()) {
             PreparedStatement ps = conn.prepareStatement(SQL_UPDATE);
 
@@ -104,12 +109,11 @@ public class TaiKhoanDAO {
                 System.out.println("Update account successfully");
                 return true;
             }
-
+            
+            throw new TaiKhoanException("Không tìm thấy tài khoản để cập nhật");
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new TaiKhoanException("Lỗi khi cập nhật tài khoản: " + e.getMessage(), e);
         }
-
-        return false;
     }
     
     /**
@@ -118,7 +122,7 @@ public class TaiKhoanDAO {
      * @param hashedPassword Mật khẩu đã được hash
      * @return true nếu update thành công
      */
-    public boolean updatePassword(String email, String hashedPassword) {        
+    public boolean updatePassword(String email, String hashedPassword) throws TaiKhoanException {        
         try (Connection conn = DBConnector.getConnection()) {
             PreparedStatement ps = conn.prepareStatement(SQL_UPDATE_PASSWORD);
 
@@ -131,15 +135,14 @@ public class TaiKhoanDAO {
                 System.out.println("Update password successfully for: " + email);
                 return true;
             }
-
+            
+            throw new TaiKhoanException("Không tìm thấy tài khoản để cập nhật mật khẩu");
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new TaiKhoanException("Lỗi khi cập nhật mật khẩu: " + e.getMessage(), e);
         }
-
-        return false;
     }
     
-    public boolean deleteAccount(String email) {
+    public boolean deleteAccount(String email) throws TaiKhoanException {
         try (Connection conn = DBConnector.getConnection()) {
             PreparedStatement ps = conn.prepareStatement(SQL_DELETE);
             ps.setString(1, email);
@@ -150,16 +153,20 @@ public class TaiKhoanDAO {
                 System.out.println("Delete account successfully");
                 return true;
             }
-
+            
+            throw new TaiKhoanException("Không tìm thấy tài khoản để xóa");
+        } catch (java.sql.SQLException e) {
+            if (e.getMessage().contains("REFERENCE") || e.getMessage().contains("FOREIGN KEY")) {
+                throw new TaiKhoanException("Không thể xóa tài khoản vì có dữ liệu liên quan", e);
+            }
+            throw new TaiKhoanException("Lỗi khi xóa tài khoản: " + e.getMessage(), e);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new TaiKhoanException("Lỗi khi xóa tài khoản: " + e.getMessage(), e);
         }
-
-        return false;
     }
     
-    public java.util.List<TaiKhoan> getAllAccounts(String lastEmailCursor, int pageSize) {
-        java.util.List<TaiKhoan> accounts = new java.util.ArrayList<>();
+    public List<TaiKhoan> getAllAccounts(String lastEmailCursor, int pageSize) throws TaiKhoanException {
+        List<TaiKhoan> accounts = new ArrayList<>();
         
         boolean isFirstPage = (lastEmailCursor == null || lastEmailCursor.trim().isEmpty());
         String sql = isFirstPage ? SQL_GET_ACCOUNTS_FIRST_PAGE : SQL_GET_ACCOUNTS_NEXT_PAGE;
@@ -186,15 +193,13 @@ public class TaiKhoanDAO {
             }
 
             System.out.println("Retrieved " + accounts.size() + " accounts (cursor: " + lastEmailCursor + ")");
-            
+            return accounts;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new TaiKhoanException("Lỗi khi lấy danh sách tài khoản: " + e.getMessage(), e);
         }
-        
-        return accounts;
     }
     
-    public int getTotalAccounts() {
+    public int getTotalAccounts() throws TaiKhoanException {
         try (Connection conn = DBConnector.getConnection()) {
             PreparedStatement ps = conn.prepareStatement(SQL_COUNT_ACCOUNTS);
             ResultSet rs = ps.executeQuery();
@@ -203,11 +208,10 @@ public class TaiKhoanDAO {
                 return rs.getInt("Total");
             }
             
+            return 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new TaiKhoanException("Lỗi khi đếm số lượng tài khoản: " + e.getMessage(), e);
         }
-        
-        return 0;
     }
     
     /**
@@ -217,8 +221,8 @@ public class TaiKhoanDAO {
      * @param pageSize Số lượng record trên 1 trang
      * @return Danh sách tài khoản
      */
-    public java.util.List<TaiKhoan> searchAccounts(String keyword, String lastEmailCursor, int pageSize) {
-        java.util.List<TaiKhoan> accounts = new java.util.ArrayList<>();
+    public List<TaiKhoan> searchAccounts(String keyword, String lastEmailCursor, int pageSize) throws TaiKhoanException {
+        List<TaiKhoan> accounts = new ArrayList<>();
         String searchKeyword = (keyword == null ? "" : keyword.trim());
         String likePattern = "%" + searchKeyword + "%";
         
@@ -250,12 +254,10 @@ public class TaiKhoanDAO {
             }
             
             System.out.println("Search found " + accounts.size() + " accounts (keyword: '" + searchKeyword + ")");
-            
+            return accounts;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new TaiKhoanException("Lỗi khi tìm kiếm tài khoản: " + e.getMessage(), e);
         }
-        
-        return accounts;
     }
     
     /**
@@ -263,9 +265,7 @@ public class TaiKhoanDAO {
      * @param email Email của tài khoản
      * @return Map chứa thông tin chi tiết từ view VW_TAIKHOAN_ProfileStats
      */
-    public TaiKhoanProfile getAccountProfile(String email) {
-        TaiKhoanProfile profile = new TaiKhoanProfile();
-        
+    public TaiKhoanProfile getAccountProfile(String email) throws TaiKhoanException {
         try (Connection conn = DBConnector.getConnection()) {
             PreparedStatement ps = conn.prepareStatement(SQL_GET_PROFILE);
             ps.setString(1, email);
@@ -273,7 +273,7 @@ public class TaiKhoanDAO {
             ResultSet rs = ps.executeQuery();
             
             if (rs.next()) {
-                profile = new TaiKhoanProfile(
+                TaiKhoanProfile profile = new TaiKhoanProfile(
                     rs.getString("Email"),
                     rs.getString("HoTen"),
                     rs.getString("Role"),
@@ -288,12 +288,14 @@ public class TaiKhoanDAO {
                 );
                 
                 System.out.println("Retrieved profile for: " + email);
+                return profile;
             }
             
+            throw new TaiKhoanException("Không tìm thấy thông tin tài khoản");
+        } catch (TaiKhoanException e) {
+            throw e;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new TaiKhoanException("Lỗi khi lấy thông tin tài khoản: " + e.getMessage(), e);
         }
-        
-        return profile;
     }
 }

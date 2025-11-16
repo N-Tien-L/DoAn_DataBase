@@ -34,8 +34,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
     
     // Controller
     private final TaiKhoanController controller;
-    private final String currentUserRole;
-    private final String currentUserEmail;
+    private final TaiKhoan currentUser;
     
     // UI Components
     private JTable tblTaiKhoan;
@@ -52,10 +51,9 @@ public class QuanLyTaiKhoanPanel extends JPanel {
     private boolean hasNextPage = false;
     private java.util.Stack<String> cursorHistory = new java.util.Stack<>(); // Stack to track cursor for each page
     
-    public QuanLyTaiKhoanPanel(String currentUserRole, String currentUserEmail) {
+    public QuanLyTaiKhoanPanel(TaiKhoan currentUser) {
         this.controller = new TaiKhoanController();
-        this.currentUserRole = currentUserRole;
-        this.currentUserEmail = currentUserEmail;
+        this.currentUser = currentUser;
         
         initComponents();
         loadData();
@@ -167,7 +165,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
                 java.awt.Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 
                 String emailAtRow = (String) table.getValueAt(row, 0);
-                if (emailAtRow != null && emailAtRow.equals(currentUserEmail)) {
+                if (emailAtRow != null && emailAtRow.equals(currentUser.getEmail())) {
                     if (!isSelected) {
                         c.setBackground(new Color(255, 255, 200)); // Light yellow
                         c.setFont(c.getFont().deriveFont(Font.BOLD));
@@ -195,7 +193,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
                 setHorizontalAlignment(SwingConstants.CENTER);
                 
                 String emailAtRow = (String) table.getValueAt(row, 0);
-                if (emailAtRow != null && emailAtRow.equals(currentUserEmail)) {
+                if (emailAtRow != null && emailAtRow.equals(currentUser.getEmail())) {
                     if (!isSelected) {
                         c.setBackground(new Color(255, 255, 200)); // Light yellow
                         c.setFont(c.getFont().deriveFont(Font.BOLD));
@@ -254,41 +252,52 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         return paginationPanel;
     }
     
-    private void loadData() {      
-        List<TaiKhoan> danhSach = controller.getAllAccounts(currentUserRole, currentCursor, pageSize + 1);
-        
-        if (danhSach != null) {
-            // Check if there's a next page
-            hasNextPage = danhSach.size() > pageSize;
+    private void loadData() {
+        try {
+            List<TaiKhoan> danhSach = controller.getAllAccounts(currentUser, currentCursor, pageSize + 1);
             
-            // If we got more than pageSize, remove the extra one (it's just for checking hasNext)
-            if (hasNextPage) {
-                danhSach.remove(danhSach.size() - 1);
+            if (danhSach != null) {
+                // Check if there's a next page
+                hasNextPage = danhSach.size() > pageSize;
+                
+                // If we got more than pageSize, remove the extra one (it's just for checking hasNext)
+                if (hasNextPage) {
+                    danhSach.remove(danhSach.size() - 1);
+                }
+                
+                // Store last email for next page navigation
+                if (!danhSach.isEmpty()) {
+                    lastEmailOnPage = danhSach.get(danhSach.size() - 1).getEmail();
+                }
+                
+                tableModel.setData(danhSach);
+                
+                // Update pagination info
+                try {
+                    int totalRecords = controller.getTotalAccounts(currentUser);
+                    int currentPageNum = cursorHistory.size() + 1;
+                    int totalPages = controller.getTotalPages(currentUser, pageSize);
+                    
+                    lblTotalRecords.setText("Tổng: " + totalRecords + " tài khoản");
+                    lblPageInfo.setText("Trang " + currentPageNum + "/" + totalPages);
+                } catch (Exception e) {
+                    // Nếu không lấy được thống kê, hiển thị thông tin cơ bản
+                    int currentPageNum = cursorHistory.size() + 1;
+                    lblTotalRecords.setText("Tổng: ? tài khoản");
+                    lblPageInfo.setText("Trang " + currentPageNum + "/?");
+                    System.err.println("Không thể lấy thống kê phân trang: " + e.getMessage());
+                }
+                
+                // Enable/disable navigation buttons
+                btnPrevious.setEnabled(!cursorHistory.isEmpty());
+                btnNext.setEnabled(hasNextPage);
+                
+                // Enable/disable action buttons based on selection
+                updateButtonStates();
             }
-            
-            // Store last email for next page navigation
-            if (!danhSach.isEmpty()) {
-                lastEmailOnPage = danhSach.get(danhSach.size() - 1).getEmail();
-            }
-            
-            tableModel.setData(danhSach);
-            
-            // Update pagination info
-            int totalRecords = controller.getTotalAccounts(currentUserRole);
-            int currentPageNum = cursorHistory.size() + 1;
-            
-            lblTotalRecords.setText("Tổng: " + totalRecords + " tài khoản");
-            lblPageInfo.setText("Trang " + currentPageNum + "/" + controller.getTotalPages(currentUserRole, pageSize));
-            
-            // Enable/disable navigation buttons
-            btnPrevious.setEnabled(!cursorHistory.isEmpty());
-            btnNext.setEnabled(hasNextPage);
-            
-            // Enable/disable action buttons based on selection
-            updateButtonStates();
-        } else {
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
-                "Không thể tải danh sách tài khoản!",
+                "Không thể tải danh sách tài khoản: " + e.getMessage(),
                 "Lỗi",
                 JOptionPane.ERROR_MESSAGE);
         }
@@ -321,8 +330,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
     private void handleAdd() {
         TaiKhoanDialog dialog = new TaiKhoanDialog(
             javax.swing.SwingUtilities.getWindowAncestor(this),
-            currentUserRole,
-            currentUserEmail
+            currentUser
         );
         dialog.setVisible(true);
         
@@ -344,8 +352,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         TaiKhoan selected = tableModel.getTaiKhoanAt(selectedRow);
         TaiKhoanDialog dialog = new TaiKhoanDialog(
             javax.swing.SwingUtilities.getWindowAncestor(this),
-            currentUserRole,
-            currentUserEmail,
+            currentUser,
             selected
         );
         dialog.setVisible(true);
@@ -368,7 +375,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         TaiKhoan selected = tableModel.getTaiKhoanAt(selectedRow);
         
         // Prevent deleting own account
-        if (selected.getEmail().equals(currentUserEmail)) {
+        if (selected.getEmail().equals(currentUser.getEmail())) {
             JOptionPane.showMessageDialog(this,
                 "Bạn không thể xóa tài khoản của chính mình!",
                 "Cảnh báo",
@@ -386,17 +393,19 @@ public class QuanLyTaiKhoanPanel extends JPanel {
             JOptionPane.WARNING_MESSAGE);
         
         if (confirm == JOptionPane.YES_OPTION) {
-            boolean success = controller.deleteAccount(currentUserRole, selected.getEmail());
-            
-            if (success) {
+            try {
+                boolean success = controller.deleteAccount(currentUser, selected.getEmail());
+                
+                if (success) {
+                    JOptionPane.showMessageDialog(this,
+                        "Xóa tài khoản thành công!",
+                        "Thành công",
+                        JOptionPane.INFORMATION_MESSAGE);
+                    resetPaginationAndLoad();
+                }
+            } catch (Exception e) {
                 JOptionPane.showMessageDialog(this,
-                    "Xóa tài khoản thành công!",
-                    "Thành công",
-                    JOptionPane.INFORMATION_MESSAGE);
-                resetPaginationAndLoad();
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    "Xóa tài khoản thất bại!",
+                    "Xóa tài khoản thất bại: " + e.getMessage(),
                     "Lỗi",
                     JOptionPane.ERROR_MESSAGE);
             }
@@ -415,19 +424,21 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         
         TaiKhoan selected = tableModel.getTaiKhoanAt(selectedRow);
         
-        TaiKhoanProfile profile = 
-            controller.getAccountProfile(currentUserRole, selected.getEmail());
-        
-        if (profile != null && profile.getEmail() != null) {
-            TaiKhoanProfileDialog dialog = 
-                new TaiKhoanProfileDialog(
-                    javax.swing.SwingUtilities.getWindowAncestor(this),
-                    profile
-                );
-            dialog.setVisible(true);
-        } else {
+        try {
+            TaiKhoanProfile profile = 
+                controller.getAccountProfile(currentUser, selected.getEmail());
+            
+            if (profile != null && profile.getEmail() != null) {
+                TaiKhoanProfileDialog dialog = 
+                    new TaiKhoanProfileDialog(
+                        javax.swing.SwingUtilities.getWindowAncestor(this),
+                        profile
+                    );
+                dialog.setVisible(true);
+            }
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
-                "Không thể tải thông tin chi tiết tài khoản!",
+                "Không thể tải thông tin chi tiết: " + e.getMessage(),
                 "Lỗi",
                 JOptionPane.ERROR_MESSAGE);
         }
@@ -456,17 +467,19 @@ public class QuanLyTaiKhoanPanel extends JPanel {
             JOptionPane.QUESTION_MESSAGE);
         
         if (confirm == JOptionPane.YES_OPTION) {
-            boolean success = controller.resetPassword(currentUserRole, selected.getEmail());
-            
-            if (success) {
+            try {
+                boolean success = controller.resetPassword(currentUser, selected.getEmail());
+                
+                if (success) {
+                    JOptionPane.showMessageDialog(this,
+                        "Cấp lại mật khẩu thành công!\n" +
+                        "Mật khẩu mới đã được gửi đến email: " + selected.getEmail(),
+                        "Thành công",
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (Exception e) {
                 JOptionPane.showMessageDialog(this,
-                    "Cấp lại mật khẩu thành công!\n" +
-                    "Mật khẩu mới đã được gửi đến email: " + selected.getEmail(),
-                    "Thành công",
-                    JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    "Cấp lại mật khẩu thất bại!",
+                    "Cấp lại mật khẩu thất bại: " + e.getMessage(),
                     "Lỗi",
                     JOptionPane.ERROR_MESSAGE);
             }
@@ -488,38 +501,40 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         hasNextPage = false;
         cursorHistory.clear();
         
-        List<TaiKhoan> danhSach = controller.searchAccounts(currentUserRole, keyword, currentCursor, pageSize + 1);
-        
-        if (danhSach != null) {
-            // Check if there's a next page
-            hasNextPage = danhSach.size() > pageSize;
+        try {
+            List<TaiKhoan> danhSach = controller.searchAccounts(currentUser, keyword, currentCursor, pageSize + 1);
             
-            if (hasNextPage) {
-                danhSach.remove(danhSach.size() - 1);
+            if (danhSach != null) {
+                // Check if there's a next page
+                hasNextPage = danhSach.size() > pageSize;
+                
+                if (hasNextPage) {
+                    danhSach.remove(danhSach.size() - 1);
+                }
+                
+                if (!danhSach.isEmpty()) {
+                    lastEmailOnPage = danhSach.get(danhSach.size() - 1).getEmail();
+                }
+                
+                tableModel.setData(danhSach);
+                
+                lblTotalRecords.setText("Tìm thấy: " + danhSach.size() + " kết quả");
+                lblPageInfo.setText("Trang 1/?");
+                btnPrevious.setEnabled(false);
+                btnNext.setEnabled(hasNextPage);
+                
+                updateButtonStates();
+                
+                if (danhSach.isEmpty()) {
+                    JOptionPane.showMessageDialog(this,
+                        "Không tìm thấy tài khoản nào với từ khóa: " + keyword,
+                        "Thông báo",
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
             }
-            
-            if (!danhSach.isEmpty()) {
-                lastEmailOnPage = danhSach.get(danhSach.size() - 1).getEmail();
-            }
-            
-            tableModel.setData(danhSach);
-            
-            lblTotalRecords.setText("Tìm thấy: " + danhSach.size() + " kết quả");
-            lblPageInfo.setText("Trang 1/?");
-            btnPrevious.setEnabled(false);
-            btnNext.setEnabled(hasNextPage);
-            
-            updateButtonStates();
-            
-            if (danhSach.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                    "Không tìm thấy tài khoản nào với từ khóa: " + keyword,
-                    "Thông báo",
-                    JOptionPane.INFORMATION_MESSAGE);
-            }
-        } else {
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
-                "Có lỗi xảy ra khi tìm kiếm!",
+                "Có lỗi xảy ra khi tìm kiếm: " + e.getMessage(),
                 "Lỗi",
                 JOptionPane.ERROR_MESSAGE);
         }
@@ -536,7 +551,7 @@ public class QuanLyTaiKhoanPanel extends JPanel {
         // Disable delete if current user is selected
         if (hasSelection) {
             TaiKhoan selected = tableModel.getTaiKhoanAt(selectedRow);
-            boolean isCurrentUser = selected != null && selected.getEmail().equals(currentUserEmail);
+            boolean isCurrentUser = selected != null && selected.getEmail().equals(currentUser.getEmail());
             btnDelete.setEnabled(!isCurrentUser);
         } else {
             btnDelete.setEnabled(false);
