@@ -33,6 +33,16 @@ public class BanDocController {
         }
         return false;
     }
+    public Boolean update(BanDoc cur) throws Exception {
+        if(dao.updateDAO(cur)) {
+            this.dsBanDoc.removeIf(bd -> {
+                return bd.getIdBD() == cur.getIdBD();
+            });
+            this.dsBanDoc.add(cur);
+            return true;
+        }
+        return false;
+    }
     public Boolean init() throws Exception {
         if(dao.readDAO(dsBanDoc)) {
            return true;
