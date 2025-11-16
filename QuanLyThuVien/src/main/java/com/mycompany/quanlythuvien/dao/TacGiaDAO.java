@@ -40,7 +40,7 @@ public class TacGiaDAO {
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)) 
         {
-            ps.setInt(1, pageSize);
+            ps.setInt(1, pageSize + 1);
             if (!isFirstPage) {
                 ps.setInt(2, lastIdCursor);
             }

@@ -23,9 +23,12 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(DanhSachBanSaoDialog.class.getName());
     private String isbn; //id cua sach goc
     private BanSaoController banSaoController = new BanSaoController();
+    
+    private Integer currentCursor = null;
     private Integer lastMaBanSao = null;
     private int pageSize = 10;
-    private Stack<Integer> cursorStack = new Stack<>();
+    private Stack<Integer> cursorHistory = new Stack<>();
+    private boolean hasNextPage = false;
     /**
      * Creates new form DanhSachBanSaoDialog
      */
@@ -41,12 +44,15 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         setLocationRelativeTo(null);
         this.isbn = isbn;
         lblTieuDe.setText("Danh sách bản sao của sách: " + isbn);
-        loadBanSao();
+        resetPaginationAndLoadBanSao();
     }
 
-    private void loadBanSaoPage(Integer cursor) {
+    private void loadBanSaoPage() {
         try {
-            List<BanSao> list = banSaoController.getPage(isbn, pageSize, cursor);
+            List<BanSao> list = banSaoController.getPage(isbn, pageSize, currentCursor);
+            hasNextPage = list.size() > pageSize;
+            if (hasNextPage) list.remove(list.size() - 1);
+            
             DefaultTableModel model = (DefaultTableModel) tblBanSao.getModel();
             model.setRowCount(0);
             
@@ -64,10 +70,11 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
                 lastMaBanSao = list.get(list.size() - 1).getMaBanSao();
             }
             
-            btnBSSau.setEnabled(list.size() == pageSize);
-            btnBSTruoc.setEnabled(!cursorStack.isEmpty());
+            btnBSSau.setEnabled(hasNextPage);
+            btnBSTruoc.setEnabled(!cursorHistory.isEmpty());
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi tải danh sách bản sao: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -190,7 +197,7 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     private void btnThemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnThemActionPerformed
         // TODO add your handling code here:
         new ChiTietBanSaoDialog(this, true, isbn, null).setVisible(true);
-        loadBanSao();
+        resetPaginationAndLoadBanSao();
     }//GEN-LAST:event_btnThemActionPerformed
 
     private void btnSuaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSuaActionPerformed
@@ -205,7 +212,7 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         try {
             BanSao b = banSaoController.findById(maBanSao);
             new ChiTietBanSaoDialog(this, true, isbn, b).setVisible(true);
-            loadBanSao();
+            resetPaginationAndLoadBanSao();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi tải bản sao: " + e.getMessage());
         }
@@ -222,7 +229,7 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         if (JOptionPane.showConfirmDialog(this, "Xóa bản sao này?", "Xác nhận", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
             try {
                 banSaoController.delete(maBanSao);
-                loadBanSao();
+                resetPaginationAndLoadBanSao();
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Lỗi khi xóa: " + e.getMessage());
             }
@@ -237,24 +244,27 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     
     private void btnBSTruocActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBSTruocActionPerformed
         // TODO add your handling code here:
-        if (!cursorStack.isEmpty()) {
-            Integer prevCursor = cursorStack.pop();
-            loadBanSaoPage(prevCursor);
+        if (!cursorHistory.isEmpty()) {
+            currentCursor = cursorHistory.pop();
+            loadBanSaoPage();
         }
     }//GEN-LAST:event_btnBSTruocActionPerformed
 
-    private void loadBanSao() {
-        cursorStack.clear();
+    private void resetPaginationAndLoadBanSao() {
+        cursorHistory.clear();
+        currentCursor = null;
         lastMaBanSao = null;
-        loadBanSaoPage(lastMaBanSao);
+        hasNextPage = false;
+        loadBanSaoPage();
     }
     
     private void btnBSSauActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBSSauActionPerformed
         // TODO add your handling code here:
-        if (lastMaBanSao != null) {
-            cursorStack.push(lastMaBanSao);
+        if (hasNextPage) {
+            cursorHistory.push(currentCursor);
+            currentCursor = lastMaBanSao;
+            loadBanSaoPage();
         }
-        loadBanSaoPage(lastMaBanSao);
     }//GEN-LAST:event_btnBSSauActionPerformed
 
     /**

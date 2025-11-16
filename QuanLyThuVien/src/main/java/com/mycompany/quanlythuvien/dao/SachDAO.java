@@ -176,9 +176,9 @@ public class SachDAO {
             PreparedStatement ps = con.prepareStatement(sql))
         {
             if (isFirstPage) {
-                ps.setInt(1, pageSize);
+                ps.setInt(1, pageSize + 1);
             }else {
-                ps.setInt(1, pageSize);
+                ps.setInt(1, pageSize + 1);
                 ps.setString(2, lastISBNCursor);
             }
             

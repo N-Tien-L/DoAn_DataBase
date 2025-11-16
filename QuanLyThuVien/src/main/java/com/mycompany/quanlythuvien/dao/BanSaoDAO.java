@@ -17,19 +17,18 @@ import java.util.List;
 public class BanSaoDAO {    
     public List<BanSao> getPage(String isbn, int pageSize, Integer lastMaBanSao) {
         List<BanSao> list = new ArrayList<>();
+        if (isbn == null || isbn.isBlank()) return list;
         if (pageSize < 1 || pageSize > 100) pageSize = 10;
         
-        String sql;
-        if (lastMaBanSao == null) {
-            sql = "SELECT TOP (?) * FROM BANSAO WHERE ISBN = ? ORDER BY MaBanSao";
-        } else {
-            sql = "SELECT TOP (?) * FROM BANSAO WHERE ISBN = ? AND MaBanSao > ? ORDER BY MaBanSao";
-        }
+        boolean isFirstPage = (lastMaBanSao == null);
+        String sql = isFirstPage
+                ? "SELECT TOP (?) * FROM BANSAO WHERE ISBN = ? ORDER BY MaBanSao ASC"
+                : "SELECT TOP (?) * FROM BANSAO WHERE ISBN = ? AND MaBanSao > ? ORDER BY MaBanSao ASC";    
         
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql))
         {
-            ps.setInt(1, pageSize);
+            ps.setInt(1, pageSize + 1);
             ps.setString(2, isbn);
             if (lastMaBanSao != null) ps.setInt(3, lastMaBanSao);
             

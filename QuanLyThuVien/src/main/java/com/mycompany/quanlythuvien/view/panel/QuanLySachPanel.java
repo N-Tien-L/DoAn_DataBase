@@ -4,8 +4,10 @@
  */
 package com.mycompany.quanlythuvien.view.panel;
 
+import com.mycompany.quanlythuvien.controller.NhaXuatBanController;
 import com.mycompany.quanlythuvien.controller.SachController;
 import com.mycompany.quanlythuvien.controller.TacGiaController;
+import com.mycompany.quanlythuvien.model.NhaXuatBan;
 import com.mycompany.quanlythuvien.view.dialog.ThongTinSachDialog;
 import com.mycompany.quanlythuvien.view.dialog.DanhSachBanSaoDialog;
 import com.mycompany.quanlythuvien.model.Sach;
@@ -13,6 +15,7 @@ import com.mycompany.quanlythuvien.model.TacGia;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Stack;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -27,33 +30,41 @@ public class QuanLySachPanel extends javax.swing.JPanel {
      */
     private DefaultTableModel tableModel = new DefaultTableModel();
     private DefaultTableModel tableModelTG = new DefaultTableModel();
+    private DefaultTableModel tableModelNXB = new DefaultTableModel();
+    
     private SachController sachController = new SachController();
     private TacGiaController tacGiaController = new TacGiaController();
+    private NhaXuatBanController nxbController = new NhaXuatBanController();
     
     private String lastISBNCursor = null;
-    private final int pageSize = 20;
-    private int currentPage = 1;
-    private final List<String> cursorHistory = new ArrayList<>();
+    private final int pageSize = 10;
+    private String currentCursor = null;
+    private boolean hasNextPage = false;
+    private Stack<String> cursorHistory = new Stack<>();
 
     private int lastTacGiaCursor = 0;
     private final int pageSizeTG = 20;
-    private int currentPageTG = 1;
-    private final List<Integer> cursorHistoryTG = new ArrayList<>();
-    private int lastMaTacGiaCursor = 0;
+    private int currentCursorTG = 0;
+    private boolean hasNextPageTG = false;
+    private Stack<Integer> cursorHistoryTG = new Stack<>();
     private boolean isAddingTG = false;
     
     public QuanLySachPanel() {
         initComponents();
         initTable();
-        loadFirstPage();
+        resetPaginationAndLoadSach();
         initComboBox();
         tblSach.setRowHeight(28);
         
         initTableTG();
         initComboBoxTG();
-        loadFirstPageTG();
+        resetPaginationTG();
         tblTacGia.setRowHeight(28);
         tblTheLoai.setRowHeight(28);
+        
+        initTableNXB();
+        initComboBoxNXB();
+        resetPaginationNXB();
         tblNXB.setRowHeight(28);
     }
 
@@ -844,6 +855,13 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         tblTacGia.setModel(tableModelTG);
     }
     
+    private void initTableNXB() {
+        tableModelNXB.setColumnIdentifiers(new String[]{
+            "Mã nhà xuất bản", "Tên nhà xuất bản"
+        });
+        tblTacGia.setModel(tableModelTG);
+    }
+    
     private void loadDataToTable(List<Sach> list) {
         tableModel.setRowCount(0);
         for (Sach s : list) {
@@ -858,21 +876,51 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         } 
     }
     
-    private void loadFirstPage() {
-        currentPage = 1;
-        lastISBNCursor = null;
-        cursorHistory.clear(); // F5
-        try {
-            List<Sach> list = sachController.getAllForTable(lastISBNCursor, pageSize);
-            loadDataToTable(list);
+    private void loadDataSach() {
+        List<Sach> list = sachController.getAllForTable(currentCursor, pageSize + 1);
+
+        if (list != null) {
+
+            hasNextPage = list.size() > pageSize;
+
+            // bỏ record thứ pageSize+1 vì dùng để check next
+            if (hasNextPage) {
+                list.remove(list.size() - 1);
+            }
+
+            // lưu lại cursor cho trang sau
             if (!list.isEmpty()) {
                 lastISBNCursor = list.get(list.size() - 1).getISBN();
             }
-        }catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi tải dữ liệu: " + e.getMessage());
-            e.printStackTrace();
+
+            loadDataToTable(list);
+
+            // UI update
+//            int total = sachController.countTotal();
+//            int currentPageNum = cursorHistory.size() + 1;
+
+//            lblTotal.setText("Tổng: " + total + " sách");
+//            lblPageInfo.setText("Trang " + currentPageNum + "/" + ((total + pageSize - 1) / pageSize));
+
+            btnSachTruoc.setEnabled(!cursorHistory.isEmpty());
+            btnSachSau.setEnabled(hasNextPage);
+
+        } else {
+            JOptionPane.showMessageDialog(this,
+                "Không thể tải danh sách!",
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
+
+    private void resetPaginationAndLoadSach() {
+        currentCursor = null;
+        lastISBNCursor = null;
+        hasNextPage = false;
+        cursorHistory.clear();
+        loadDataSach();
+    }
+
     
     private void loadDataToTableTG(List<TacGia> list) {
         tableModelTG.setRowCount(0);
@@ -886,21 +934,53 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         }
     }
     
-    private void loadFirstPageTG() {
-        currentPageTG = 1;
-        lastTacGiaCursor = 0;
-        cursorHistoryTG.clear(); 
+    private void loadDataTG() {
         try {
-            List<TacGia> list = tacGiaController.getAllTacGia(lastTacGiaCursor, pageSizeTG);
+            List<TacGia> list = tacGiaController.getAllTacGia(currentCursorTG, pageSizeTG + 1);
+
+            // Check next page
+            hasNextPageTG = list.size() > pageSizeTG;
+            if (hasNextPageTG) list.remove(list.size() - 1); // remove thừa
+
             loadDataToTableTG(list);
-            if (!list.isEmpty()) {
-                lastTacGiaCursor = list.get(list.size() - 1).getMaTacGia();
-            }
+
+            // Update cursor
+            if (!list.isEmpty()) lastTacGiaCursor = list.get(list.size() - 1).getMaTacGia();
+
+            // Update labels
+//            lblTotalRecords.setText("Tổng: " + tacGiaController.getTotalTacGia() + " tác giả");
+//            lblPageInfo.setText("Trang " + (cursorHistoryTG.size() + 1) + "/" + tacGiaController.getTotalPages(pageSizeTG));
+
+            // Enable/disable buttons
+            btnTGTruoc.setEnabled(!cursorHistoryTG.isEmpty());
+            btnTGSau.setEnabled(hasNextPageTG);
+
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi tải dữ liệu tác giả: " + e.getMessage());
             e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi tải dữ liệu tác giả: " + e.getMessage());
         }
     }
+    
+    private void resetPaginationTG() {
+        currentCursorTG = 0;
+        lastTacGiaCursor = 0;
+        hasNextPageTG = false;
+        cursorHistoryTG.clear();
+        loadDataTG();
+    }
+    
+    private void loadDataToTableNXB(List<NhaXuatBan> list) {
+        tableModelNXB.setRowCount(0);
+        for (NhaXuatBan nxb : list) {
+            tableModelNXB.addRow(new Object[]{
+                nxb.getMaNXB(),
+                nxb.getTenNXB()
+            });
+        }
+    }
+    
+    private void loadDataNXB() {}
+    private void resetPaginationNXB(){}
     
     private void initComboBox(){
         cboTieuChi.removeAllItems();
@@ -919,12 +999,20 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         cboTieuChiTG.addItem("Ghi chú");
         cboTieuChiTG.setSelectedIndex(1); // mặc định chọn "Tên"
     }
+    
+    private void initComboBoxNXB() {
+        cboTieuChiNXB.removeAllItems(); 
+        cboTieuChiNXB.addItem("Mã nhà xuất bản");
+        cboTieuChiNXB.addItem("Tên nhà xuất bản");
+        cboTieuChiNXB.setSelectedIndex(1);
+    }
+    
     private void btnThemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnThemActionPerformed
         //sach=null, isEditMode=false
         ThongTinSachDialog dialog = new ThongTinSachDialog(null, true, null, false, false);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
-        loadFirstPage(); //f5 về trang đầu
+        resetPaginationAndLoadSach();; //f5 về trang đầu
     }//GEN-LAST:event_btnThemActionPerformed
 
     //lay ISBN o dong da chon, truyen ISBN vao de dialog load du lieu, sau khi luu -> Reload
@@ -942,7 +1030,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                 ThongTinSachDialog dialog = new ThongTinSachDialog(null, true, sach, true, false); // sua: truyen sach, isEditMode=true
                 dialog.setLocationRelativeTo(this);
                 dialog.setVisible(true);
-                loadFirstPage(); //f5 về trang đầu
+                resetPaginationAndLoadSach();; //f5 về trang đầu
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi tải sách: " + e.getMessage());
@@ -963,7 +1051,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
             try {
                 if (sachController.delete(isbn)) {
                     JOptionPane.showMessageDialog(this, "Xóa thành công");
-                    loadFirstPage(); //f5 về trang đầu
+                    resetPaginationAndLoadSach(); //f5 về trang đầu
                 } else {
                     JOptionPane.showMessageDialog(this, "Xóa thất bại");
                 }
@@ -976,7 +1064,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
     private void btnLamMoiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLamMoiActionPerformed
         // TODO add your handling code here:
-        loadFirstPage(); //f5 về trang đầu
+        resetPaginationAndLoadSach(); //f5 về trang đầu
         txtTimKiem.setText("");
     }//GEN-LAST:event_btnLamMoiActionPerformed
 
@@ -1120,7 +1208,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
             try {
                 if (tacGiaController.deleteTacGia(maTG)) {
                     JOptionPane.showMessageDialog(this, "Xóa thành công");
-                    loadFirstPageTG();
+                    resetPaginationTG();
                     clearFormTG();
                 } else {
                     JOptionPane.showMessageDialog(this, "Xóa thất bại");
@@ -1135,7 +1223,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
         clearFormTG();
         txtTimKiemTG.setText("");
-        loadFirstPageTG();
+        resetPaginationTG();
     }//GEN-LAST:event_btnLamMoiTGActionPerformed
 
     private void txtTimKiemTGActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTimKiemTGActionPerformed
@@ -1152,36 +1240,19 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
     private void btnSachTruocActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSachTruocActionPerformed
         // TODO add your handling code here:
-        try {
-            if (!cursorHistory.isEmpty()) {
-                lastISBNCursor = cursorHistory.remove(cursorHistory.size() - 1);
-                List<Sach> list = sachController.getAllForTable(lastISBNCursor, pageSize);
-                currentPage--;
-                loadDataToTable(list);
-            } else {
-                JOptionPane.showMessageDialog(this, "Đây là trang đầu tiên!");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu trang sau: " + e.getMessage());
+        if (!cursorHistory.isEmpty()) {
+            currentCursor = cursorHistory.pop();
+            loadDataSach();
         }
     }//GEN-LAST:event_btnSachTruocActionPerformed
 
     private void btnSachSauActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSachSauActionPerformed
         // TODO add your handling code here:
-        try {
-            List<Sach> list = sachController.getAllForTable(lastISBNCursor, pageSize);
-            if (!list.isEmpty()) {
-                cursorHistory.add(lastISBNCursor);
-                lastISBNCursor = list.get(list.size() - 1).getISBN();
-                currentPage++;
-                loadDataToTable(list);
-            } else {
-                JOptionPane.showMessageDialog(this, "Đã hết dữ liệu!");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu trang sau: " + e.getMessage());
+        if (hasNextPage) {
+            cursorHistory.push(currentCursor);
+
+            currentCursor = lastISBNCursor;
+            loadDataSach();
         }
     }//GEN-LAST:event_btnSachSauActionPerformed
 
@@ -1190,7 +1261,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         try {
             String keyword = txtTimKiemTG.getText().trim();
             if (keyword.isEmpty()) {
-                loadFirstPageTG();
+                resetPaginationTG();
                 return;
             }
             
@@ -1277,7 +1348,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                     JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
                 }
             }
-            loadFirstPageTG();
+            resetPaginationTG();
             clearFormTG();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi: " + e.getMessage());
@@ -1286,49 +1357,22 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
     private void btnTGTruocActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTGTruocActionPerformed
         // TODO add your handling code here:
-        try {
-            if (!cursorHistoryTG.isEmpty()) {
-                int prevCursor = cursorHistoryTG.remove(cursorHistoryTG.size() - 1);
-                boolean isFirstPage = prevCursor == 0;
-                
-                List<TacGia> list;
-                if (isFirstPage) {
-                    list = tacGiaController.getAllTacGia(0, pageSizeTG);
-                } else {
-                    list = tacGiaController.getAllTacGia(prevCursor, pageSizeTG);
-                }
-                
-                if (!list.isEmpty()) {
-                    lastTacGiaCursor = list.get(list.size() - 1).getMaTacGia();
-                    currentPageTG--;
-                    loadDataToTableTG(list);
-                } else {
-                    JOptionPane.showMessageDialog(this, "Không có dữ liệu!");
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "Đây là trang đầu tiên!");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu trang trước: " + e.getMessage());
+        if (!cursorHistoryTG.isEmpty()) {
+            currentCursorTG = cursorHistoryTG.pop();
+            loadDataTG();
+        } else {
+            JOptionPane.showMessageDialog(this, "Đây là trang đầu tiên!");
         }
     }//GEN-LAST:event_btnTGTruocActionPerformed
 
     private void btnTGSauActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTGSauActionPerformed
         // TODO add your handling code here:
-        try {
-            List<TacGia> list = tacGiaController.getAllTacGia(lastTacGiaCursor, pageSizeTG);
-            if (!list.isEmpty()) {
-                cursorHistoryTG.add(lastTacGiaCursor);
-                lastTacGiaCursor = list.get(list.size() - 1).getMaTacGia();
-                currentPageTG++;
-                loadDataToTableTG(list);
-            } else {
-                JOptionPane.showMessageDialog(this, "Đã hết dữ liệu!");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu trang sau: " + e.getMessage());
+        if (hasNextPageTG) {
+            cursorHistoryTG.push(currentCursorTG);
+            currentCursorTG = lastTacGiaCursor;
+            loadDataTG();
+        } else {
+            JOptionPane.showMessageDialog(this, "Đã hết dữ liệu!");
         }
     }//GEN-LAST:event_btnTGSauActionPerformed
 
