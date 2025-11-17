@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +41,9 @@ public class BanSaoDAO {
                             rs.getInt("SoThuTuTrongKho"),
                             rs.getString("TinhTrang"),
                             rs.getDate("NgayNhapKho") != null ? rs.getDate("NgayNhapKho").toLocalDate() : null,
-                            rs.getString("ViTriLuuTru")
+                            rs.getString("ViTriLuuTru"),
+                            rs.getTimestamp("CreatedAt"),
+                            rs.getString("CreatedBy")
                     );
                     list.add(b);
                 }
@@ -76,14 +79,14 @@ public class BanSaoDAO {
     public List<BanSao> getAllByISBN(String isbn) {
         return getPage(isbn, Integer.MAX_VALUE, null);
     }
-    public boolean insert(BanSao b) throws Exception {
+    public boolean insert(BanSao b, String createdBy) throws Exception {
         String sql = """
-            INSERT INTO BANSAO (ISBN, SoThuTuTrongKho, TinhTrang, NgayNhapKho, ViTriLuuTru)
-            VALUES (?,?,?,?,?)
+            INSERT INTO BANSAO (ISBN, SoThuTuTrongKho, TinhTrang, NgayNhapKho, ViTriLuuTru, CreatedBy)
+            VALUES (?,?,?,?,?,?)
                      """;
         
         try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) 
+            PreparedStatement ps = con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) 
         {
             ps.setString(1, b.getISBN());
             ps.setInt(2, b.getSoThuTuTrongKho());
@@ -96,8 +99,20 @@ public class BanSaoDAO {
             }
             
             ps.setString(5, b.getViTriLuuTru());
+            ps.setString(6, createdBy);
             
-            return ps.executeUpdate() > 0;
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows == 0) return false;
+            
+            // Lấy MaBanSao vừa sinh
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    b.setMaBanSao(rs.getInt(1));
+                }
+            }
+
+            b.setCreatedBy(createdBy);
+            return true;
         }
     }
     
@@ -156,7 +171,9 @@ public class BanSaoDAO {
                             rs.getInt("SoThuTuTrongKho"),
                             rs.getString("TinhTrang"),
                             (rs.getDate("NgayNhapKho") != null) ? rs.getDate("NgayNhapKho").toLocalDate() : null,
-                            rs.getString("ViTriLuuTru")
+                            rs.getString("ViTriLuuTru"),
+                            rs.getTimestamp("CreatedAt"),
+                            rs.getString("CreatedBy")
                     );
                 }
             }

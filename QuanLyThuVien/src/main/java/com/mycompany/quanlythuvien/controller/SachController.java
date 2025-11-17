@@ -41,12 +41,12 @@ public class SachController {
     }
     
     // Thêm sách
-    public void insert(Sach sach) throws Exception {
+    public void insert(Sach sach, String createdBy) throws Exception {
         validateAndSetDefault(sach);
         if (sachDAO.existsByISBN(sach.getISBN())) {
             throw new Exception("ISBN đã tồn tại!");
         }
-        sachDAO.insert(sach);
+        sachDAO.insert(sach, createdBy);
     }
 
     // Cập nhật sách

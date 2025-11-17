@@ -15,7 +15,8 @@ import java.util.List;
  */
 public class SachDAO {
     private static final String SQL_GET_FIRST_PAGE = """
-        SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
+        SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai,
+                        S.CreatedAt, S.CreatedBy
         FROM SACH AS S
         LEFT JOIN TACGIA AS TG ON S.MaTacGia = TG.MaTacGia
         LEFT JOIN NHAXUATBAN AS NXB ON S.MaNXB = NXB.MaNXB
@@ -24,7 +25,8 @@ public class SachDAO {
     """;
 
     private static final String SQL_GET_NEXT_PAGE = """
-        SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
+        SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai,
+                        S.CreatedAt, S.CreatedBy
         FROM SACH AS S
         LEFT JOIN TACGIA AS TG ON S.MaTacGia = TG.MaTacGia
         LEFT JOIN NHAXUATBAN AS NXB ON S.MaNXB = NXB.MaNXB
@@ -37,9 +39,9 @@ public class SachDAO {
     
     
     // them sach
-    public boolean insert(Sach s) throws Exception {
+    public boolean insert(Sach s, String createdBy) throws Exception {
         // SoLuongTon được quản lý tự động bởi trigger TRG_BANSAO_Update_SoLuongTon
-        String sql = "INSERT INTO SACH (ISBN, TenSach, MaTacGia, MaTheLoai, NamXuatBan, DinhDang, MoTa, MaNXB, GiaBia, SoTrang) VALUES (?,?,?,?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO SACH (ISBN, TenSach, MaTacGia, MaTheLoai, NamXuatBan, DinhDang, MoTa, MaNXB, GiaBia, SoTrang, CreatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 
         try (Connection con = DBConnector.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
@@ -53,7 +55,7 @@ public class SachDAO {
             ps.setObject(8, s.getMaNXB(), java.sql.Types.INTEGER);
             ps.setBigDecimal(9, s.getGiaBia());
             ps.setObject(10, s.getSoTrang(), java.sql.Types.INTEGER);
-            
+            ps.setString(11, createdBy);
             return ps.executeUpdate() > 0;
         } catch (SQLIntegrityConstraintViolationException ex) {
             //trung isbn
@@ -154,7 +156,10 @@ public class SachDAO {
                         rs.getObject("MaNXB", Integer.class),
                         rs.getBigDecimal("GiaBia"),
                         rs.getObject("SoLuongTon", Integer.class),
-                        rs.getObject("SoTrang", Integer.class)
+                        rs.getObject("SoTrang", Integer.class),
+                            
+                        rs.getTimestamp("CreatedAt"),
+                        rs.getString("CreatedBy")
                     );
                     s.setTenTacGia(rs.getString("TenTacGia"));
                     s.setTenNXB(rs.getString("TenNXB"));
@@ -191,6 +196,8 @@ public class SachDAO {
                     s.setTenNXB(rs.getString("TenNXB"));
                     s.setNamXuatBan(rs.getInt("NamXuatBan"));
                     s.setTenTheLoai(rs.getString("TenTheLoai"));
+                    s.setCreatedAt(rs.getTimestamp("CreatedAt"));
+                    s.setCreatedBy(rs.getString("CreatedBy"));
                     list.add(s);
                 }
             }

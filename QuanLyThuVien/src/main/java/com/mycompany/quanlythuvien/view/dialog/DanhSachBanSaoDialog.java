@@ -7,6 +7,7 @@ package com.mycompany.quanlythuvien.view.dialog;
 import com.mycompany.quanlythuvien.view.dialog.ChiTietBanSaoDialog;
 import com.mycompany.quanlythuvien.controller.BanSaoController;
 import com.mycompany.quanlythuvien.model.BanSao;
+import com.mycompany.quanlythuvien.model.TaiKhoan;
 import java.util.List;
 import java.util.Stack;
 import javax.swing.JOptionPane;
@@ -29,6 +30,8 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     private int pageSize = 10;
     private Stack<Integer> cursorHistory = new Stack<>();
     private boolean hasNextPage = false;
+    
+    private TaiKhoan currentUser;
     /**
      * Creates new form DanhSachBanSaoDialog
      */
@@ -38,11 +41,12 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         setLocationRelativeTo(null);
     }
 
-    public DanhSachBanSaoDialog(java.awt.Frame parent, boolean modal, String isbn) {
+    public DanhSachBanSaoDialog(java.awt.Frame parent, boolean modal, String isbn, TaiKhoan currentUser) {
         super(parent, modal);
         initComponents();
         setLocationRelativeTo(null);
         this.isbn = isbn;
+        this.currentUser = currentUser;
         lblTieuDe.setText("Danh sách bản sao của sách: " + isbn);
         resetPaginationAndLoadBanSao();
     }
@@ -101,6 +105,7 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         btnThem = new javax.swing.JButton();
         btnSua = new javax.swing.JButton();
         btnXoa = new javax.swing.JButton();
+        btnChiTiet = new javax.swing.JButton();
         btnDong = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
@@ -180,6 +185,15 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         });
         jPanel2.add(btnXoa);
 
+        btnChiTiet.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        btnChiTiet.setText("Xem chi tiết");
+        btnChiTiet.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnChiTietActionPerformed(evt);
+            }
+        });
+        jPanel2.add(btnChiTiet);
+
         btnDong.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         btnDong.setText("Đóng");
         btnDong.addActionListener(new java.awt.event.ActionListener() {
@@ -196,7 +210,7 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
 
     private void btnThemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnThemActionPerformed
         // TODO add your handling code here:
-        new ChiTietBanSaoDialog(this, true, isbn, null).setVisible(true);
+        new ChiTietBanSaoDialog(this, true, isbn, null, currentUser).setVisible(true);
         resetPaginationAndLoadBanSao();
     }//GEN-LAST:event_btnThemActionPerformed
 
@@ -211,7 +225,7 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         int maBanSao = (int) tblBanSao.getValueAt(row, 0);
         try {
             BanSao b = banSaoController.findById(maBanSao);
-            new ChiTietBanSaoDialog(this, true, isbn, b).setVisible(true);
+            new ChiTietBanSaoDialog(this, true, isbn, b, currentUser).setVisible(true);
             resetPaginationAndLoadBanSao();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi tải bản sao: " + e.getMessage());
@@ -267,6 +281,30 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         }
     }//GEN-LAST:event_btnBSSauActionPerformed
 
+    private void btnChiTietActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnChiTietActionPerformed
+        // TODO add your handling code here:
+        int r = tblBanSao.getSelectedRow();
+        if (r == -1) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một bản sao để xem!");
+            return;
+        }
+        
+        try {
+            int modelRow = tblBanSao.convertRowIndexToModel(r);
+            int maBanSao = (int) tblBanSao.getModel().getValueAt(modelRow, 0);
+            BanSao b = banSaoController.findById(maBanSao);
+            
+            if (b != null) {
+                ChiTietBanSaoDialog dialog = new ChiTietBanSaoDialog(this, true, b.getISBN(), b, currentUser);
+                dialog.setViewMode();
+                dialog.setVisible(true);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải chi tiết: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_btnChiTietActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -309,6 +347,7 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBSSau;
     private javax.swing.JButton btnBSTruoc;
+    private javax.swing.JButton btnChiTiet;
     private javax.swing.JButton btnDong;
     private javax.swing.JButton btnSua;
     private javax.swing.JButton btnThem;

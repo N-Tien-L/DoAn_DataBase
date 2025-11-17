@@ -66,52 +66,64 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" attributes="0">
+                  <Group type="102" alignment="1" attributes="0">
+                      <EmptySpace max="32767" attributes="0"/>
+                      <Component id="btnHuy" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="124" max="-2" attributes="0"/>
+                  </Group>
+                  <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" pref="60" max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="103" alignment="0" groupAlignment="0" max="-2" attributes="0">
+                              <Group type="102" attributes="0">
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="lblISBN" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
+                                      <Component id="lblTenSach" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
+                                      <Component id="lblMaTacGia" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
+                                      <Component id="lblMaTheLoai" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
+                                      <Component id="lblNamXuatBan" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
+                                      <Component id="lblDinhDang" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
+                                      <Component id="lblGiaBia" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
+                                      <Component id="lblSoTrang" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
+                                      <Component id="lblSoLuongTon" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
+                                      <Component id="lblMoTa" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace min="-2" pref="41" max="-2" attributes="0"/>
+                              </Group>
+                              <Group type="102" alignment="1" attributes="0">
+                                  <Component id="lblMaNXB" max="32767" attributes="0"/>
+                                  <EmptySpace min="-2" pref="27" max="-2" attributes="0"/>
+                              </Group>
+                          </Group>
                           <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="lblISBN" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
-                                  <Component id="lblTenSach" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
-                                  <Component id="lblMaTacGia" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
-                                  <Component id="lblMaTheLoai" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
-                                  <Component id="lblNamXuatBan" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
-                                  <Component id="lblDinhDang" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
-                                  <Component id="lblGiaBia" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
-                                  <Component id="lblSoTrang" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
-                                  <Component id="lblSoLuongTon" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
-                                  <Component id="lblMoTa" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
+                                  <Component id="lblCreatedBy" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
+                                  <Component id="lblCreatedAt" alignment="0" min="-2" pref="98" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace min="-2" pref="41" max="-2" attributes="0"/>
                           </Group>
-                          <Group type="102" alignment="1" attributes="0">
-                              <Group type="103" groupAlignment="1" attributes="0">
-                                  <Component id="btnLuu" min="-2" max="-2" attributes="0"/>
-                                  <Component id="lblMaNXB" max="32767" attributes="0"/>
-                              </Group>
-                              <EmptySpace min="-2" pref="27" max="-2" attributes="0"/>
-                          </Group>
                       </Group>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                              <Component id="txtDinhDang" alignment="0" max="32767" attributes="0"/>
-                              <Component id="txtISBN" alignment="0" max="32767" attributes="0"/>
-                              <Component id="cboMaTheLoai" alignment="0" pref="190" max="32767" attributes="0"/>
-                              <Component id="txtTenSach" alignment="1" max="32767" attributes="0"/>
-                              <Component id="txtGiaBia" alignment="1" max="32767" attributes="0"/>
-                              <Component id="txtSoTrang" alignment="1" max="32767" attributes="0"/>
-                              <Component id="txtSoLuongTon" alignment="0" max="32767" attributes="0"/>
-                              <Component id="jScrollPane1" pref="0" max="32767" attributes="0"/>
-                              <Component id="cboMaNXB" alignment="0" max="32767" attributes="0"/>
-                              <Component id="txtNamXuatBan" alignment="0" max="32767" attributes="0"/>
-                              <Component id="cboMaTacGia" alignment="0" pref="190" max="32767" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <EmptySpace min="-2" pref="26" max="-2" attributes="0"/>
-                              <Component id="btnHuy" min="-2" max="-2" attributes="0"/>
-                          </Group>
+                          <Component id="txtCreatedAt" pref="260" max="32767" attributes="0"/>
+                          <Component id="txtCreatedBy" pref="260" max="32767" attributes="0"/>
+                          <Component id="txtDinhDang" alignment="0" max="32767" attributes="0"/>
+                          <Component id="txtISBN" alignment="0" max="32767" attributes="0"/>
+                          <Component id="cboMaTheLoai" alignment="0" pref="260" max="32767" attributes="0"/>
+                          <Component id="txtTenSach" alignment="1" max="32767" attributes="0"/>
+                          <Component id="txtGiaBia" alignment="1" max="32767" attributes="0"/>
+                          <Component id="txtSoTrang" alignment="1" max="32767" attributes="0"/>
+                          <Component id="txtSoLuongTon" alignment="0" max="32767" attributes="0"/>
+                          <Component id="cboMaNXB" alignment="0" max="32767" attributes="0"/>
+                          <Component id="txtNamXuatBan" alignment="0" max="32767" attributes="0"/>
+                          <Component id="cboMaTacGia" alignment="0" pref="260" max="32767" attributes="0"/>
+                          <Component id="jScrollPane1" alignment="0" pref="0" max="32767" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="34" max="32767" attributes="0"/>
+                      <EmptySpace min="-2" pref="105" max="-2" attributes="0"/>
+                  </Group>
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace min="-2" pref="216" max="-2" attributes="0"/>
+                      <Component id="btnLuu" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -169,22 +181,25 @@
                           <Component id="txtSoTrang" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="lblCreatedBy" alignment="3" min="-2" pref="25" max="-2" attributes="0"/>
+                          <Component id="txtCreatedBy" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="lblCreatedAt" alignment="3" min="-2" pref="25" max="-2" attributes="0"/>
+                          <Component id="txtCreatedAt" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="lblMoTa" min="-2" pref="25" max="-2" attributes="0"/>
                           <Component id="jScrollPane1" min="-2" pref="112" max="-2" attributes="0"/>
+                          <Component id="lblMoTa" min="-2" pref="25" max="-2" attributes="0"/>
                       </Group>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" attributes="0">
-                              <EmptySpace pref="17" max="32767" attributes="0"/>
-                              <Component id="btnLuu" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="-2" pref="27" max="-2" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <EmptySpace type="separate" max="-2" attributes="0"/>
-                              <Component id="btnHuy" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="32767" attributes="0"/>
-                          </Group>
-                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="btnHuy" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <Component id="btnLuu" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="25" max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -425,6 +440,42 @@
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
               </AuxValues>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblCreatedBy">
+              <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Segoe UI" size="14" style="0"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="Ng&#x1b0;&#x1edd;i t&#x1ea1;o:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="lblCreatedAt">
+              <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Segoe UI" size="14" style="0"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="Ng&#xe0;y t&#x1ea1;o:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="txtCreatedBy">
+              <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Segoe UI" size="14" style="0"/>
+                </Property>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtCreatedByActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JTextField" name="txtCreatedAt">
+              <Properties>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Segoe UI" size="14" style="0"/>
+                </Property>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtCreatedAtActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>

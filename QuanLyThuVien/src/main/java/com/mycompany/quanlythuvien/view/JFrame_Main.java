@@ -129,7 +129,7 @@ public class JFrame_Main extends javax.swing.JFrame {
 
         // Thêm các panel vào CardLayout
         jPanel_Content.add(new WelcomePanel(), "Welcome");
-        jPanel_Content.add(new QuanLySachPanel(), "QuanLySach");
+        jPanel_Content.add(new QuanLySachPanel(currentUser), "QuanLySach");
         jPanel_Content.add(new QuanLyBanDocPanel(), "QuanLyBanDoc");
         jPanel_Content.add(new QuanLyPhieuMuonPanel(), "QuanLyPhieuMuon");
         jPanel_Content.add(new QuanLyPhatPanel(), "QuanLyPhat");

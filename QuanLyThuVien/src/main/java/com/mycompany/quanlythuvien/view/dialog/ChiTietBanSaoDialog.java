@@ -6,6 +6,11 @@ package com.mycompany.quanlythuvien.view.dialog;
 
 import com.mycompany.quanlythuvien.controller.BanSaoController;
 import com.mycompany.quanlythuvien.model.BanSao;
+import com.mycompany.quanlythuvien.model.TaiKhoan;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import javax.swing.JOptionPane;
@@ -20,25 +25,36 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
     private String isbn;
     private BanSao bansao; //null -> them moi
     private BanSaoController controller = new BanSaoController();
+    private TaiKhoan currentUser;
     /**
      * Creates new form ChiTietBanSaoDialog
      */
     public ChiTietBanSaoDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        setSize(650, 450);
+        setMinimumSize(new Dimension(650, 450));
         setLocationRelativeTo(null);
     }
 
-    public ChiTietBanSaoDialog(java.awt.Dialog parent, boolean modal, String isbn, BanSao bansao){
+    public ChiTietBanSaoDialog(java.awt.Dialog parent, boolean modal, String isbn, BanSao bansao, TaiKhoan currentUser){
         super(parent, modal);
         initComponents();
+        setSize(650, 450);
+        setMinimumSize(new Dimension(650, 450));
         setLocationRelativeTo(null);
         this.isbn = isbn;
         this.bansao = bansao;
+        this.currentUser = currentUser;
         
         txtMaBanSao.setEditable(false);
         txtISBN.setEditable(false);
         txtISBN.setText(isbn);
+        txtCreatedAt.setEnabled(false);
+        txtCreatedAt.setDisabledTextColor(Color.BLACK);
+
+        txtCreatedBy.setEnabled(false);
+        txtCreatedBy.setDisabledTextColor(Color.BLACK);
         
         if (bansao != null) {
             txtMaBanSao.setText(String.valueOf(bansao.getMaBanSao()));
@@ -46,7 +62,34 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
             txtTinhTrang.setText(bansao.getTinhTrang());
             txtNgayNhapKho.setText((bansao.getNgayNhapKho() != null) ? bansao.getNgayNhapKho().toString() : "");
             txtViTriLuuTru.setText(bansao.getViTriLuuTru());
+            txtCreatedBy.setText(bansao.getCreatedBy());
+
+            // Format CreatedAt
+            if (bansao.getCreatedAt() != null) {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                txtCreatedAt.setText(sdf.format(bansao.getCreatedAt()));
+            } else {
+                txtCreatedAt.setText("");
+            }
+        } else {
+            txtCreatedBy.setText(currentUser.getEmail());
+            txtCreatedAt.setText("");
         }
+    }
+    
+    public void setViewMode() {
+        txtSoThuTuTrongKho.setEditable(false);
+        txtTinhTrang.setEditable(false);
+        txtNgayNhapKho.setEditable(false);
+        txtViTriLuuTru.setEditable(false);  
+        
+        txtMaBanSao.setEditable(false);
+        txtISBN.setEditable(false);
+        txtCreatedAt.setEnabled(false);
+        txtCreatedBy.setEnabled(false);
+        
+        btnLuu.setVisible(false);
+        btnHuy.setText("Đóng");
     }
     
     /**
@@ -76,6 +119,10 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
         txtNgayNhapKho = new javax.swing.JTextField();
         lblViTriLuuTru = new javax.swing.JLabel();
         txtViTriLuuTru = new javax.swing.JTextField();
+        lblCreatedBy = new javax.swing.JLabel();
+        txtCreatedBy = new javax.swing.JTextField();
+        lblCreatedAt = new javax.swing.JLabel();
+        txtCreatedAt = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -103,31 +150,63 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
 
         getContentPane().add(jPanel3, java.awt.BorderLayout.PAGE_END);
 
-        jPanel2.setLayout(new java.awt.GridLayout(6, 2));
+        jPanel2.setLayout(new java.awt.GridLayout(8, 2));
 
+        lblMaBanSao.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblMaBanSao.setText("Mã bản sao:");
         jPanel2.add(lblMaBanSao);
+
+        txtMaBanSao.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jPanel2.add(txtMaBanSao);
 
+        lblISBN.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblISBN.setText("ISBN:");
         jPanel2.add(lblISBN);
+
+        txtISBN.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jPanel2.add(txtISBN);
 
+        lblSoThuTuTrongKho.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblSoThuTuTrongKho.setText("Số thứ tự trong kho:");
         jPanel2.add(lblSoThuTuTrongKho);
+
+        txtSoThuTuTrongKho.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jPanel2.add(txtSoThuTuTrongKho);
 
+        lblTinhTrang.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblTinhTrang.setText("Tình trạng:");
         jPanel2.add(lblTinhTrang);
+
+        txtTinhTrang.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jPanel2.add(txtTinhTrang);
 
+        lblNgayNhapKho.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblNgayNhapKho.setText("Ngày nhập kho:");
         jPanel2.add(lblNgayNhapKho);
+
+        txtNgayNhapKho.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jPanel2.add(txtNgayNhapKho);
 
+        lblViTriLuuTru.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblViTriLuuTru.setText("Vị trí lưu trữ:");
         jPanel2.add(lblViTriLuuTru);
+
+        txtViTriLuuTru.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jPanel2.add(txtViTriLuuTru);
+
+        lblCreatedBy.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        lblCreatedBy.setText("Người tạo:");
+        jPanel2.add(lblCreatedBy);
+
+        txtCreatedBy.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jPanel2.add(txtCreatedBy);
+
+        lblCreatedAt.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        lblCreatedAt.setText("Ngày tạo:");
+        jPanel2.add(lblCreatedAt);
+
+        txtCreatedAt.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jPanel2.add(txtCreatedAt);
 
         getContentPane().add(jPanel2, java.awt.BorderLayout.CENTER);
 
@@ -142,21 +221,37 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
             int soThuTu = Integer.parseInt(txtSoThuTuTrongKho.getText().trim());
             LocalDate ngayNhap = controller.parseDate(txtNgayNhapKho.getText().trim());
                     
+            String createdBy = (bansao != null) ? bansao.getCreatedBy() : currentUser.getEmail();
+
             BanSao b = new BanSao(
                     (bansao != null) ? bansao.getMaBanSao() : 0,
                     isbn,
                     soThuTu,
                     tinhTrang,
                     ngayNhap,
-                    viTri
+                    viTri,
+                    null,
+                    createdBy
             );
             
-            controller.save(b);
+            controller.save(b, currentUser.getEmail());
             
+            BanSao inserted = controller.findById(b.getMaBanSao());
+            b.setCreatedAt(inserted.getCreatedAt());
+            
+            txtMaBanSao.setText(String.valueOf(b.getMaBanSao()));
+            txtCreatedBy.setText(b.getCreatedBy());
+            txtCreatedAt.setText(b.getCreatedAt().toString());
+
             JOptionPane.showMessageDialog(this, "Lưu thành công");
             dispose();
+        } catch (NumberFormatException nfEx) {
+            JOptionPane.showMessageDialog(this, "Số thứ tự trong kho phải là số nguyên!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (DateTimeParseException dtEx) {
+            JOptionPane.showMessageDialog(this, "Ngày nhập kho không hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi lưu: " + e.getMessage());
+            e.printStackTrace();
         }
     }//GEN-LAST:event_btnLuuActionPerformed
 
@@ -208,6 +303,8 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JLabel lblCreatedAt;
+    private javax.swing.JLabel lblCreatedBy;
     private javax.swing.JLabel lblISBN;
     private javax.swing.JLabel lblMaBanSao;
     private javax.swing.JLabel lblNgayNhapKho;
@@ -215,6 +312,8 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
     private javax.swing.JLabel lblTieuDe;
     private javax.swing.JLabel lblTinhTrang;
     private javax.swing.JLabel lblViTriLuuTru;
+    private javax.swing.JTextField txtCreatedAt;
+    private javax.swing.JTextField txtCreatedBy;
     private javax.swing.JTextField txtISBN;
     private javax.swing.JTextField txtMaBanSao;
     private javax.swing.JTextField txtNgayNhapKho;

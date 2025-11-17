@@ -13,6 +13,7 @@ import com.mycompany.quanlythuvien.view.dialog.ThongTinSachDialog;
 import com.mycompany.quanlythuvien.view.dialog.DanhSachBanSaoDialog;
 import com.mycompany.quanlythuvien.model.Sach;
 import com.mycompany.quanlythuvien.model.TacGia;
+import com.mycompany.quanlythuvien.model.TaiKhoan;
 import com.mycompany.quanlythuvien.model.TheLoai;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,29 +68,41 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private Stack<Integer> cursorHistoryTL = new Stack<>();
     private boolean isAddingTL = false;
     
+    private TaiKhoan currentUser;
+    
     public QuanLySachPanel() {
         initComponents();
+        initAfterInitComponents();
+    }
+
+    public QuanLySachPanel(TaiKhoan currentUser) {
+        this.currentUser = currentUser;
+        initComponents();
+        initAfterInitComponents();
+    }
+    
+    private void initAfterInitComponents() {
         initTable();
         resetPaginationAndLoadSach();
         initComboBox();
         tblSach.setRowHeight(28);
-        
+
         initTableTG();
         initComboBoxTG();
         resetPaginationTG();
         tblTacGia.setRowHeight(28);
-        
+
         initTableTL();
         initComboBoxTL();
         resetPaginationTL();
         tblTheLoai.setRowHeight(28);
-        
+
         initTableNXB();
         initComboBoxNXB();
         resetPaginationNXB();
         tblNXB.setRowHeight(28);
     }
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -691,7 +704,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                     .addComponent(jLabel4))
                 .addGap(58, 58, 58)
                 .addComponent(btnLuuNXB)
-                .addContainerGap(240, Short.MAX_VALUE))
+                .addContainerGap(19, Short.MAX_VALUE))
         );
 
         jPanel6.add(jPanel9);
@@ -758,7 +771,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                 .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(btnLamMoiNXB)
                     .addComponent(btnXoaNXB))
-                .addContainerGap(332, Short.MAX_VALUE))
+                .addContainerGap(111, Short.MAX_VALUE))
         );
 
         jPanel6.add(jPanel10);
@@ -1284,7 +1297,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     
     private void btnThemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnThemActionPerformed
         //sach=null, isEditMode=false
-        ThongTinSachDialog dialog = new ThongTinSachDialog(null, true, null, false, false);
+        ThongTinSachDialog dialog = new ThongTinSachDialog(null, true, null, false, false, currentUser);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
         resetPaginationAndLoadSach();; //f5 về trang đầu
@@ -1302,7 +1315,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         try {
             Sach sach = sachController.findByISBN(isbn); // lay thon tin sach
             if (sach != null) {
-                ThongTinSachDialog dialog = new ThongTinSachDialog(null, true, sach, true, false); // sua: truyen sach, isEditMode=true
+                ThongTinSachDialog dialog = new ThongTinSachDialog(null, true, sach, true, false, currentUser); // sua: truyen sach, isEditMode=true
                 dialog.setLocationRelativeTo(this);
                 dialog.setVisible(true);
                 resetPaginationAndLoadSach();; //f5 về trang đầu
@@ -1355,7 +1368,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         try {
             Sach sach = sachController.findByISBN(isbn);
             if (sach != null) {
-                ThongTinSachDialog dialog = new ThongTinSachDialog(null, true, sach, false, true);
+                ThongTinSachDialog dialog = new ThongTinSachDialog(null, true, sach, false, true, currentUser);
                 dialog.setLocationRelativeTo(this);
                 dialog.setVisible(true);
                 //loadDataToTable();
@@ -1373,7 +1386,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
             return;
         }
         String isbn = (String) tableModel.getValueAt(r, 0);
-        DanhSachBanSaoDialog dialog = new DanhSachBanSaoDialog(null, true, isbn);
+        DanhSachBanSaoDialog dialog = new DanhSachBanSaoDialog(null, true, isbn, currentUser);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }//GEN-LAST:event_btnXemBanSaoActionPerformed

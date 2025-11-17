@@ -52,9 +52,9 @@ public class BanSaoController {
     }
     
     // Thêm bản sao mới
-    public void insert(BanSao bansao) throws Exception {
+    public void insert(BanSao bansao, String createdBy) throws Exception {
         validateAndSetDefault(bansao);
-        banSaoDAO.insert(bansao);
+        banSaoDAO.insert(bansao, createdBy);
     }
     
     // Cập nhật bản sao
@@ -66,8 +66,8 @@ public class BanSaoController {
         banSaoDAO.update(bansao);
     }
     // Lưu bản sao (insert hoặc update tùy)
-    public void save(BanSao bansao) throws Exception {
-        if (bansao.getMaBanSao() <= 0) insert(bansao);
+    public void save(BanSao bansao, String createdBy) throws Exception {
+        if (bansao.getMaBanSao() <= 0) insert(bansao, createdBy);
         else update(bansao);
     }
 
