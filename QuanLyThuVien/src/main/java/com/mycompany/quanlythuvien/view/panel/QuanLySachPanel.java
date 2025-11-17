@@ -70,6 +70,12 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     
     private TaiKhoan currentUser;
     
+    //SEARCH MODE
+    private boolean isSearching = false;
+    private String searchKeyword = null;
+    private String searchTieuChi = null;
+    private String lastSearchCursor = null;
+    
     public QuanLySachPanel() {
         initComponents();
         initAfterInitComponents();
@@ -1129,6 +1135,27 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         loadDataSach();
     }
   
+    private void loadSearchPage(){
+        List<Sach> list = sachController.search(searchKeyword, searchTieuChi, lastSearchCursor, pageSize + 1);
+        hasNextPage = list.size() > pageSize;
+        if (hasNextPage) {
+            list.remove(list.size() - 1); 
+        }
+        
+        if (!list.isEmpty()) {
+            lastSearchCursor = list.get(list.size() - 1).getISBN();
+        }
+        
+        loadDataToTable(list);
+        
+        btnSachTruoc.setEnabled(!cursorHistory.isEmpty());
+        btnSachSau.setEnabled(hasNextPage);
+        
+        if (list.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy sách nào!");
+        }
+    }
+    
     private void loadDataToTableTG(List<TacGia> list) {
         tableModelTG.setRowCount(0);
         for (TacGia tg : list) {
@@ -1271,6 +1298,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         cboTieuChi.addItem("Nhà xuất bản");
         cboTieuChi.addItem("Thể loại");
         cboTieuChi.addItem("ISBN");
+        cboTieuChi.addItem("Năm");
+        cboTieuChi.setSelectedIndex(1);
     }
     private void initComboBoxTG() {
         cboTieuChiTG.removeAllItems(); 
@@ -1352,8 +1381,13 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
     private void btnLamMoiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLamMoiActionPerformed
         // TODO add your handling code here:
-        resetPaginationAndLoadSach(); //f5 về trang đầu
+        isSearching = false;
+        searchKeyword = null;
+        searchTieuChi = null;
+        lastSearchCursor = null;
+        
         txtTimKiem.setText("");
+        resetPaginationAndLoadSach();
     }//GEN-LAST:event_btnLamMoiActionPerformed
 
     private void btnChiTietActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnChiTietActionPerformed
@@ -1404,24 +1438,16 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                 return;
             }
             
-            List<Sach> list = sachController.search(keyword, tieuChi);
-           
-            tableModel.setRowCount(0);
+            // Bật Search Mode
+            isSearching = true;
+            searchKeyword = keyword;
+            searchTieuChi = tieuChi;
             
-            for (Sach s : list) {
-                tableModel.addRow(new Object[] {
-                    s.getISBN(),
-                    s.getTenSach(),
-                    s.getTenTacGia(),
-                    s.getTenNXB(),
-                    s.getNamXuatBan(),
-                    s.getTenTheLoai()
-                });
-            }
-            
-            if (list.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Không tìm thấy sách nào!");
-            }
+            cursorHistory.clear();          // reset pagination
+            lastSearchCursor = null;
+            currentCursor = null; 
+            lastISBNCursor = null;  
+            loadSearchPage();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi tìm kiếm: " + e.getMessage());
             e.printStackTrace();
@@ -1594,7 +1620,13 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
         if (!cursorHistory.isEmpty()) {
             currentCursor = cursorHistory.pop();
-            loadDataSach();
+            if (isSearching) {
+                lastSearchCursor = currentCursor;
+                loadSearchPage();
+            } else {
+                lastISBNCursor = currentCursor;
+                loadDataSach();
+            }
         }
     }//GEN-LAST:event_btnSachTruocActionPerformed
 
@@ -1602,9 +1634,14 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
         if (hasNextPage) {
             cursorHistory.push(currentCursor);
-
-            currentCursor = lastISBNCursor;
-            loadDataSach();
+            
+            if (isSearching) {
+                currentCursor = lastSearchCursor;
+                loadSearchPage();
+            } else {
+                currentCursor = lastISBNCursor;
+                loadDataSach();
+            }
         }
     }//GEN-LAST:event_btnSachSauActionPerformed
 

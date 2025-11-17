@@ -91,10 +91,10 @@ public class SachController {
         }
     }
     
-    public List<Sach> search(String keyword, String tieuChi) {
+    public List<Sach> search(String keyword, String tieuChi, String lastISBNCursor, int pageSize) {
         try {
             if (tieuChi == null || tieuChi.isBlank()) tieuChi = "Tất cả";
-            return sachDAO.search(keyword, tieuChi);
+            return sachDAO.search(keyword, tieuChi, lastISBNCursor, pageSize);
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
