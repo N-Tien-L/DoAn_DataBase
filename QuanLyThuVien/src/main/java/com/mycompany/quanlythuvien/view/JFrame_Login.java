@@ -62,11 +62,7 @@ public class JFrame_Login extends javax.swing.JFrame {
         jButton_Login.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         jButton_Login.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                try {
-                    jButton_LoginActionPerformed(evt);
-                } catch (Exception ex) {
-                    System.getLogger(JFrame_Login.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
-                }
+                jButton_LoginActionPerformed(evt);
             }
         });
 
@@ -134,7 +130,7 @@ public class JFrame_Login extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton_LoginActionPerformed(java.awt.event.ActionEvent evt) throws Exception {//GEN-FIRST:event_jButton_LoginActionPerformed
+    private void jButton_LoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton_LoginActionPerformed
         String email = jTextField_Email.getText().trim();
         String password = new String(jPasswordField_Password.getPassword()).trim();
         
@@ -143,14 +139,19 @@ public class JFrame_Login extends javax.swing.JFrame {
             return;
         }
 
-        TaiKhoan userAccount = taiKhoanController.login(email, password);
-        if (userAccount != null) {
-            JFrame_Main mainFrame = new JFrame_Main(userAccount);
-            mainFrame.setVisible(true);
-            
-            this.dispose();
-        } else {
-            JOptionPane.showMessageDialog(this, "Sai email hoặc mật khẩu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        try {
+            TaiKhoan userAccount = taiKhoanController.login(email, password);
+            if (userAccount != null) {
+                JFrame_Main mainFrame = new JFrame_Main(userAccount);
+                mainFrame.setVisible(true);
+                
+                this.dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Sai email hoặc mật khẩu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi đăng nhập: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }//GEN-LAST:event_jButton_LoginActionPerformed
 

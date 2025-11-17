@@ -28,7 +28,7 @@ public class LichLamController {
         }
 
         if(GioKetThuc.isBefore(GioBatDau)) {
-            throw new LichLamException("NGiờ kết thúc phải sau giờ bắt đầu");
+            throw new LichLamException("Giờ kết thúc phải sau giờ bắt đầu");
         }
 
         Date sqlDate = Date.valueOf(Ngay);
@@ -53,7 +53,7 @@ public class LichLamController {
         return lichLamDAO.getShiftsByEmailBetween(EmailThuThu, FromDate, ToDate);
     }
 
-    public boolean cancelShift(TaiKhoan currentUser, int idLich, String adminEmail) throws Exception {
+    public boolean cancelShift(TaiKhoan currentUser, int idLich) throws Exception {
         AuthMiddleware.requireAdmin(currentUser);
         return lichLamDAO.cancelShift(idLich);
     }

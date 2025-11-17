@@ -27,7 +27,7 @@ public class TaiKhoanController {
         }
 
         return dao.checkLogin(email, password);
-        // return new TaiKhoan("admin@thuvien.com", "Seeded Admin", "Admin"); // bypass real login to SEEDING test account (admin)
+        // return new TaiKhoan("admin@thuvien.com", "Seeded Admin", "Admin"); // bypass real login to SEED test account (admin)
     }
     
     public boolean createAccount(TaiKhoan currentUser, String email, String hoTen, String role) throws Exception {
