@@ -450,6 +450,38 @@ public class PhatDAO {
         return null;
     }
 
+    // Trả về top N bạn đọc nợ nhiều (theo tổng tiền chưa đóng)
+    public List<BanDocPhat> getTopDebtors(int topN) throws Exception {
+        List<BanDocPhat> list = new ArrayList<>();
+        String sql = "SELECT bd.IdBD, bd.HoTen, bd.Email, bd.DiaChi, bd.SDT, "
+                + "SUM(p.SoTien) AS TongTienChuaDong "
+                + "FROM BANDOC bd "
+                + "JOIN PHIEUMUON pm ON bd.IdBD = pm.IdBD "
+                + "JOIN PHAT p ON pm.IdPM = p.IdPM "
+                + "WHERE p.TrangThai = 'Chua dong' "
+                + "GROUP BY bd.IdBD, bd.HoTen, bd.Email, bd.DiaChi, bd.SDT "
+                + "ORDER BY TongTienChuaDong DESC "
+                + "OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, topN);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    BanDocPhat bdp = new BanDocPhat();
+                    bdp.setIdBD(rs.getInt("IdBD"));
+                    bdp.setHoTen(rs.getString("HoTen"));
+                    bdp.setEmail(rs.getString("Email"));
+                    bdp.setDiaChi(rs.getString("DiaChi"));
+                    bdp.setSdt(rs.getString("SDT"));
+                    bdp.setTongTienChuaDong(rs.getBigDecimal("TongTienChuaDong") != null ? rs.getBigDecimal("TongTienChuaDong") : java.math.BigDecimal.ZERO);
+                    list.add(bdp);
+                }
+            }
+        }
+        return list;
+    }
+
     // Cập nhật trạng thái "Da dong" cho tất cả vé phạt của 1 bạn đọc
     public boolean updateAllPhatToDaDongByIdBD(int idBD) throws Exception {
         String sql = """

@@ -251,5 +251,123 @@ public class ChiTietPhieuMuonDAO {
         }
     }
 
+    // Check if a physical copy is currently borrowed (not yet returned)
+    public boolean isMaBanSaoBorrowed(int maBanSao) throws Exception {
+        String sql = "SELECT 1 FROM CT_PM WHERE MaBanSao = ? AND NgayTraThucTe IS NULL";
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, maBanSao);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException ex) {
+            throw new Exception("Failed to check borrowed status: " + ex.getMessage(), ex);
+        }
+    }
+
+    // Get the active (unreturned) CT_PM record for a given MaBanSao, or null if none
+    public ChiTietPhieuMuon getActiveByMaBanSao(int maBanSao) throws Exception {
+        String sql = "SELECT * FROM CT_PM WHERE MaBanSao = ? AND NgayTraThucTe IS NULL";
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, maBanSao);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapRow(rs);
+                return null;
+            }
+        } catch (SQLException ex) {
+            throw new Exception("Failed to get active loan by MaBanSao: " + ex.getMessage(), ex);
+        }
+    }
+
+    // Count overdue items for a reader (IdBD)
+    public int countOverdueByBanDoc(int idBD) throws Exception {
+        String sql = "SELECT COUNT(*) FROM CT_PM c JOIN PHIEUMUON pm ON c.IdPM = pm.IdPM WHERE pm.IdBD = ? AND c.NgayTraThucTe IS NULL AND pm.HanTra < ?";
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idBD);
+            ps.setDate(2, Date.valueOf(LocalDate.now()));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+                return 0;
+            }
+        } catch (SQLException ex) {
+            throw new Exception("Failed to count overdue items: " + ex.getMessage(), ex);
+        }
+    }
+
+    // Calculate number of days late for a given CT_PM (if returned use actual return date, otherwise use today)
+    public long getDaysLate(int idPM, int maBanSao) throws Exception {
+        String sql = "SELECT pm.HanTra, c.NgayTraThucTe FROM CT_PM c JOIN PHIEUMUON pm ON c.IdPM = pm.IdPM WHERE c.IdPM = ? AND c.MaBanSao = ?";
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idPM);
+            ps.setInt(2, maBanSao);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Date sqlHanTra = rs.getDate("HanTra");
+                    Date sqlNgayTra = rs.getDate("NgayTraThucTe");
+                    LocalDate hanTra = sqlHanTra != null ? sqlHanTra.toLocalDate() : null;
+                    LocalDate ngayTra = sqlNgayTra != null ? sqlNgayTra.toLocalDate() : LocalDate.now();
+                    if (hanTra == null) return 0;
+                    long daysLate = java.time.temporal.ChronoUnit.DAYS.between(hanTra, ngayTra);
+                    return Math.max(0, daysLate);
+                }
+                return 0;
+            }
+        } catch (SQLException ex) {
+            throw new Exception("Failed to compute days late: " + ex.getMessage(), ex);
+        }
+    }
+
+    // Lịch sử mượn cho 1 bạn đọc (join PHIEUMUON, CT_PM, BANSAO -> SACH)
+    public List<com.mycompany.quanlythuvien.model.LoanHistoryEntry> getLoanHistoryByBanDoc(int idBD) throws Exception {
+        String sql = "SELECT pm.IdPM, ct.MaBanSao, b.ISBN, s.TenSach, pm.NgayMuon, pm.HanTra, ct.NgayTraThucTe, ct.TinhTrangKhiTra, p.SoTien AS Phat "
+                + "FROM PHIEUMUON pm "
+                + "JOIN CT_PM ct ON pm.IdPM = ct.IdPM "
+                + "LEFT JOIN BANSAO b ON ct.MaBanSao = b.MaBanSao "
+                + "LEFT JOIN SACH s ON b.ISBN = s.ISBN "
+                + "LEFT JOIN PHAT p ON p.IdPM = pm.IdPM AND p.MaBanSao = ct.MaBanSao "
+                + "WHERE pm.IdBD = ? "
+                + "ORDER BY pm.NgayMuon DESC";
+
+        List<com.mycompany.quanlythuvien.model.LoanHistoryEntry> list = new ArrayList<>();
+
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idBD);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    com.mycompany.quanlythuvien.model.LoanHistoryEntry e = new com.mycompany.quanlythuvien.model.LoanHistoryEntry(
+                            rs.getInt("IdPM"),
+                            rs.getInt("MaBanSao"),
+                            rs.getString("ISBN"),
+                            rs.getString("TenSach"),
+                            rs.getDate("NgayMuon") != null ? rs.getDate("NgayMuon").toLocalDate() : null,
+                            rs.getDate("HanTra") != null ? rs.getDate("HanTra").toLocalDate() : null,
+                            rs.getDate("NgayTraThucTe") != null ? rs.getDate("NgayTraThucTe").toLocalDate() : null,
+                            rs.getString("TinhTrangKhiTra"),
+                            rs.getBigDecimal("Phat")
+                    );
+                    list.add(e);
+                }
+            }
+        }
+        return list;
+    }
+
+    // Đếm số sách quá hạn vào 1 ngày (ngày nhỏ hơn date và chưa trả)
+    public int countOverdueOnDate(java.time.LocalDate date) throws Exception {
+        String sql = "SELECT COUNT(*) FROM CT_PM c JOIN PHIEUMUON pm ON c.IdPM = pm.IdPM WHERE c.NgayTraThucTe IS NULL AND pm.HanTra < ?";
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(date));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+                return 0;
+            }
+        }
+    }
+
 
 }
