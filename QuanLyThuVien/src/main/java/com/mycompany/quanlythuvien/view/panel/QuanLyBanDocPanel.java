@@ -26,6 +26,64 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
      */
     BanDocController cur;
     String txtSearchPrv = "";
+    private int currentPage = 1;
+    private int pageSize = 32;    
+    private int totalRecords = 0;
+    private int totalPages = 1;
+    
+    private void recalcTotalPages() {
+        totalPages = (totalRecords + pageSize - 1) / pageSize;
+        if (totalPages == 0) totalPages = 1;
+    }
+    private void initPagination() {
+
+
+        totalRecords = cur.getDsBanDoc().size();
+        recalcTotalPages();
+        loadPage(currentPage);
+
+        // Nút trang trước
+        btnPrv.addActionListener(e -> {
+            if (currentPage > 1) {
+                currentPage--;
+                loadPage(currentPage);
+            }
+        });
+
+        // Nút trang sau
+        btnNxt.addActionListener(e -> {
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadPage(currentPage);
+            }
+        });
+    }
+    private void loadPage(int page) {
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, totalRecords);
+        
+        DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
+        model.setRowCount(0);
+        
+        for (int i = start; i < end; i++) {
+            BanDoc u = cur.getDsBanDoc().get(i);
+            model.addRow(new Object[]{
+                u.getIdBD(),
+                u.getHoTen(),
+                u.getEmail(),
+                u.getSdt(),
+                u.getDiaChi()
+            });
+        }
+
+        lblPageInfo.setText("Trang " + currentPage + "/" + totalPages);
+
+        btnPrv.setEnabled(currentPage > 1);
+        btnNxt.setEnabled(currentPage < totalPages);
+    }
+
+
+    
     public QuanLyBanDocPanel() throws Exception {
         initComponents();
         cur = new BanDocController();
@@ -36,6 +94,7 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi khi load dữ liệu:\n" + ex.getMessage());
         }
+        initPagination();
     }
     private ArrayList<BanDoc> filterList(String KEYFIELD, String KEYTXT) {
         ArrayList<BanDoc> newDsBanDoc = new ArrayList<BanDoc>(); 
@@ -125,7 +184,9 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         searchByCombo = new javax.swing.JComboBox<>();
         scrollPaneUsers = new javax.swing.JScrollPane();
         tblUsers = new javax.swing.JTable();
+        panelPagination = new javax.swing.JPanel();
         btnPrv = new javax.swing.JButton();
+        lblPageInfo = new javax.swing.JLabel();
         btnNxt = new javax.swing.JButton();
 
         jToolBar1.setRollover(true);
@@ -210,14 +271,28 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         });
         scrollPaneUsers.setViewportView(tblUsers);
 
+        panelPagination.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+
         btnPrv.setText("Trang trước");
+        btnPrv.setBorder(null);
+        btnPrv.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPrvActionPerformed(evt);
+            }
+        });
+        panelPagination.add(btnPrv);
+
+        lblPageInfo.setText("Trang 1/1");
+        panelPagination.add(lblPageInfo);
 
         btnNxt.setText("Trang sau");
+        btnNxt.setBorder(null);
         btnNxt.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnNxtActionPerformed(evt);
             }
         });
+        panelPagination.add(btnNxt);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -225,24 +300,17 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jToolBar1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(scrollPaneUsers, javax.swing.GroupLayout.DEFAULT_SIZE, 620, Short.MAX_VALUE)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(166, 166, 166)
-                .addComponent(btnPrv)
-                .addGap(130, 130, 130)
-                .addComponent(btnNxt)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(panelPagination, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(scrollPaneUsers, javax.swing.GroupLayout.PREFERRED_SIZE, 289, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnPrv)
-                    .addComponent(btnNxt))
-                .addContainerGap(56, Short.MAX_VALUE))
+                .addComponent(scrollPaneUsers, javax.swing.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
+                .addGap(12, 12, 12)
+                .addComponent(panelPagination, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -448,6 +516,10 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_btnNxtActionPerformed
 
+    private void btnPrvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrvActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnPrvActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel Search;
@@ -458,6 +530,8 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     private javax.swing.JButton btnPrv;
     private javax.swing.JButton btnView;
     private javax.swing.JToolBar jToolBar1;
+    private javax.swing.JLabel lblPageInfo;
+    private javax.swing.JPanel panelPagination;
     private javax.swing.JScrollPane scrollPaneUsers;
     private javax.swing.JComboBox<String> searchByCombo;
     private javax.swing.JTable tblUsers;
