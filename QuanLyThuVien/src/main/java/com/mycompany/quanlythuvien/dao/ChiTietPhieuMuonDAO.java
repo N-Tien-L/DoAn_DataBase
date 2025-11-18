@@ -1,5 +1,6 @@
 package com.mycompany.quanlythuvien.dao;
 
+import com.mycompany.quanlythuvien.model.BanDoc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -250,6 +251,95 @@ public class ChiTietPhieuMuonDAO {
             }
         }
     }
+    public ArrayList<Object> getAllPhieuMuonBanDoc(BanDoc x) throws Exception { //lede vibe coding
+        String sql = "SELECT pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, pm.HanTra, "
+                + "ct.MaBanSao, ct.NgayTraThucTe, ct.TinhTrangKhiTra, ct.EmailNguoiNhan "
+                + "FROM PHIEUMUON pm "
+                + "JOIN CT_PM ct ON pm.IdPM = ct.IdPM "
+                + "WHERE pm.IdBD = ? "
+                + "ORDER BY pm.NgayMuon DESC";
+        ArrayList<Object> ans = new ArrayList<Object>();
+        try (Connection con = DBConnector.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql);) {
+            
+            ps.setInt(1, x.getIdBD());
 
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int idPM = rs.getInt("IdPM");
+                    String EmailNguoiLap = rs.getString("EmailNguoiLap");
+                    
+                    Date sqlNgayMuon = rs.getDate("NgayMuon");
+                    LocalDate ngayMuon = sqlNgayMuon != null ? sqlNgayMuon.toLocalDate() : null;
+                    
+                    Date sqlHanTra = rs.getDate("HanTra");
+                    LocalDate HanTra = sqlHanTra != null ? sqlHanTra.toLocalDate() : null;
+                    
+                    
+                    int maBanSao = rs.getInt("MaBanSao");
+                    
+                    Date sqlNgayTra = rs.getDate("NgayTraThucTe");
+                    
+                    LocalDate ngayTraThucTe = sqlNgayTra != null ? sqlNgayTra.toLocalDate() : null;
+                    String tinhTrang = rs.getString("TinhTrangKhiTra");
+                    
+                    String emailNguoiNhan = rs.getString("EmailNguoiNhan");
+                    ans.add(idPM);
+                    ans.add(EmailNguoiLap);
+                    ans.add(ngayMuon);
+                    ans.add(HanTra);
+                    ans.add(maBanSao);
+                    ans.add(ngayTraThucTe);
+                    ans.add(tinhTrang);
+                    ans.add(emailNguoiNhan);
+                }
+            }
+        }
+        return ans;
+    }
+    public ArrayList<Object> getAllPhieuPhatBanDoc(BanDoc x) throws Exception {
+        String sql = "SELECT p.IdPhat, pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, "
+                   + "p.LoaiPhat, p.SoTien, p.NgayGhiNhan, p.TrangThai "
+                   + "FROM PHIEUMUON pm "
+                   + "JOIN PHAT p ON pm.IdPM = p.IdPM "
+                   + "WHERE pm.IdBD = ? "
+                   + "ORDER BY p.NgayGhiNhan DESC";
+
+        ArrayList<Object> ans = new ArrayList<>();
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, x.getIdBD());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int idPhat = rs.getInt("IdPhat");
+                    int idPM = rs.getInt("IdPM");
+                    String emailNguoiLap = rs.getString("EmailNguoiLap");
+
+                    Date sqlNgayMuon = rs.getDate("NgayMuon");
+                    java.time.LocalDate ngayMuon = sqlNgayMuon != null ? sqlNgayMuon.toLocalDate() : null;
+
+                    String loaiPhat = rs.getString("LoaiPhat");
+                    double soTien = rs.getDouble("SoTien");
+
+                    Date sqlNgayGhi = rs.getDate("NgayGhiNhan");
+                    java.time.LocalDate ngayGhiNhan = sqlNgayGhi != null ? sqlNgayGhi.toLocalDate() : null;
+
+                    String trangThai = rs.getString("TrangThai");
+
+                    ans.add(idPhat);
+                    ans.add(idPM);
+                    ans.add(emailNguoiLap);
+                    ans.add(ngayMuon);
+                    ans.add(loaiPhat);
+                    ans.add(soTien);
+                    ans.add(ngayGhiNhan);
+                    ans.add(trangThai);
+                }
+            }
+        }
+        return ans;
+    }
 
 }

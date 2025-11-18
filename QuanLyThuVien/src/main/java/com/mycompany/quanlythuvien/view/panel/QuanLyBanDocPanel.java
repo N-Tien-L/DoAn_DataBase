@@ -4,8 +4,11 @@
  */
 package com.mycompany.quanlythuvien.view.panel;
 
+import com.mycompany.quanlythuvien.view.dialog.BanDocFormDialog;
 import com.mycompany.quanlythuvien.controller.BanDocController;
 import com.mycompany.quanlythuvien.model.BanDoc;
+import java.awt.Dialog;
+import java.awt.Dimension;
 import java.awt.Frame;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -122,10 +125,12 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         searchByCombo = new javax.swing.JComboBox<>();
         scrollPaneUsers = new javax.swing.JScrollPane();
         tblUsers = new javax.swing.JTable();
+        btnPrv = new javax.swing.JButton();
+        btnNxt = new javax.swing.JButton();
 
         jToolBar1.setRollover(true);
 
-        btnAdd.setText("ADD");
+        btnAdd.setText("Thêm");
         btnAdd.setFocusable(false);
         btnAdd.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnAdd.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -136,7 +141,7 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         });
         jToolBar1.add(btnAdd);
 
-        btnEdit.setText("EDIT");
+        btnEdit.setText("Sửa");
         btnEdit.setFocusable(false);
         btnEdit.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnEdit.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -147,7 +152,7 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         });
         jToolBar1.add(btnEdit);
 
-        btnDelete.setText("DELETE");
+        btnDelete.setText("Xóa");
         btnDelete.setFocusable(false);
         btnDelete.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnDelete.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -158,10 +163,15 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         });
         jToolBar1.add(btnDelete);
 
-        btnView.setText("View");
+        btnView.setText("Xem chi tiết");
+        btnView.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnViewActionPerformed(evt);
+            }
+        });
         jToolBar1.add(btnView);
 
-        Search.setText("Search:");
+        Search.setText("Tìm kiếm");
         jToolBar1.add(Search);
 
         txtSearch.addActionListener(new java.awt.event.ActionListener() {
@@ -200,20 +210,39 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         });
         scrollPaneUsers.setViewportView(tblUsers);
 
+        btnPrv.setText("Trang trước");
+
+        btnNxt.setText("Trang sau");
+        btnNxt.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNxtActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jToolBar1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(scrollPaneUsers, javax.swing.GroupLayout.DEFAULT_SIZE, 620, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(166, 166, 166)
+                .addComponent(btnPrv)
+                .addGap(130, 130, 130)
+                .addComponent(btnNxt)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(scrollPaneUsers, javax.swing.GroupLayout.PREFERRED_SIZE, 323, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(57, Short.MAX_VALUE))
+                .addComponent(scrollPaneUsers, javax.swing.GroupLayout.PREFERRED_SIZE, 289, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnPrv)
+                    .addComponent(btnNxt))
+                .addContainerGap(56, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -358,12 +387,75 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         
     }//GEN-LAST:event_searchByComboActionPerformed
 
+    private void btnViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnViewActionPerformed
+        int viewRow = tblUsers.getSelectedRow();
+        if (viewRow == -1) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn 1 bạn đọc để xem chi tiết.", "Chú ý", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int modelRow = tblUsers.convertRowIndexToModel(viewRow);
+        Object idObj = tblUsers.getModel().getValueAt(modelRow, 0);
+        Object nameObj = tblUsers.getModel().getValueAt(modelRow, 1);
+        Object emailObj = tblUsers.getModel().getValueAt(modelRow, 2);
+        Object sdtObj = tblUsers.getModel().getValueAt(modelRow, 3);
+        Object diaChiObj = tblUsers.getModel().getValueAt(modelRow, 4);
+
+        final String idStr = idObj == null ? "" : idObj.toString();
+        final String name = nameObj == null ? "" : nameObj.toString();
+        final String email = emailObj == null ? "" : emailObj.toString();
+        final String sdt = sdtObj == null ? "" : sdtObj.toString();
+        final String diaChi = diaChiObj == null ? "" : diaChiObj.toString();
+
+        int id;
+        try {
+            id = Integer.parseInt(idStr);
+        } catch (NumberFormatException nfe) {
+            JOptionPane.showMessageDialog(this, "ID không hợp lệ: " + idStr, "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        BanDoc bd = new BanDoc(id, name, email, diaChi, sdt);
+
+        try {
+            ChiTietPhieuBanDocPanel chiTietPanel = new ChiTietPhieuBanDocPanel(bd);
+
+//            chiTietPanel.setPreferredSize(new Dimension(1338, 715));
+
+            JDialog dialog = new JDialog(
+                SwingUtilities.getWindowAncestor(this),
+                "Chi tiết phiếu - " + name,
+                Dialog.ModalityType.APPLICATION_MODAL
+            );
+
+            dialog.getContentPane().add(chiTietPanel);
+
+            dialog.pack();
+
+            dialog.setLocationRelativeTo(this);
+
+            dialog.setVisible(true);
+
+
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi khi mở chi tiết: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_btnViewActionPerformed
+
+    private void btnNxtActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNxtActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnNxtActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel Search;
     private javax.swing.JButton btnAdd;
     private javax.swing.JButton btnDelete;
     private javax.swing.JButton btnEdit;
+    private javax.swing.JButton btnNxt;
+    private javax.swing.JButton btnPrv;
     private javax.swing.JButton btnView;
     private javax.swing.JToolBar jToolBar1;
     private javax.swing.JScrollPane scrollPaneUsers;
