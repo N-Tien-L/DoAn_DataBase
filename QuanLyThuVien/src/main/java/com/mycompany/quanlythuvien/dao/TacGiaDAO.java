@@ -127,26 +127,55 @@ public class TacGiaDAO {
         }
     }
     
-    public List<TacGia> search(String keyword, String column) {
-        List<TacGia> list = new ArrayList<>();
-        
-        if (!isValidColumn(column)) return list;
-        
-        String sql = "SELECT * FROM TACGIA WHERE " + column + " LIKE ? ORDER BY MaTacGia ASC";
-        try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) 
-        {
-            ps.setString(1, "%" + keyword + "%");
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(mapRow(rs));
+        public List<TacGia> search(String keyword, String column, Integer lastMaTacGia, int pageSize) {
+            List<TacGia> list = new ArrayList<>();
+            String likePattern = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+
+            String sql;
+            switch (column) {
+                case "MaTacGia":
+                    sql = "SELECT TOP (?) * FROM TACGIA WHERE CAST(MaTacGia AS VARCHAR) LIKE ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
+                    break;
+                case "TenTacGia":
+                    sql = "SELECT TOP (?) * FROM TACGIA WHERE TenTacGia LIKE ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
+                    break;
+                case "Website":
+                    sql = "SELECT TOP (?) * FROM TACGIA WHERE Website LIKE ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
+                    break;
+                case "GhiChu":
+                    sql = "SELECT TOP (?) * FROM TACGIA WHERE GhiChu LIKE ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
+                    break;
+                default:
+                    return list;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            
+            try (Connection con = DBConnector.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) 
+            {
+                int idx = 1;
+                ps.setInt(idx++, pageSize);
+                
+                ps.setString(idx++, likePattern);
+                
+                if (lastMaTacGia == null) {
+                    ps.setNull(idx++, java.sql.Types.INTEGER);
+                    ps.setNull(idx++, java.sql.Types.INTEGER);
+                } else {
+                    ps.setInt(idx++, lastMaTacGia);
+                    ps.setInt(idx++, lastMaTacGia);
+                }
+                
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        list.add(mapRow(rs));
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return list;
         }
-        
-        return list;
-    }
     
     public Optional<TacGia> getById(int id) {
         String sql = "SELECT * FROM TACGIA WHERE MaTacGia=?";
@@ -162,12 +191,5 @@ public class TacGiaDAO {
             e.printStackTrace();
         }
         return Optional.empty();
-    }
-    
-    private boolean isValidColumn(String column) {
-        return switch(column) {
-            case "TenTacGia", "Website", "GhiChu" -> true;
-            default -> false;
-        };
     }
 }

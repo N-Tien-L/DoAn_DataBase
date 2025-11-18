@@ -59,11 +59,11 @@ public class TheLoaiController {
         return theLoaiDAO.delete(maTheLoai);
     }
     
-    public List<TheLoai> searchTheLoai(String keyword, String column) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return theLoaiDAO.getAll(0, getTotalTheLoai());
+    public List<TheLoai> searchTheLoai(String keyword, String column, Integer lastMaTheLoaiCursor, int pageSize) {
+        if (pageSize < 1 || pageSize > 100) {
+            pageSize = 20;
         }
-        return theLoaiDAO.search(keyword, column);
+        return theLoaiDAO.search(keyword, column, lastMaTheLoaiCursor, pageSize);
     }
     
     public Optional<TheLoai> getTheLoaiById(int id) {

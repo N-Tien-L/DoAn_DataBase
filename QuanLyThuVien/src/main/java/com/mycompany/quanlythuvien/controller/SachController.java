@@ -93,7 +93,9 @@ public class SachController {
     
     public List<Sach> search(String keyword, String tieuChi, String lastISBNCursor, int pageSize) {
         try {
-            if (tieuChi == null || tieuChi.isBlank()) tieuChi = "Tất cả";
+            if (pageSize < 1 || pageSize > 100) {
+                pageSize = 20;
+            }
             return sachDAO.search(keyword, tieuChi, lastISBNCursor, pageSize);
         } catch (Exception e) {
             e.printStackTrace();

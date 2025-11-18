@@ -53,12 +53,12 @@ public class NhaXuatBanController {
         return nxbDAO.delete(maNXB);
     }
     
-    public List<NhaXuatBan> searchNXB(String keyword, String column) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return nxbDAO.getAll(0, getTotalNXB());
+    public List<NhaXuatBan> searchNXB(String keyword, String column, Integer lastMaNXBCursor, int pageSize) {
+        if (pageSize < 1 || pageSize > 100) {
+            pageSize = 20;
         }
         
-        return nxbDAO.search(keyword, column);
+        return nxbDAO.search(keyword, column, lastMaNXBCursor, pageSize);
     }
     
     public Optional<NhaXuatBan> getNXBById(int id) {

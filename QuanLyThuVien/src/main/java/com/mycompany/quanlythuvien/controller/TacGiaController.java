@@ -97,12 +97,12 @@ public class TacGiaController {
         return dao.delete(maTG);
     }
     
-    public List<TacGia> searchTacGia(String keyword, String column) {
-        if (keyword == null || keyword.isEmpty()) {
-            return dao.getAll(0, getTotalTacGia());
+    public List<TacGia> searchTacGia(String keyword, String column, Integer lastMaTacGiaCursor, int pageSize) {
+        if (pageSize < 1 || pageSize > 100) {
+            pageSize = 20;
         }
         
-        return dao.search(keyword, column);
+        return dao.search(keyword, column, lastMaTacGiaCursor, pageSize);
     }
     
     public Optional<TacGia> getTacGiaById(int maTG){

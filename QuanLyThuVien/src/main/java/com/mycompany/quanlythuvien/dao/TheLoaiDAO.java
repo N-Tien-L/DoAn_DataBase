@@ -130,29 +130,48 @@ public class TheLoaiDAO {
         return Optional.empty();
     }
     
-    public List<TheLoai> search(String keyword, String column) {
+    public List<TheLoai> search(String keyword, String column, Integer lastMaTheLoai, int pageSize) {
         List<TheLoai> list = new ArrayList<>();
-        if (!isValidColumn(column)) return list;
+        String likePattern = "%" + (keyword == null ? "" : keyword.trim()) + "%";
         
-        String sql = "SELECT * FROM THELOAI WHERE " + column + " LIKE ? ORDER BY MaTheLoai ASC";
+        String sql;
+        
+        switch (column) {
+            case "MaTheLoai":
+                sql = "SELECT TOP (?) * FROM THELOAI WHERE CAST(MaTheLoai AS VARCHAR) LIKE ? AND (? IS NULL OR MaTheLoai > ?) ORDER BY MaTheLoai ASC";
+                break;
+            case "TenTheLoai":
+                sql = "SELECT TOP (?) * FROM THELOAI WHERE TenTheLoai LIKE ? AND (? IS NULL OR MaTheLoai > ?) ORDER BY MaTheLoai ASC";
+                break;
+            default:
+                return list;
+        }
+        
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)) 
         {
-            ps.setString(1, "%" + keyword + "%");
+
+            int idx = 1;
+            ps.setInt(idx++, pageSize);
+            ps.setString(idx++, likePattern);
+            
+            if (lastMaTheLoai == null) {
+                ps.setNull(idx++, java.sql.Types.INTEGER);
+                ps.setNull(idx++, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(idx++, lastMaTheLoai);
+                ps.setInt(idx++, lastMaTheLoai);
+            }
+            
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(mapRow(rs));
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         
         return list;
-    }
-    
-    private boolean isValidColumn(String column) {
-        return switch (column) {
-            case "TenTheLoai" -> true;
-            default -> false;
-        };
     }
 }

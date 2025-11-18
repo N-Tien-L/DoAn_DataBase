@@ -131,28 +131,47 @@ public class NhaXuatBanDAO {
         return Optional.empty();
     }
     
-    public List<NhaXuatBan> search(String keyword, String column) {
+    public List<NhaXuatBan> search(String keyword, String column, Integer lastMaNXB, int pageSize) {
         List<NhaXuatBan> list = new ArrayList<>();
-        if (!isValidColumn(column)) return list;
+        String likePattern = "%" + (keyword == null ? "" : keyword.trim()) + "%";
         
-        String sql = "SELECT * FROM NHAXUATBAN WHERE " + column + " LIKE ? ORDER BY MaNXB ASC";
+        String sql;
+        
+        switch (column) {
+            case "MaNXB":
+                sql = "SELECT TOP (?) * FROM NHAXUATBAN WHERE CAST(MaNXB AS VARCHAR) LIKE ? AND (? IS NULL OR MaNXB > ?) ORDER BY MaNXB ASC";
+                break;
+            case "TenNXB":
+                sql = "SELECT TOP (?) * FROM NHAXUATBAN WHERE TenNXB LIKE ? AND (? IS NULL OR MaNXB > ?) ORDER BY MaNXB ASC";
+                break;
+            default:
+                return list;
+        }
+        
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql))
         {
-            ps.setString(1, "%" + keyword + "%");
+            int idx = 1;
+            ps.setInt(idx++, pageSize);
+            
+            ps.setString(idx++, likePattern);
+            
+            if (lastMaNXB == null) {
+                ps.setNull(idx++, java.sql.Types.INTEGER);
+                ps.setNull(idx++, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(idx++, lastMaNXB);
+                ps.setInt(idx++, lastMaNXB);
+            }
+            
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(mapRow(rs));
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return list;
-    }
-    
-    private boolean isValidColumn(String column) {
-        return switch(column) {
-            case "TenNXB" -> true;
-            default -> false;
-        };
     }
 }

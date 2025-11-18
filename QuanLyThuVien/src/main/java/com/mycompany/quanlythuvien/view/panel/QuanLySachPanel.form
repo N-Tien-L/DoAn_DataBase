@@ -11,7 +11,7 @@
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
-    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,3,91,0,0,2,-27"/>
+    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,3,54,0,0,3,11"/>
   </AuxValues>
 
   <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
@@ -53,15 +53,15 @@
                 <Component class="javax.swing.JLabel" name="lblTimKiem">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="T&#xec;m ki&#x1ebf;m s&#xe1;ch"/>
+                    <Property name="text" type="java.lang.String" value="[&#x2315;] T&#xec;m ki&#x1ebf;m s&#xe1;ch"/>
                   </Properties>
                 </Component>
                 <Component class="javax.swing.JComboBox" name="cboTieuChi">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
                     <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
                       <StringArray count="4">
@@ -79,7 +79,7 @@
                 <Component class="javax.swing.JTextField" name="txtTimKiem">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
                     <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                       <Dimension value="[250, 25]"/>
@@ -95,7 +95,7 @@
                 <Component class="javax.swing.JButton" name="btnTim">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
                     <Property name="text" type="java.lang.String" value="T&#xec;m"/>
                   </Properties>
@@ -126,9 +126,9 @@
                 <Component class="javax.swing.JButton" name="btnThem">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="Th&#xea;m"/>
+                    <Property name="text" type="java.lang.String" value="[+] Th&#xea;m"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnThemActionPerformed"/>
@@ -137,9 +137,9 @@
                 <Component class="javax.swing.JButton" name="btnSua">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="S&#x1eed;a"/>
+                    <Property name="text" type="java.lang.String" value="[&#x270e;] S&#x1eed;a"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSuaActionPerformed"/>
@@ -148,9 +148,9 @@
                 <Component class="javax.swing.JButton" name="btnXoa">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="X&#xf3;a"/>
+                    <Property name="text" type="java.lang.String" value="[-] X&#xf3;a"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnXoaActionPerformed"/>
@@ -159,9 +159,9 @@
                 <Component class="javax.swing.JButton" name="btnLamMoi">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="L&#xe0;m m&#x1edb;i"/>
+                    <Property name="text" type="java.lang.String" value="[&#x21bb;] L&#xe0;m m&#x1edb;i"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnLamMoiActionPerformed"/>
@@ -170,9 +170,9 @@
                 <Component class="javax.swing.JButton" name="btnChiTiet">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="Xem chi ti&#x1ebf;t"/>
+                    <Property name="text" type="java.lang.String" value="[i] Xem chi ti&#x1ebf;t"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnChiTietActionPerformed"/>
@@ -183,7 +183,7 @@
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                       <Font name="Segoe UI" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="Xem b&#x1ea3;n sao"/>
+                    <Property name="text" type="java.lang.String" value="[c] Xem b&#x1ea3;n sao"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnXemBanSaoActionPerformed"/>
@@ -287,7 +287,10 @@
                   <SubComponents>
                     <Component class="javax.swing.JButton" name="btnSachTruoc">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Tr&#x1b0;&#x1edb;c"/>
+                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
+                        </Property>
+                        <Property name="text" type="java.lang.String" value="&#x25c4; Tr&#x1b0;&#x1edb;c"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSachTruocActionPerformed"/>
@@ -295,7 +298,10 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="btnSachSau">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Sau"/>
+                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
+                        </Property>
+                        <Property name="text" type="java.lang.String" value="Sau &#x25ba;"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSachSauActionPerformed"/>
@@ -353,7 +359,7 @@
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" attributes="0">
                                   <Component id="lblMaTacGiaTG" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace max="32767" attributes="0"/>
+                                  <EmptySpace pref="81" max="32767" attributes="0"/>
                                   <Component id="jLabel6" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <Component id="txtTenTG" min="-2" max="-2" attributes="0"/>
@@ -482,9 +488,9 @@
                 <Component class="javax.swing.JButton" name="btnLuuTG">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="L&#x1b0;u"/>
+                    <Property name="text" type="java.lang.String" value="[&#x2713;]L&#x1b0;u"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnLuuTGActionPerformed"/>
@@ -506,7 +512,7 @@
                           <EmptySpace min="-2" pref="50" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" attributes="0">
-                                  <Component id="btnThemTG" min="-2" pref="71" max="-2" attributes="0"/>
+                                  <Component id="btnThemTG" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="btnSuaTG" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
@@ -524,7 +530,7 @@
                                   <Component id="btnTimTG" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
-                          <EmptySpace pref="169" max="32767" attributes="0"/>
+                          <EmptySpace pref="188" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -554,9 +560,9 @@
                 <Component class="javax.swing.JButton" name="btnThemTG">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="Th&#xea;m"/>
+                    <Property name="text" type="java.lang.String" value="[+] Th&#xea;m"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnThemTGActionPerformed"/>
@@ -565,9 +571,9 @@
                 <Component class="javax.swing.JButton" name="btnSuaTG">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="S&#x1eed;a"/>
+                    <Property name="text" type="java.lang.String" value="[&#x270e;] S&#x1eed;a"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSuaTGActionPerformed"/>
@@ -576,9 +582,9 @@
                 <Component class="javax.swing.JButton" name="btnXoaTG">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="X&#xf3;a"/>
+                    <Property name="text" type="java.lang.String" value="[-] X&#xf3;a"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnXoaTGActionPerformed"/>
@@ -587,9 +593,9 @@
                 <Component class="javax.swing.JButton" name="btnLamMoiTG">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="L&#xe0;m m&#x1edb;i"/>
+                    <Property name="text" type="java.lang.String" value="[&#x21bb;] L&#xe0;m m&#x1edb;i"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnLamMoiTGActionPerformed"/>
@@ -598,15 +604,15 @@
                 <Component class="javax.swing.JLabel" name="lblTimKiemTG">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="T&#xec;m ki&#x1ebf;m t&#xe1;c gi&#x1ea3;"/>
+                    <Property name="text" type="java.lang.String" value="[&#x2315;] T&#xec;m ki&#x1ebf;m t&#xe1;c gi&#x1ea3;"/>
                   </Properties>
                 </Component>
                 <Component class="javax.swing.JComboBox" name="cboTieuChiTG">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
                     <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
                       <StringArray count="4">
@@ -624,7 +630,7 @@
                 <Component class="javax.swing.JTextField" name="txtTimKiemTG">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
                     <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                       <Dimension value="[250, 26]"/>
@@ -640,7 +646,7 @@
                 <Component class="javax.swing.JButton" name="btnTimTG">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
                     <Property name="text" type="java.lang.String" value="T&#xec;m"/>
                   </Properties>
@@ -735,7 +741,10 @@
                   <SubComponents>
                     <Component class="javax.swing.JButton" name="btnTGTruoc">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Tr&#x1b0;&#x1edb;c"/>
+                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
+                        </Property>
+                        <Property name="text" type="java.lang.String" value="&#x25c4; Tr&#x1b0;&#x1edb;c"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnTGTruocActionPerformed"/>
@@ -743,7 +752,10 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="btnTGSau">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Sau"/>
+                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
+                        </Property>
+                        <Property name="text" type="java.lang.String" value="Sau &#x25ba;"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnTGSauActionPerformed"/>
@@ -778,15 +790,15 @@
                 <Component class="javax.swing.JLabel" name="lblTimKiemNXB">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="T&#xec;m ki&#x1ebf;m nh&#xe0; xu&#x1ea5;t b&#x1ea3;n"/>
+                    <Property name="text" type="java.lang.String" value="[&#x2315;] T&#xec;m ki&#x1ebf;m nh&#xe0; xu&#x1ea5;t b&#x1ea3;n"/>
                   </Properties>
                 </Component>
                 <Component class="javax.swing.JComboBox" name="cboTieuChiNXB">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
                     <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
                       <StringArray count="4">
@@ -804,7 +816,7 @@
                 <Component class="javax.swing.JTextField" name="txtTimKiemNXB">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
                     <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                       <Dimension value="[250, 25]"/>
@@ -820,7 +832,7 @@
                 <Component class="javax.swing.JButton" name="btnTimNXB">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
                     <Property name="text" type="java.lang.String" value="T&#xec;m"/>
                   </Properties>
@@ -866,7 +878,7 @@
                                               <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                                               <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                                           </Group>
-                                          <Component id="jLabel4" pref="171" max="32767" attributes="0"/>
+                                          <Component id="jLabel4" pref="168" max="32767" attributes="0"/>
                                       </Group>
                                       <EmptySpace type="separate" max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="0" attributes="0">
@@ -875,7 +887,7 @@
                                       </Group>
                                   </Group>
                               </Group>
-                              <EmptySpace pref="71" max="32767" attributes="0"/>
+                              <EmptySpace pref="67" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -892,9 +904,9 @@
                                   <Component id="txtTenNXB" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace min="-2" pref="58" max="-2" attributes="0"/>
+                              <EmptySpace type="separate" max="-2" attributes="0"/>
                               <Component id="btnLuuNXB" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace pref="19" max="32767" attributes="0"/>
+                              <EmptySpace pref="14" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -942,9 +954,9 @@
                     <Component class="javax.swing.JButton" name="btnLuuNXB">
                       <Properties>
                         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                          <Font name="Segoe UI" size="14" style="0"/>
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
                         </Property>
-                        <Property name="text" type="java.lang.String" value="L&#x1b0;u"/>
+                        <Property name="text" type="java.lang.String" value="[&#x2713;]L&#x1b0;u"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnLuuNXBActionPerformed"/>
@@ -967,20 +979,20 @@
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" alignment="0" attributes="0">
-                              <EmptySpace min="-2" pref="40" max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Group type="102" attributes="0">
-                                      <Component id="btnXoaNXB" min="-2" pref="85" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="17" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="btnThemNXB" min="-2" pref="108" max="-2" attributes="0"/>
+                                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                                      <Component id="btnSuaNXB" max="32767" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="btnXoaNXB" min="-2" pref="108" max="-2" attributes="0"/>
                                       <EmptySpace type="separate" max="-2" attributes="0"/>
                                       <Component id="btnLamMoiNXB" min="-2" max="-2" attributes="0"/>
                                   </Group>
-                                  <Group type="102" attributes="0">
-                                      <Component id="btnThemNXB" min="-2" pref="85" max="-2" attributes="0"/>
-                                      <EmptySpace type="separate" max="-2" attributes="0"/>
-                                      <Component id="btnSuaNXB" min="-2" pref="85" max="-2" attributes="0"/>
-                                  </Group>
                               </Group>
-                              <EmptySpace max="32767" attributes="0"/>
+                              <EmptySpace pref="27" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -993,11 +1005,11 @@
                                   <Component id="btnSuaNXB" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="btnLamMoiNXB" min="-2" max="-2" attributes="0"/>
-                                  <Component id="btnXoaNXB" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="btnLamMoiNXB" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="btnXoaNXB" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="111" max="32767" attributes="0"/>
+                              <EmptySpace pref="67" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -1006,9 +1018,9 @@
                     <Component class="javax.swing.JButton" name="btnThemNXB">
                       <Properties>
                         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                          <Font name="Segoe UI" size="14" style="0"/>
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
                         </Property>
-                        <Property name="text" type="java.lang.String" value="Th&#xea;m"/>
+                        <Property name="text" type="java.lang.String" value="[+] Th&#xea;m"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnThemNXBActionPerformed"/>
@@ -1017,9 +1029,9 @@
                     <Component class="javax.swing.JButton" name="btnXoaNXB">
                       <Properties>
                         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                          <Font name="Segoe UI" size="14" style="0"/>
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
                         </Property>
-                        <Property name="text" type="java.lang.String" value="X&#xf3;a"/>
+                        <Property name="text" type="java.lang.String" value="[-] X&#xf3;a"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnXoaNXBActionPerformed"/>
@@ -1028,9 +1040,9 @@
                     <Component class="javax.swing.JButton" name="btnLamMoiNXB">
                       <Properties>
                         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                          <Font name="Segoe UI" size="14" style="0"/>
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
                         </Property>
-                        <Property name="text" type="java.lang.String" value="L&#xe0;m m&#x1edb;i"/>
+                        <Property name="text" type="java.lang.String" value="[&#x21bb;] L&#xe0;m m&#x1edb;i"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnLamMoiNXBActionPerformed"/>
@@ -1039,9 +1051,9 @@
                     <Component class="javax.swing.JButton" name="btnSuaNXB">
                       <Properties>
                         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                          <Font name="Segoe UI" size="14" style="0"/>
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
                         </Property>
-                        <Property name="text" type="java.lang.String" value="S&#x1eed;a"/>
+                        <Property name="text" type="java.lang.String" value="[&#x270e;] S&#x1eed;a"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSuaNXBActionPerformed"/>
@@ -1071,7 +1083,10 @@
                   <SubComponents>
                     <Component class="javax.swing.JButton" name="btnNXBTruoc">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Tr&#x1b0;&#x1edb;c"/>
+                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
+                        </Property>
+                        <Property name="text" type="java.lang.String" value="&#x25c4; Tr&#x1b0;&#x1edb;c"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnNXBTruocActionPerformed"/>
@@ -1079,7 +1094,10 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="btnNXBSau">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Sau"/>
+                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
+                        </Property>
+                        <Property name="text" type="java.lang.String" value="Sau &#x25ba;"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnNXBSauActionPerformed"/>
@@ -1167,15 +1185,15 @@
                 <Component class="javax.swing.JLabel" name="lblTimKiemTL">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="T&#xec;m ki&#x1ebf;m th&#x1ec3; lo&#x1ea1;i"/>
+                    <Property name="text" type="java.lang.String" value="[&#x2315;] T&#xec;m ki&#x1ebf;m th&#x1ec3; lo&#x1ea1;i"/>
                   </Properties>
                 </Component>
                 <Component class="javax.swing.JComboBox" name="cboTieuChiTL">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
                     <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
                       <StringArray count="4">
@@ -1193,7 +1211,7 @@
                 <Component class="javax.swing.JTextField" name="txtTimKiemTL">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
                     <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                       <Dimension value="[250, 25]"/>
@@ -1209,7 +1227,7 @@
                 <Component class="javax.swing.JButton" name="btnTimTL">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                      <Font name="Segoe UI" size="14" style="0"/>
+                      <Font name="Arial Unicode MS" size="14" style="0"/>
                     </Property>
                     <Property name="text" type="java.lang.String" value="T&#xec;m"/>
                   </Properties>
@@ -1258,7 +1276,7 @@
                                       </Group>
                                   </Group>
                               </Group>
-                              <EmptySpace pref="112" max="32767" attributes="0"/>
+                              <EmptySpace pref="125" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -1275,7 +1293,7 @@
                                   <Component id="txtTenTL" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="jLabel10" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="12" max="32767" attributes="0"/>
+                              <EmptySpace pref="13" max="32767" attributes="0"/>
                               <Component id="btnLuuTL" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                           </Group>
@@ -1315,9 +1333,9 @@
                     <Component class="javax.swing.JButton" name="btnLuuTL">
                       <Properties>
                         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                          <Font name="Segoe UI" size="14" style="0"/>
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
                         </Property>
-                        <Property name="text" type="java.lang.String" value="L&#x1b0;u"/>
+                        <Property name="text" type="java.lang.String" value="[&#x2713;]L&#x1b0;u"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnLuuTLActionPerformed"/>
@@ -1349,21 +1367,18 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <EmptySpace min="-2" pref="66" max="-2" attributes="0"/>
+                          <Group type="102" attributes="0">
+                              <EmptySpace pref="38" max="32767" attributes="0"/>
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Group type="102" attributes="0">
-                                      <Component id="btnXoaTL" min="-2" pref="85" max="-2" attributes="0"/>
-                                      <EmptySpace type="separate" max="-2" attributes="0"/>
-                                      <Component id="btnLamMoiTL" min="-2" max="-2" attributes="0"/>
-                                  </Group>
-                                  <Group type="102" attributes="0">
-                                      <Component id="btnThemTL" min="-2" pref="85" max="-2" attributes="0"/>
-                                      <EmptySpace type="separate" max="-2" attributes="0"/>
-                                      <Component id="btnSuaTL" max="32767" attributes="0"/>
-                                  </Group>
+                                  <Component id="btnXoaTL" max="32767" attributes="0"/>
+                                  <Component id="btnThemTL" pref="108" max="32767" attributes="0"/>
                               </Group>
-                              <EmptySpace max="32767" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                  <Component id="btnLamMoiTL" max="32767" attributes="0"/>
+                                  <Component id="btnSuaTL" max="32767" attributes="0"/>
+                              </Group>
+                              <EmptySpace pref="26" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -1377,10 +1392,10 @@
                               </Group>
                               <EmptySpace type="separate" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="btnXoaTL" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="btnLamMoiTL" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="btnXoaTL" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="48" max="32767" attributes="0"/>
+                              <EmptySpace pref="50" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -1389,9 +1404,9 @@
                     <Component class="javax.swing.JButton" name="btnThemTL">
                       <Properties>
                         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                          <Font name="Segoe UI" size="14" style="0"/>
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
                         </Property>
-                        <Property name="text" type="java.lang.String" value="Th&#xea;m"/>
+                        <Property name="text" type="java.lang.String" value="[+] Th&#xea;m"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnThemTLActionPerformed"/>
@@ -1400,9 +1415,9 @@
                     <Component class="javax.swing.JButton" name="btnSuaTL">
                       <Properties>
                         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                          <Font name="Segoe UI" size="14" style="0"/>
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
                         </Property>
-                        <Property name="text" type="java.lang.String" value="S&#x1eed;a"/>
+                        <Property name="text" type="java.lang.String" value="[&#x270e;] S&#x1eed;a"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSuaTLActionPerformed"/>
@@ -1411,9 +1426,9 @@
                     <Component class="javax.swing.JButton" name="btnXoaTL">
                       <Properties>
                         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                          <Font name="Segoe UI" size="14" style="0"/>
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
                         </Property>
-                        <Property name="text" type="java.lang.String" value="X&#xf3;a"/>
+                        <Property name="text" type="java.lang.String" value="[-] X&#xf3;a"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnXoaTLActionPerformed"/>
@@ -1422,9 +1437,9 @@
                     <Component class="javax.swing.JButton" name="btnLamMoiTL">
                       <Properties>
                         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                          <Font name="Segoe UI" size="14" style="0"/>
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
                         </Property>
-                        <Property name="text" type="java.lang.String" value="L&#xe0;m m&#x1edb;i"/>
+                        <Property name="text" type="java.lang.String" value="[&#x21bb;] L&#xe0;m m&#x1edb;i"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnLamMoiTLActionPerformed"/>
@@ -1454,13 +1469,25 @@
                   <SubComponents>
                     <Component class="javax.swing.JButton" name="btnTruocTL">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Tr&#x1b0;&#x1edb;c"/>
+                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
+                        </Property>
+                        <Property name="text" type="java.lang.String" value="&#x25c4; Tr&#x1b0;&#x1edb;c"/>
                       </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnTruocTLActionPerformed"/>
+                      </Events>
                     </Component>
                     <Component class="javax.swing.JButton" name="btnSauTL">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Sau"/>
+                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                          <Font name="Arial Unicode MS" size="14" style="0"/>
+                        </Property>
+                        <Property name="text" type="java.lang.String" value="Sau &#x25ba;"/>
                       </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSauTLActionPerformed"/>
+                      </Events>
                     </Component>
                   </SubComponents>
                 </Container>
