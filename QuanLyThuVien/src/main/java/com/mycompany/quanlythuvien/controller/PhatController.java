@@ -36,6 +36,16 @@ public class PhatController {
         }
     }
 
+    // Lấy phạt theo IdPhat
+    public Phat getPhatById(int idPhat) {
+        try {
+            return phatDAO.getPhatById(idPhat);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     // Tạo phiếu phạt mới
     public boolean createPhat(Phat p) {
         try {

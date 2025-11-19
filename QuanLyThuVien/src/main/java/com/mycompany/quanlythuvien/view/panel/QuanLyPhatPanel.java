@@ -34,13 +34,17 @@ public class QuanLyPhatPanel extends JPanel {
 
     // Pagination fields
     private int currentCursor = 0;
+    private int nextCursor = -1;
     private int pageSize = 10;
     private int totalCount = 0;
+    private int currentRecordStart = 1; // Vị trí record đầu tiên của trang hiện tại (1-based)
     private String currentSearchText = "";
     private boolean isSearching = false;
     private JButton btnPrevious;
     private JButton btnNext;
     private JLabel lblPageInfo;
+    private java.util.Stack<Integer> cursorStack = new java.util.Stack<>();
+    private java.util.Stack<Integer> recordStartStack = new java.util.Stack<>(); // Lưu vị trí đầu của từng trang
 
     public QuanLyPhatPanel() {
         setLayout(new BorderLayout(10, 10));
@@ -51,6 +55,25 @@ public class QuanLyPhatPanel extends JPanel {
         add(createMainPanel(), BorderLayout.CENTER);
 
         loadTableData();
+    }
+
+    /**
+     * Helper: Load và scale icon với chất lượng cao
+     */
+    private ImageIcon loadScaledIcon(String path, int width, int height) {
+        try {
+            java.net.URL resource = getClass().getResource(path);
+            if (resource != null) {
+                ImageIcon icon = new ImageIcon(resource);
+                Image img = icon.getImage();
+                // Scale với Image.SCALE_SMOOTH để render mượt hơn
+                Image scaledImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+                return new ImageIcon(scaledImg);
+            }
+        } catch (Exception e) {
+            // Icon load failed
+        }
+        return null;
     }
 
     /**
@@ -159,6 +182,9 @@ public class QuanLyPhatPanel extends JPanel {
                     isSearching = false;
                     currentSearchText = "";
                     currentCursor = 0;
+                    currentRecordStart = 1;
+                    cursorStack.clear();
+                    recordStartStack.clear();
                     loadTableData();
                     scrollSuggest.setVisible(false);
                     return;
@@ -168,6 +194,9 @@ public class QuanLyPhatPanel extends JPanel {
                 isSearching = true;
                 currentSearchText = text;
                 currentCursor = 0;
+                currentRecordStart = 1;
+                cursorStack.clear();
+                recordStartStack.clear();
 
                 // Tải dữ liệu trang đầu tiên của tìm kiếm
                 loadTableData();
@@ -250,7 +279,15 @@ public class QuanLyPhatPanel extends JPanel {
         panel.setOpaque(false);
 
         // Nút Previous
-        btnPrevious = new JButton("◀ Trang Trước");
+        btnPrevious = new JButton("Trang Trước");
+        try {
+            ImageIcon leftIcon = loadScaledIcon("/icons/32x32/left.png", 20, 20);
+            if (leftIcon != null) {
+                btnPrevious.setIcon(leftIcon);
+            }
+        } catch (Exception e) {
+            btnPrevious.setText("◀ Trang Trước");
+        }
         btnPrevious.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         btnPrevious.setForeground(Color.WHITE);
         btnPrevious.setBackground(new Color(100, 100, 100));
@@ -259,6 +296,19 @@ public class QuanLyPhatPanel extends JPanel {
         btnPrevious.setEnabled(false);
         btnPrevious.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnPrevious.addActionListener(e -> previousPage());
+        btnPrevious.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                if (btnPrevious.isEnabled()) {
+                    btnPrevious.setBackground(new Color(80, 80, 80));
+                }
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnPrevious.setBackground(new Color(100, 100, 100));
+            }
+        });
         panel.add(btnPrevious);
 
         // Thông tin trang
@@ -268,7 +318,15 @@ public class QuanLyPhatPanel extends JPanel {
         panel.add(lblPageInfo);
 
         // Nút Next
-        btnNext = new JButton("Trang Sau ▶");
+        btnNext = new JButton("Trang Sau");
+        try {
+            ImageIcon rightIcon = loadScaledIcon("/icons/32x32/right.png", 20, 20);
+            if (rightIcon != null) {
+                btnNext.setIcon(rightIcon);
+            }
+        } catch (Exception e) {
+            btnNext.setText("Trang Sau ▶");
+        }
         btnNext.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         btnNext.setForeground(Color.WHITE);
         btnNext.setBackground(new Color(100, 100, 100));
@@ -277,6 +335,19 @@ public class QuanLyPhatPanel extends JPanel {
         btnNext.setEnabled(false);
         btnNext.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnNext.addActionListener(e -> nextPage());
+        btnNext.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                if (btnNext.isEnabled()) {
+                    btnNext.setBackground(new Color(80, 80, 80));
+                }
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btnNext.setBackground(new Color(100, 100, 100));
+            }
+        });
         panel.add(btnNext);
 
         return panel;
@@ -286,15 +357,9 @@ public class QuanLyPhatPanel extends JPanel {
      * Chuyển đến trang trước
      */
     private void previousPage() {
-        PaginationResult<Phat> result;
-        if (isSearching && !currentSearchText.isEmpty()) {
-            result = phatController.searchPhatByTextPaginated(currentSearchText, currentCursor, pageSize);
-        } else {
-            result = phatController.getAllPhatPaginated(currentCursor, pageSize);
-        }
-
-        if (result.isHasPrevious()) {
-            currentCursor = result.getPreviousCursor();
+        if (!cursorStack.isEmpty()) {
+            currentCursor = cursorStack.pop();
+            currentRecordStart = recordStartStack.pop();
             loadTableData();
         }
     }
@@ -303,15 +368,11 @@ public class QuanLyPhatPanel extends JPanel {
      * Chuyển đến trang tiếp theo
      */
     private void nextPage() {
-        PaginationResult<Phat> result;
-        if (isSearching && !currentSearchText.isEmpty()) {
-            result = phatController.searchPhatByTextPaginated(currentSearchText, currentCursor, pageSize);
-        } else {
-            result = phatController.getAllPhatPaginated(currentCursor, pageSize);
-        }
-
-        if (result.isHasNext()) {
-            currentCursor = result.getNextCursor();
+        if (nextCursor >= 0) {
+            cursorStack.push(currentCursor);
+            recordStartStack.push(currentRecordStart);
+            currentCursor = nextCursor;
+            currentRecordStart += pageSize;
             loadTableData();
         }
     }
@@ -369,27 +430,36 @@ public class QuanLyPhatPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(tablePhat);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
 
-        // Panel nút chỉnh sửa và xóa
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        // Panel nút chỉnh sửa, xóa, thanh toán
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 8));
         buttonPanel.setOpaque(false);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
 
-        // Nút Edit với icon
-        JButton btnEdit = new JButton();
+        // Helper method để tạo nút đẹp
+        java.util.function.BiConsumer<JButton, String> styleButton = (btn, colorType) -> {
+            btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+            btn.setForeground(Color.WHITE);
+            btn.setFocusPainted(false);
+            btn.setBorderPainted(false);
+            btn.setMargin(new Insets(10, 12, 10, 12));
+            btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            btn.setOpaque(true);
+        };
+
+        // Nút Edit - Màu cam
+        JButton btnEdit = new JButton("✏ Chỉnh Sửa");
         try {
-            ImageIcon editIcon = new ImageIcon(getClass().getResource("/icons/32x32/edit.png"));
-            btnEdit.setIcon(editIcon);
-            btnEdit.setText("");
+            ImageIcon editIcon = loadScaledIcon("/icons/32x32/edit.png", 20, 20);
+            if (editIcon != null) {
+                btnEdit.setIcon(editIcon);
+                btnEdit.setText("  Chỉnh Sửa");
+            }
         } catch (Exception e) {
-            btnEdit.setText("✎ Chỉnh Sửa");
+            // Fallback: dùng text
         }
-        btnEdit.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        btnEdit.setForeground(Color.WHITE);
+        styleButton.accept(btnEdit, "edit");
         btnEdit.setBackground(new Color(255, 152, 0));
-        btnEdit.setFocusPainted(false);
-        btnEdit.setBorderPainted(false);
-        btnEdit.setMargin(new Insets(8, 8, 8, 8));
-        btnEdit.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnEdit.setToolTipText("Chỉnh sửa vé phạt");
+        btnEdit.setToolTipText("Nhấp để chỉnh sửa vé phạt");
         btnEdit.addActionListener(e -> {
             if (tablePhat.getSelectedRow() != -1) {
                 int row = tablePhat.getSelectedRow();
@@ -422,32 +492,31 @@ public class QuanLyPhatPanel extends JPanel {
         btnEdit.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btnEdit.setBackground(new Color(255, 131, 0));
+                btnEdit.setBackground(new Color(255, 111, 0));
+                btnEdit.setForeground(Color.WHITE);
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 btnEdit.setBackground(new Color(255, 152, 0));
+                btnEdit.setForeground(Color.WHITE);
             }
         });
 
-        // Nút Delete với icon
-        JButton btnDelete = new JButton();
+        // Nút Delete - Màu đỏ
+        JButton btnDelete = new JButton("🗑 Xóa");
         try {
-            ImageIcon deleteIcon = new ImageIcon(getClass().getResource("/icons/32x32/delete.png"));
-            btnDelete.setIcon(deleteIcon);
-            btnDelete.setText("");
+            ImageIcon deleteIcon = loadScaledIcon("/icons/32x32/delete.png", 20, 20);
+            if (deleteIcon != null) {
+                btnDelete.setIcon(deleteIcon);
+                btnDelete.setText("  Xóa");
+            }
         } catch (Exception e) {
-            btnDelete.setText("✕ Xóa");
+            // Fallback: dùng text
         }
-        btnDelete.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        btnDelete.setForeground(Color.WHITE);
+        styleButton.accept(btnDelete, "delete");
         btnDelete.setBackground(new Color(244, 67, 54));
-        btnDelete.setFocusPainted(false);
-        btnDelete.setBorderPainted(false);
-        btnDelete.setMargin(new Insets(8, 8, 8, 8));
-        btnDelete.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnDelete.setToolTipText("Xóa vé phạt");
+        btnDelete.setToolTipText("Nhấp để xóa vé phạt");
         btnDelete.addActionListener(e -> {
             if (tablePhat.getSelectedRow() != -1) {
                 int row = tablePhat.getSelectedRow();
@@ -498,42 +567,43 @@ public class QuanLyPhatPanel extends JPanel {
         btnDelete.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btnDelete.setBackground(new Color(229, 57, 53));
+                btnDelete.setBackground(new Color(211, 47, 47));
+                btnDelete.setForeground(Color.WHITE);
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 btnDelete.setBackground(new Color(244, 67, 54));
+                btnDelete.setForeground(Color.WHITE);
             }
         });
 
-        // Nút Thanh toán
-        JButton btnPayment = new JButton();
+        // Nút Thanh toán - Màu xanh
+        JButton btnPayment = new JButton("💰 Thanh Toán");
         try {
-            ImageIcon paymentIcon = new ImageIcon(getClass().getResource("/icons/32x32/borrow.png"));
-            btnPayment.setIcon(paymentIcon);
-            btnPayment.setText("");
+            ImageIcon paymentIcon = loadScaledIcon("/icons/32x32/money.png", 20, 20);
+            if (paymentIcon != null) {
+                btnPayment.setIcon(paymentIcon);
+                btnPayment.setText("  Thanh Toán");
+            }
         } catch (Exception e) {
-            btnPayment.setText("💳 Thanh toán");
+            // Fallback: dùng text
         }
-        btnPayment.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        btnPayment.setForeground(Color.WHITE);
+        styleButton.accept(btnPayment, "payment");
         btnPayment.setBackground(new Color(76, 175, 80));
-        btnPayment.setFocusPainted(false);
-        btnPayment.setBorderPainted(false);
-        btnPayment.setMargin(new Insets(8, 8, 8, 8));
-        btnPayment.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnPayment.setToolTipText("Thanh toán phạt cho bạn đọc");
+        btnPayment.setToolTipText("Nhấp để xử lý thanh toán phạt");
         btnPayment.addActionListener(e -> openPaymentDialog());
         btnPayment.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 btnPayment.setBackground(new Color(56, 142, 60));
+                btnPayment.setForeground(Color.WHITE);
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 btnPayment.setBackground(new Color(76, 175, 80));
+                btnPayment.setForeground(Color.WHITE);
             }
         });
 
@@ -841,16 +911,26 @@ public class QuanLyPhatPanel extends JPanel {
      * Cập nhật trạng thái nút phân trang
      */
     private void updatePaginationButtons(PaginationResult<Phat> result) {
+        // Lưu trữ nextCursor từ result
+        this.nextCursor = result.getNextCursor();
+
         if (btnPrevious != null) {
-            btnPrevious.setEnabled(result.isHasPrevious());
+            // Nút trang trước được bật nếu stack không rỗng (tức là có trang trước)
+            btnPrevious.setEnabled(!cursorStack.isEmpty());
         }
         if (btnNext != null) {
+            // Nút trang sau được bật nếu có nextCursor
             btnNext.setEnabled(result.isHasNext());
         }
         if (lblPageInfo != null) {
-            int displayFrom = currentCursor + 1;
-            int displayTo = Math.min(currentCursor + result.getData().size(), totalCount);
-            lblPageInfo.setText(String.format("Hiển thị %d - %d / %d", displayFrom, displayTo, totalCount));
+            int dataSize = result.getData().size();
+            if (dataSize > 0) {
+                int displayFrom = currentRecordStart;
+                int displayTo = currentRecordStart + dataSize - 1;
+                lblPageInfo.setText(String.format("Hiển thị %d - %d / %d", displayFrom, displayTo, totalCount));
+            } else {
+                lblPageInfo.setText("Hiển thị 0 - 0 / " + totalCount);
+            }
         }
     }
 
@@ -1250,6 +1330,25 @@ public class QuanLyPhatPanel extends JPanel {
         lblIdBD.setPreferredSize(new Dimension(100, 35));
         JTextField txtIdBD = new JTextField();
         txtIdBD.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+        // Auto-fill IdBD nếu đang select một vé phạt
+        int selectedRow = tablePhat.getSelectedRow();
+        if (selectedRow >= 0) {
+            try {
+                Object idPMObj = tableModel.getValueAt(selectedRow, 1); // Column 1 là IdPM
+                if (idPMObj != null && !idPMObj.toString().isEmpty()) {
+                    int idPM = Integer.parseInt(idPMObj.toString());
+                    // Lấy chi tiết phiếu mượn để tìm IdBD
+                    ChiTietPhieuMuonInfo detail = phatController.getChiTietPhieuMuonByIdPMAndMaBanSao(idPM, 0);
+                    if (detail != null && detail.getIdBD() > 0) {
+                        txtIdBD.setText(String.valueOf(detail.getIdBD()));
+                    }
+                }
+            } catch (Exception e) {
+                // Nếu lỗi, text field vẫn trống để user nhập thủ công
+            }
+        }
+
         inputPanel.add(lblIdBD, BorderLayout.WEST);
         inputPanel.add(txtIdBD, BorderLayout.CENTER);
         mainPanel.add(inputPanel);
