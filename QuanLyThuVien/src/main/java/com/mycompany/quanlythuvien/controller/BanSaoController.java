@@ -71,6 +71,54 @@ public class BanSaoController {
         else update(bansao);
     }
 
+    public List<BanSao> searchBanSao(String isbn, String tieuChi, String keyword, String keywordTo, Integer lastMaBanSao, int pageSize) {
+        if (pageSize < 1 || pageSize > 100) {
+            pageSize = 20;
+        }
+        
+        if (isbn == null || isbn.isBlank()) {
+            return new ArrayList<>();
+        }
+        
+        try {
+            if ("Ngày nhập".equals(tieuChi)) {
+            // TH1: Tìm kiếm theo khoảng ngày (Range Search)
+                if (keywordTo != null && !keywordTo.isBlank()) {
+                    LocalDate fromDate = LocalDate.parse(keyword.trim());
+                    LocalDate toDate = LocalDate.parse(keywordTo.trim());
+
+                    if (fromDate.isAfter(toDate)) {
+                        LocalDate tmp = fromDate;
+                        fromDate = toDate;
+                        toDate = tmp;
+                    }
+
+                    return banSaoDAO.searchByDateRange(isbn, fromDate, toDate, lastMaBanSao, pageSize);
+                }
+                return new ArrayList<>();
+            }
+            
+            // Trường hợp 2: Tìm kiếm theo từ khóa
+            if (("Mã bản sao".equals(tieuChi) || "Số thứ tự".equals(tieuChi))
+                && (keyword == null || keyword.isBlank() || !keyword.matches("\\d+"))) {
+                System.err.println("Lỗi: Tiêu chí Mã bản sao/Số thứ tự yêu cầu từ khóa phải là số.");
+                return new ArrayList<>();
+            }
+            return banSaoDAO.search(isbn, keyword, tieuChi, lastMaBanSao, pageSize);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+    
+    public int insertBatch(String isbn, int soLuong, int soThuTuBatDau, String tinhTrang,
+            String viTriLuuTru, String createdBy) throws Exception {
+        if (soLuong <= 0) {
+            throw new IllegalArgumentException("Số lượng bản sao phải lớn hơn 0.");
+        }
+        return banSaoDAO.insertBatch(isbn, soLuong, soThuTuBatDau, tinhTrang, viTriLuuTru, createdBy);
+    }
+    
     // Validate dữ liệu bản sao
     private void validateAndSetDefault(BanSao b) throws Exception {
         if (b == null) throw new Exception("Dữ liệu bản sao không hợp lệ!");

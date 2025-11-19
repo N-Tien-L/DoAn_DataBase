@@ -6,8 +6,10 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Timestamp;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -179,5 +181,181 @@ public class BanSaoDAO {
             }
         }
         return null;
+    }
+    
+
+    public List<BanSao> search(String isbn, String keyword, String tieuChi, Integer lastMaBanSao, int pageSize) {
+        List<BanSao> list = new ArrayList<>();
+
+        if (isbn == null || isbn.isBlank()) return list; 
+        String kw = keyword == null ? "" : keyword.trim();
+
+        String sql = null;
+        int keywordInt = -1; // Chỉ dùng cho Mã bản sao/Số thứ tự
+
+        switch (tieuChi) {
+            case "Mã bản sao":
+                keywordInt = Integer.parseInt(kw); 
+                sql = "SELECT TOP (?) * FROM BANSAO WHERE ISBN = ? AND MaBanSao = ?"
+                    + " AND (? IS NULL OR MaBanSao > ?)"
+                    + " ORDER BY MaBanSao ASC";
+                break;
+            case "Số thứ tự":
+                keywordInt = Integer.parseInt(kw); 
+                sql = "SELECT TOP (?) * FROM BANSAO WHERE ISBN = ? AND SoThuTuTrongKho = ?"
+                    + " AND (? IS NULL OR MaBanSao > ?)"
+                    + " ORDER BY MaBanSao ASC";
+                break;
+            case "Tình trạng":
+                sql = "SELECT TOP (?) * FROM BANSAO WHERE ISBN = ? AND TinhTrang LIKE ?"
+                    + " AND (? IS NULL OR MaBanSao > ?)"
+                    + " ORDER BY MaBanSao ASC";
+                break;
+            case "Vị trí lưu trữ":
+                sql = "SELECT TOP (?) * FROM BANSAO WHERE ISBN = ? AND ViTriLuuTru LIKE ?"
+                    + " AND (? IS NULL OR MaBanSao > ?)"
+                    + " ORDER BY MaBanSao ASC";
+                break;
+            default:
+                return list;
+        }
+
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            int idx = 1;
+
+            ps.setInt(idx++, pageSize);
+
+            ps.setString(idx++, isbn);
+
+            switch (tieuChi) {
+                case "Mã bản sao":
+                case "Số thứ tự":
+                    ps.setInt(idx++, keywordInt); 
+                    break;
+                case "Tình trạng":
+                case "Vị trí lưu trữ":
+                    ps.setString(idx++, "%" + kw + "%");
+                    break;
+            }
+
+            if (lastMaBanSao == null) {
+                ps.setNull(idx++, Types.INTEGER); // Gán cho '?' IS NULL
+                ps.setNull(idx++, Types.INTEGER); // Gán cho MaBanSao > '?'
+            } else {
+                ps.setInt(idx++, lastMaBanSao);
+                ps.setInt(idx++, lastMaBanSao);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    BanSao b = new BanSao(
+                                rs.getInt("MaBanSao"),
+                                rs.getString("ISBN"),
+                                rs.getInt("SoThuTuTrongKho"),
+                                rs.getString("TinhTrang"),
+                                rs.getDate("NgayNhapKho") != null ? rs.getDate("NgayNhapKho").toLocalDate() : null,
+                                rs.getString("ViTriLuuTru"),
+                                rs.getTimestamp("CreatedAt"),
+                                rs.getString("CreatedBy")
+                            );
+                    list.add(b);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+    
+    public List<BanSao> searchByDateRange(String isbn, LocalDate fromDate, LocalDate toDate, Integer lastMaBanSao, int pageSize) {
+        List<BanSao> list = new ArrayList<>();
+        
+        String sql = "SELECT TOP (?) * FROM BANSAO WHERE ISBN = ? "
+            + "AND NgayNhapKho BETWEEN ? AND ? " 
+            + "AND (? IS NULL OR MaBanSao > ?) "
+            + "ORDER BY MaBanSao ASC";
+        
+        try (Connection con = DBConnector.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)) 
+        {
+            int idx = 1;
+            ps.setInt(idx++, pageSize + 1);
+            
+            ps.setString(idx++, isbn);
+            
+            ps.setDate(idx++, Date.valueOf(fromDate));
+            ps.setDate(idx++, Date.valueOf(toDate));
+            
+            if (lastMaBanSao == null) {
+                ps.setNull(idx++, Types.INTEGER);
+                ps.setNull(idx++, Types.INTEGER);
+            } else {
+                ps.setInt(idx++, lastMaBanSao);
+                ps.setInt(idx++, lastMaBanSao);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    BanSao bs = mapResultSetToBanSao(rs);
+                    list.add(bs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    
+    private BanSao mapResultSetToBanSao(ResultSet rs) throws SQLException {
+        BanSao b = new BanSao();
+        b.setMaBanSao(rs.getInt("MaBanSao"));
+        b.setISBN(rs.getString("ISBN"));
+        b.setSoThuTuTrongKho(rs.getInt("SoThuTuTrongKho"));
+        b.setTinhTrang(rs.getString("TinhTrang"));
+        
+        if (rs.getDate("NgayNhapKho") != null) { 
+            b.setNgayNhapKho(rs.getDate("NgayNhapKho").toLocalDate());
+        }
+        b.setViTriLuuTru(rs.getString("ViTriLuuTru"));
+        return b;      
+    }
+    
+    public int insertBatch(String isbn, int soLuong, int soThuTuBatDau, String tinhTrang,
+                        String viTriLuuTru, String createdBy) throws Exception {
+        String sql = "INSERT INTO BANSAO (ISBN, SoThuTuTrongKho, TinhTrang, ViTriLuuTru, CreatedBy) VALUES (?, ?, ?, ?, ?)";
+        
+        int totalInserted = 0;
+        
+        try (Connection con = DBConnector.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)) 
+        {
+            for (int i = 0; i < soLuong; i++) {
+                int currentSoThuTu = soThuTuBatDau + i;
+                
+                int idx = 1;
+                ps.setString(idx++, isbn);
+                ps.setInt(idx++, currentSoThuTu);
+                ps.setString(idx++, tinhTrang);
+                ps.setString(idx++, viTriLuuTru);
+                ps.setString(idx++, createdBy);
+                
+                ps.addBatch();
+            }
+            
+            int[] result = ps.executeBatch();
+            for (int count : result) {
+                if (count > 0) {
+                    totalInserted += count;
+                }
+            }
+            
+            return totalInserted;
+        } catch (SQLIntegrityConstraintViolationException e) {
+            throw new Exception("Lỗi: Số thứ tự trong kho bị trùng lặp. Vui lòng kiểm tra lại số thứ tự bắt đầu.", e);
+        }
     }
 }

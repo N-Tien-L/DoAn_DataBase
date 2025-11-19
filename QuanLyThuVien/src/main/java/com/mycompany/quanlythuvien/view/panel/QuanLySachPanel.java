@@ -92,12 +92,15 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private String searchTieuChiTL = null;
     private Integer lastSearchCursorTL = null;
     public QuanLySachPanel() {
-        initComponents();
-        initAfterInitComponents();
+        initBase();
     }
 
     public QuanLySachPanel(TaiKhoan currentUser) {
+        this();
         this.currentUser = currentUser;
+    }
+
+    private void initBase() {
         initComponents();
         initAfterInitComponents();
     }
@@ -906,7 +909,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         txtTenTL.setPreferredSize(new java.awt.Dimension(200, 26));
 
         btnLuuTL.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
-        btnLuuTL.setText("[✓]Lưu");
+        btnLuuTL.setText("[✓] Lưu");
         btnLuuTL.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnLuuTLActionPerformed(evt);
@@ -1352,7 +1355,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
             btnTruocTL.setEnabled(!cursorHistoryTL.isEmpty());
             btnSauTL.setEnabled(hasNextPageTL);
         } else {
-            JOptionPane.showMessageDialog(this, "Không thể tải danh sách NXB!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Không thể tải danh sách thể loại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
     private void resetPaginationTL() {
@@ -1399,7 +1402,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private void initComboBoxTG() {
         cboTieuChiTG.removeAllItems(); 
         cboTieuChiTG.addItem("Mã tác giả");
-        cboTieuChiTG.addItem("Tên");
+        cboTieuChiTG.addItem("Tên tác giả");
         cboTieuChiTG.addItem("Website");
         cboTieuChiTG.addItem("Ghi chú");
         cboTieuChiTG.setSelectedIndex(1); // mặc định chọn "Tên"
@@ -1690,12 +1693,12 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
         int r = tblNXB.getSelectedRow();
         if (r == -1) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn thể loại để xóa!");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhà xuất bản để xóa!");
             return;
         }
         
         int maNXB = (int) tableModelNXB.getValueAt(r, 0);
-        int confirm = JOptionPane.showConfirmDialog(this, "Xóa thể loại " + maNXB + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(this, "Xóa nhà xuất bản " + maNXB + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 if (nxbController.deleteNXB(maNXB)) {
@@ -1768,7 +1771,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private String convertColumnTG(String tieuChi) {
         switch (tieuChi) {
             case "Mã tác giả": return "MaTacGia";
-            case "Tên": return "TenTacGia";
+            case "Tên tác giả": return "TenTacGia";
             case "Website": return "Website";
             case "Ghi chú": return "GhiChu";
             default: return "TenTacGia";
@@ -2057,7 +2060,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
         String tenTL = txtTenTL.getText().trim();
         if (tenTL.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Tên nhà xuất bản không được để trống!");
+            JOptionPane.showMessageDialog(this, "Tên thể loại không được để trống!");
             return;
         }
         boolean check;

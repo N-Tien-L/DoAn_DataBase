@@ -203,14 +203,16 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         txtMoTa.setWrapStyleWord(true);
         jScrollPane1.setViewportView(txtMoTa);
 
-        btnLuu.setText("Lưu");
+        btnLuu.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
+        btnLuu.setText("[✓] Lưu");
         btnLuu.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnLuuActionPerformed(evt);
             }
         });
 
-        btnHuy.setText("Hủy");
+        btnHuy.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
+        btnHuy.setText("[×] Hủy");
         btnHuy.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnHuyActionPerformed(evt);

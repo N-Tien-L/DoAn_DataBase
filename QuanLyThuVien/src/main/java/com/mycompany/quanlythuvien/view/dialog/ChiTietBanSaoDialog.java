@@ -132,7 +132,8 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
 
         getContentPane().add(jPanel1, java.awt.BorderLayout.PAGE_START);
 
-        btnLuu.setText("Lưu");
+        btnLuu.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
+        btnLuu.setText("[✓] Lưu");
         btnLuu.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnLuuActionPerformed(evt);
@@ -140,7 +141,8 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
         });
         jPanel3.add(btnLuu);
 
-        btnHuy.setText("Hủy");
+        btnHuy.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
+        btnHuy.setText("[×] Hủy");
         btnHuy.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnHuyActionPerformed(evt);
