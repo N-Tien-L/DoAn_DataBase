@@ -30,8 +30,7 @@ public class TaiKhoanDialog extends JDialog {
     }
     
     private final TaiKhoanController controller;
-    private final String currentUserRole;
-    private final String currentUserEmail;
+    private final TaiKhoan currentUser;
     private final Mode mode;
     private TaiKhoan taiKhoan;
     
@@ -47,26 +46,25 @@ public class TaiKhoanDialog extends JDialog {
     /**
      * Constructor cho chế độ ADD
      */
-    public TaiKhoanDialog(Window parent, String currentUserRole, String currentUserEmail) {
-        this(parent, currentUserRole, currentUserEmail, Mode.ADD, null);
+    public TaiKhoanDialog(Window parent, TaiKhoan currentUser) {
+        this(parent, currentUser, Mode.ADD, null);
     }
     
     /**
      * Constructor cho chế độ EDIT
      */
-    public TaiKhoanDialog(Window parent, String currentUserRole, String currentUserEmail, TaiKhoan taiKhoan) {
-        this(parent, currentUserRole, currentUserEmail, Mode.EDIT, taiKhoan);
+    public TaiKhoanDialog(Window parent, TaiKhoan currentUser, TaiKhoan taiKhoan) {
+        this(parent, currentUser, Mode.EDIT, taiKhoan);
     }
     
     /**
      * Constructor chính
      */
-    private TaiKhoanDialog(Window parent, String currentUserRole, String currentUserEmail, Mode mode, TaiKhoan taiKhoan) {
+    private TaiKhoanDialog(Window parent, TaiKhoan currentUser, Mode mode, TaiKhoan taiKhoan) {
         super(parent, mode == Mode.ADD ? "Thêm tài khoản mới" : "Chỉnh sửa tài khoản", ModalityType.APPLICATION_MODAL);
         
         this.controller = new TaiKhoanController();
-        this.currentUserRole = currentUserRole;
-        this.currentUserEmail = currentUserEmail;
+        this.currentUser = currentUser;
         this.mode = mode;
         this.taiKhoan = taiKhoan;
         
@@ -230,44 +228,33 @@ public class TaiKhoanDialog extends JDialog {
         btnSave.setEnabled(false);
         btnCancel.setEnabled(false);
         
-        boolean result;
-        
-        if (mode == Mode.ADD) {
-            result = controller.createAccount(currentUserRole, currentUserEmail, email, hoTen, role);
-            
-            if (result) {
+        try {
+            if (mode == Mode.ADD) {
+                controller.createAccount(currentUser, email, hoTen, role);
+                
                 JOptionPane.showMessageDialog(this,
                     "Tạo tài khoản thành công!\n" +
                     "Mật khẩu đã được gửi đến email: " + email,
                     "Thành công",
                     JOptionPane.INFORMATION_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(this,
-                    "Tạo tài khoản thất bại!\n" +
-                    "Email có thể đã tồn tại hoặc có lỗi xảy ra.",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
-            }
-        } else {
-            result = controller.updateAccount(currentUserRole, email, hoTen, role);
-            
-            if (result) {
+                controller.updateAccount(currentUser, email, hoTen, role);
+                
                 JOptionPane.showMessageDialog(this,
                     "Cập nhật tài khoản thành công!",
                     "Thành công",
                     JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    "Cập nhật tài khoản thất bại!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
             }
-        }
-        
-        if (result) {
+            
             this.success = true;
             dispose();
-        } else {
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                ex.getMessage(),
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE);
+            
             // Re-enable buttons if failed
             btnSave.setEnabled(true);
             btnCancel.setEnabled(true);

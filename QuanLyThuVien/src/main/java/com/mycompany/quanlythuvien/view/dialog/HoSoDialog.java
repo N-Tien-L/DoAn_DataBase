@@ -206,24 +206,26 @@ public class HoSoDialog extends JDialog {
                 );
                 return;
             }
-            
-            boolean success = controller.changePassword(
-                currentTaiKhoan.getEmail(),
-                oldPassword,
-                newPassword
-            );
-            
-            if (success) {
-                JOptionPane.showMessageDialog(
-                    this,
-                    "Đổi mật khẩu thành công!",
-                    "Thành công",
-                    JOptionPane.INFORMATION_MESSAGE
+
+            try {
+                boolean success = controller.changePassword(
+                    currentTaiKhoan.getEmail(),
+                    oldPassword,
+                    newPassword
                 );
-            } else {
+                
+                if (success) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "Đổi mật khẩu thành công!",
+                        "Thành công",
+                        JOptionPane.INFORMATION_MESSAGE
+                    );
+                }
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(
                     this,
-                    "Đổi mật khẩu thất bại!\nVui lòng kiểm tra lại mật khẩu cũ.",
+                    ex.getMessage(),
                     "Lỗi",
                     JOptionPane.ERROR_MESSAGE
                 );
