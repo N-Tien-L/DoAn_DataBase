@@ -10,7 +10,7 @@ public class Sach {
 
     private String ISBN;
     private String tenSach;
-    private String tacGia;
+    private Integer maTacGia;
     private Integer maTheLoai;
     private Integer namXuatBan;
     private String dinhDang;
@@ -20,13 +20,18 @@ public class Sach {
     private Integer soLuongTon;
     private Integer soTrang;
 
+    //Thêm thuộc tính phụ để HIỂN THỊ Tên tác giả, NXB, thể loại trong bảng rút gọn
+    private String tenTacGia;
+    private String tenTheLoai;
+    private String tenNXB;
+    
     public Sach() {
     }
 
-    public Sach(String ISBN, String tenSach, String tacGia, Integer maTheLoai, Integer namXuatBan, String dinhDang, String moTa, Integer maNXB, BigDecimal giaBia, Integer soLuongTon, Integer soTrang) {
+    public Sach(String ISBN, String tenSach, Integer maTacGia, Integer maTheLoai, Integer namXuatBan, String dinhDang, String moTa, Integer maNXB, BigDecimal giaBia, Integer soLuongTon, Integer soTrang) {
         this.ISBN = ISBN;
         this.tenSach = tenSach;
-        this.tacGia = tacGia;
+        this.maTacGia = maTacGia;
         this.maTheLoai = maTheLoai;
         this.namXuatBan = namXuatBan;
         this.dinhDang = dinhDang;
@@ -53,12 +58,12 @@ public class Sach {
         this.tenSach = tenSach;
     }
 
-    public String getTacGia() {
-        return tacGia;
+    public Integer getMaTacGia() {
+        return maTacGia;
     }
 
-    public void setTacGia(String tacGia) {
-        this.tacGia = tacGia;
+    public void setMaTacGia(Integer maTacGia) {
+        this.maTacGia = maTacGia;
     }
 
     public Integer getMaTheLoai() {
@@ -123,6 +128,30 @@ public class Sach {
 
     public void setSoTrang(Integer soTrang) {
         this.soTrang = soTrang;
+    }
+
+    public String getTenTacGia() {
+        return tenTacGia;
+    }
+
+    public void setTenTacGia(String tenTacGia) {
+        this.tenTacGia = tenTacGia;
+    }
+
+    public String getTenTheLoai() {
+        return tenTheLoai;
+    }
+
+    public void setTenTheLoai(String tenTheLoai) {
+        this.tenTheLoai = tenTheLoai;
+    }
+
+    public String getTenNXB() {
+        return tenNXB;
+    }
+
+    public void setTenNXB(String tenNXB) {
+        this.tenNXB = tenNXB;
     }
 
 }
