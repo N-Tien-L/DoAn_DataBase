@@ -24,14 +24,14 @@ public class ThongBaoDAO {
     private static final String SQL_LIST_BY_RECEIVER = 
         """
             SELECT TOP (?)
-            tb.IdThongBao, tb.TieuDe, tb.NoiDung, tb.CreatedBy, tb.CreatedAt, 
+            tb.Id, tb.TieuDe, tb.NoiDung, tb.CreatedBy, tb.CreatedAt, 
             tbn.EmailNhan, tbn.DaDoc, tbn.ReadAt
             FROM THONGBAO_NGUOINHAN tbn
-            INNER JOIN THONGBAO tb ON tbn.IdThongBao = tb.IdThongBao
+            INNER JOIN THONGBAO tb ON tbn.IdThongBao = tb.Id
             WHERE tbn.EmailNhan = ?
             AND (? = 0 OR tbn.DaDoc = 0)
-            AND (? IS NULL OR tb.IdThongBao < ?)
-            ORDER BY tb.IdThongBao DESC
+            AND (? IS NULL OR tb.Id < ?)
+            ORDER BY tb.Id DESC
         """;
     private static final String SQL_MARK_READ = "UPDATE THONGBAO_NGUOINHAN SET DaDoc = 1, ReadAt = GETUTCDATE() WHERE IdThongBao = ? AND EmailNhan = ?";
     private static final String SQL_COUNT_UNREAD = "SELECT COUNT(*) FROM THONGBAO_NGUOINHAN WHERE EmailNhan = ? AND DaDoc = 0";
@@ -39,7 +39,7 @@ public class ThongBaoDAO {
     private static final String SQL_ADMIN_LIST_ALL = 
         """
             SELECT TOP (?) 
-                tb.IdThongBao,
+                tb.Id,
                 tb.TieuDe,
                 tb.NoiDung,
                 tb.CreatedBy,
@@ -47,10 +47,10 @@ public class ThongBaoDAO {
                 COUNT(r.EmailNhan) AS RecipientCount,
                 SUM(CASE WHEN r.DaDoc = 1 THEN 1 ELSE 0 END) AS ReadCount
             FROM THONGBAO tb
-            LEFT JOIN THONGBAO_NGUOINHAN r ON tb.IdThongBao = r.IdThongBao
-            WHERE (? IS NULL OR tb.IdThongBao < ?)
-            GROUP BY tb.IdThongBao, tb.TieuDe, tb.NoiDung, tb.CreatedBy, tb.CreatedAt
-            ORDER BY tb.IdThongBao DESC
+            LEFT JOIN THONGBAO_NGUOINHAN r ON tb.Id = r.IdThongBao
+            WHERE (? IS NULL OR tb.Id < ?)
+            GROUP BY tb.Id, tb.TieuDe, tb.NoiDung, tb.CreatedBy, tb.CreatedAt
+            ORDER BY tb.Id DESC
         """;
     private static final String SQL_GET_RECIPIENTS = 
         """
@@ -176,7 +176,7 @@ public class ThongBaoDAO {
 
             while(rs.next()) {
                 ThongBaoNguoiNhan item = new ThongBaoNguoiNhan();
-                item.setIdThongBao(rs.getInt("IdThongBao"));
+                item.setIdThongBao(rs.getInt("Id"));
                 item.setTieuDe(rs.getString("TieuDe"));
                 item.setNoiDung(rs.getString("NoiDung"));
                 item.setCreatedBy(rs.getString("CreatedBy"));
@@ -307,7 +307,7 @@ public class ThongBaoDAO {
             
             while (rs.next()) {
                 ThongBaoAdmin dto = new ThongBaoAdmin();
-                dto.setIdThongBao(rs.getInt("IdThongBao"));
+                dto.setIdThongBao(rs.getInt("Id"));
                 dto.setTieuDe(rs.getString("TieuDe"));
                 dto.setNoiDung(rs.getString("NoiDung"));
                 dto.setCreatedBy(rs.getString("CreatedBy"));

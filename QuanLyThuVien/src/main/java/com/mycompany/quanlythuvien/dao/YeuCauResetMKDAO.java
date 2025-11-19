@@ -36,27 +36,27 @@ public class YeuCauResetMKDAO {
     /**
      * Tạo yêu cầu reset (không cần login)
      */
-    public boolean createYeuCauResetMK(String email, String lyDo) throws Exception {
+    public void createYeuCauResetMK(String email, String lyDo) throws Exception {
         // Kiểm tra email tồn tại
+        boolean emailExists = false;
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement psCheck = conn.prepareStatement(SQL_CHECK_EMAIL_EXISTS)) {
             
             psCheck.setString(1, email);
             ResultSet rs = psCheck.executeQuery();
-            
-            if (!rs.next()) {
-                throw new Exception("Email không tồn tại trong hệ thống");
-            }
+            emailExists = rs.next();
         }
         
-        // Tạo yêu cầu
-        try (Connection conn = DBConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SQL_CREATE)) {
-            
-            ps.setString(1, email);
-            ps.setString(2, lyDo);
-            
-            return ps.executeUpdate() > 0;
+        // Chỉ tạo yêu cầu nếu email tồn tại
+        // Không throw exception để attacker không biết email có tồn tại hay không
+        if (emailExists) {
+            try (Connection conn = DBConnector.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(SQL_CREATE)) {
+                
+                ps.setString(1, email);
+                ps.setString(2, lyDo);
+                ps.executeUpdate();
+            }
         }
     }
 

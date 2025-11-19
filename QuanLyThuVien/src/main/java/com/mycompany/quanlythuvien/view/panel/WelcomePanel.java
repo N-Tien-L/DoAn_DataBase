@@ -57,17 +57,20 @@ public class WelcomePanel extends JPanel {
                 BorderFactory.createEmptyBorder(20, 30, 20, 30)));
 
         String[] features = {
-                "▸ Quản Lý Sách - Thêm, sửa, xóa thông tin sách",
-                "▸ Quản Lý Bạn Đọc - Quản lý thông tin độc giả",
-                "▸ Quản Lý Phiếu Mượn - Theo dõi mượn/trả sách",
-                "▸ Quản Lý Phiếu Phạt - Phạt khi trả sách quá ngày hẹn/ làm hư hao sách",
-                "▸ Thống Kê - Xem báo cáo và thống kê",
-                "▸ Quản Lý Tài Khoản (Admin only) - Quản lý người dùng hệ thống"
+                "[BOOK] Quản Lý Sách - Thêm, sửa, xóa thông tin sách",
+                "[USER] Quản Lý Bạn Đọc - Quản lý thông tin độc giả",
+                "[CARD] Quản Lý Phiếu Mượn - Theo dõi mượn/trả sách",
+                "[WARN] Quản Lý Phiếu Phạt - Phạt khi trả sách quá ngày hẹn/ làm hư hao sách",
+                "[STAT] Thống Kê - Xem báo cáo và thống kê",
+                "[NOTF] Thông Báo - Xem thông báo của thủ thư",
+                "[INFO] Hồ Sơ - Xem thông tin tài khoản",
+                "[ADMN] Quản Lý Tài Khoản (Admin only) - Quản lý người dùng hệ thống",
+                "[ADMN] Quản Lý Thông Báo (Admin only) - Quản lý thông báo trên hệ thống"
         };
 
         for (String feature : features) {
             JLabel featureLabel = new JLabel(feature);
-            featureLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+            featureLabel.setFont(new Font("Arial", Font.PLAIN, 16));
             featureLabel.setForeground(new Color(60, 60, 60));
             featureLabel.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
             featureLabel.setAlignmentX(Component.LEFT_ALIGNMENT);

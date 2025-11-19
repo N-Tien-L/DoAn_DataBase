@@ -298,4 +298,29 @@ public class TaiKhoanDAO {
             throw new TaiKhoanException("Lỗi khi lấy thông tin tài khoản: " + e.getMessage(), e);
         }
     }
+    
+    /**
+     * Lấy tất cả email tài khoản
+     */
+    public List<TaiKhoan> getAllAccountsSimple() throws TaiKhoanException {
+        List<TaiKhoan> accounts = new ArrayList<>();
+        String sql = "SELECT Email, HoTen, [Role] FROM TAIKHOAN ORDER BY Email ASC";
+        
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            while (rs.next()) {
+                TaiKhoan acc = new TaiKhoan();
+                acc.setEmail(rs.getString("Email"));
+                acc.setHoTen(rs.getString("HoTen"));
+                acc.setRole(rs.getString("Role"));
+                accounts.add(acc);
+            }
+            
+            return accounts;
+        } catch (Exception e) {
+            throw new TaiKhoanException("Lỗi lấy danh sách tài khoản: " + e.getMessage(), e);
+        }
+    }
 }

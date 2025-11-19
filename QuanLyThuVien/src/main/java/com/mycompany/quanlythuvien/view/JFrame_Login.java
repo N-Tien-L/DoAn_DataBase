@@ -8,6 +8,7 @@ import javax.swing.JOptionPane;
 
 import com.mycompany.quanlythuvien.controller.TaiKhoanController;
 import com.mycompany.quanlythuvien.model.TaiKhoan;
+import com.mycompany.quanlythuvien.view.dialog.ResetMatKhauDialog;
 
 public class JFrame_Login extends javax.swing.JFrame {
     private final TaiKhoanController taiKhoanController = new TaiKhoanController();
@@ -40,6 +41,7 @@ public class JFrame_Login extends javax.swing.JFrame {
         jPasswordField_Password = new javax.swing.JPasswordField();
         jLabel_Title = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
+        jLabel_ForgotPassword = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Library Management - Login");
@@ -87,6 +89,16 @@ public class JFrame_Login extends javax.swing.JFrame {
             .addGap(0, 0, Short.MAX_VALUE)
         );
 
+        jLabel_ForgotPassword.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabel_ForgotPassword.setForeground(new java.awt.Color(0, 102, 204));
+        jLabel_ForgotPassword.setText("<html><u>Quên mật khẩu?</u></html>");
+        jLabel_ForgotPassword.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel_ForgotPassword.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel_ForgotPasswordMouseClicked(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -101,7 +113,8 @@ public class JFrame_Login extends javax.swing.JFrame {
                             .addComponent(jLabel_Email)
                             .addComponent(jTextField_Email, javax.swing.GroupLayout.DEFAULT_SIZE, 350, Short.MAX_VALUE)
                             .addComponent(jPasswordField_Password)
-                            .addComponent(jButton_Login, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jButton_Login, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel_ForgotPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addContainerGap(40, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -123,7 +136,9 @@ public class JFrame_Login extends javax.swing.JFrame {
                 .addComponent(jPasswordField_Password, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(50, 50, 50)
                 .addComponent(jButton_Login, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(86, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jLabel_ForgotPassword)
+                .addContainerGap(68, Short.MAX_VALUE))
             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
@@ -132,7 +147,7 @@ public class JFrame_Login extends javax.swing.JFrame {
 
     private void jButton_LoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton_LoginActionPerformed
         String email = jTextField_Email.getText().trim();
-        String password = new String(jPasswordField_Password.getPassword()).trim();
+        String password = new String(jPasswordField_Password.getPassword());
         
         if (email.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin!");
@@ -154,6 +169,15 @@ public class JFrame_Login extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }//GEN-LAST:event_jButton_LoginActionPerformed
+
+    private void jLabel_ForgotPasswordMouseClicked(java.awt.event.MouseEvent evt) {
+        showForgotPasswordDialog();
+    }
+
+    private void showForgotPasswordDialog() {
+        ResetMatKhauDialog dialog = new ResetMatKhauDialog(javax.swing.SwingUtilities.getWindowAncestor(this));
+        dialog.setVisible(true);
+    }
 
     /**
      * @param args the command line arguments
@@ -193,6 +217,7 @@ public class JFrame_Login extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton_Login;
     private javax.swing.JLabel jLabel_Email;
+    private javax.swing.JLabel jLabel_ForgotPassword;
     private javax.swing.JLabel jLabel_Password;
     private javax.swing.JLabel jLabel_Title;
     private javax.swing.JPanel jPanel1;

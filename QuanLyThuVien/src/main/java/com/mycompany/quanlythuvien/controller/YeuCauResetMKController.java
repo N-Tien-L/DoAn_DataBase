@@ -17,7 +17,7 @@ public class YeuCauResetMKController {
     /**
      * Tạo yêu cầu reset mật khẩu (không cần login)
      */
-    public boolean createYeuCau(String email, String lyDo) throws Exception {
+    public void createYeuCau(String email, String lyDo) throws Exception {
         if (email == null || email.trim().isEmpty()) {
             throw new Exception("Email không được để trống");
         }
@@ -26,7 +26,7 @@ public class YeuCauResetMKController {
             throw new Exception("Vui lòng nhập lý do");
         }
         
-        return dao.createYeuCauResetMK(email.trim(), lyDo.trim());
+        dao.createYeuCauResetMK(email.trim(), lyDo.trim());
     }
 
     /**

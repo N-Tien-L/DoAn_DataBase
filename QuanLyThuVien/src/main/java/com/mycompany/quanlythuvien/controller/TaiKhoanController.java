@@ -8,7 +8,6 @@ import com.mycompany.quanlythuvien.model.TaiKhoan;
 import com.mycompany.quanlythuvien.model.TaiKhoanProfile;
 import com.mycompany.quanlythuvien.util.PasswordUtil;
 import com.mycompany.quanlythuvien.util.EmailSender;
-import java.util.Random;
 
 /**
  *
@@ -41,9 +40,14 @@ public class TaiKhoanController {
         if (hoTen == null || hoTen.trim().isEmpty()) {
             throw new TaiKhoanException("Họ tên không được để trống");
         }
+
+        // Validate Role
+        if (role == null || (!role.equalsIgnoreCase("Admin") && !role.equalsIgnoreCase("ThuThu"))) {
+            throw new TaiKhoanException("Vai trò không hợp lệ. Chỉ chấp nhận 'Admin' hoặc 'ThuThu'");
+        }
         
         // Generate random 6-digit password
-        Random random = new Random();
+        java.security.SecureRandom random = new java.security.SecureRandom();
         String generatedPassword = String.format("%06d", random.nextInt(1000000));
         
         // hash password
@@ -92,6 +96,11 @@ public class TaiKhoanController {
         if (hoTen == null || hoTen.trim().isEmpty()) {
             throw new TaiKhoanException("Họ tên không được trống");
         }
+
+        // Validate Role
+        if (role == null || (!role.equalsIgnoreCase("Admin") && !role.equalsIgnoreCase("ThuThu"))) {
+            throw new TaiKhoanException("Vai trò không hợp lệ. Chỉ chấp nhận 'Admin' hoặc 'ThuThu'");
+        }
         
         // Password = null nghĩa là không update password
         TaiKhoan taiKhoan = new TaiKhoan(email, hoTen, role);
@@ -104,6 +113,11 @@ public class TaiKhoanController {
         // Validation
         if (email == null || email.trim().isEmpty()) {
             throw new TaiKhoanException("Email không được để trống");
+        }
+
+        // Prevent self-deletion
+        if (email.equals(currentUser.getEmail())) {
+            throw new TaiKhoanException("Không thể tự xóa tài khoản của chính mình");
         }
         
         return dao.deleteAccount(email);
@@ -163,7 +177,7 @@ public class TaiKhoanController {
         } 
 
         // Generate random 6-digit password
-        Random random = new Random();
+        java.security.SecureRandom random = new java.security.SecureRandom();
         String newPassword = String.format("%06d", random.nextInt(1000000));
         
         // Hash password
@@ -266,5 +280,14 @@ public class TaiKhoanController {
         AuthMiddleware.requireAdmin(currentUser);
         
         return dao.getAccountProfile(email);
+    }
+    
+    /**
+     * Lấy danh sách rút gọn (Email, HoTen, Role) của tất cả tài khoản
+     * Dùng cho các combobox chọn tài khoản
+     */
+    public java.util.List<TaiKhoan> getAllAccountsSimple(TaiKhoan currentUser) throws Exception {
+        AuthMiddleware.requireAdmin(currentUser);
+        return dao.getAllAccountsSimple();
     }
 }
