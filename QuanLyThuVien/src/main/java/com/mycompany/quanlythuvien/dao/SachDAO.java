@@ -155,7 +155,7 @@ public class SachDAO {
             LEFT JOIN TACGIA AS TG ON S.MaTacGia = TG.MaTacGia
             LEFT JOIN NHAXUATBAN AS NXB ON S.MaNXB = NXB.MaNXB
             LEFT JOIN THELOAI AS TL ON S.MaTheLoai = TL.MaTheLoai
-            WHERE S.ISBN = ?
+                WHERE S.ISBN = ?
                      """;
         try (Connection con = DBConnector.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
@@ -397,5 +397,74 @@ public class SachDAO {
         }
         return false; // nếu có lỗi coi như chưa tồn tại
     }
+    
+    public ArrayList<Object> getSomeInfoSachByMaBanSao(int maBanSao) { // lede vibe coding
+        String sql = "SELECT "
+                + "bs.ISBN, "
+                + "s.TenSach, "
+                + "tg.TenTacGia, "
+                + "tl.TenTheLoai, "
+                + "s.NamXuatBan, "
+                + "nxb.TenNXB\n" +
+                "FROM BANSAO bs\n" +
+                "JOIN SACH s ON bs.ISBN = s.ISBN\n" +
+                "JOIN TACGIA tg ON s.MaTacGia = tg.MaTacGia\n" +
+                "JOIN THELOAI tl ON s.MaTheLoai = tl.MaTheLoai\n" +
+                "JOIN NHAXUATBAN nxb ON s.MaNXB = nxb.MaNXB\n" +
+                "WHERE bs.MaBanSao = ?;";
+        ArrayList<Object> ans = new ArrayList<Object>();
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
+            ps.setInt(1, maBanSao);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ans.add(rs.getString("ISBN"));
+                    ans.add(rs.getString("TenSach"));
+                    ans.add(rs.getString("TenTacGia"));
+                    ans.add(rs.getString("TenTheLoai"));
+                    ans.add(rs.getString("TenNXB"));
+                    ans.add(rs.getInt("NamXuatBan"));
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+    public ArrayList<Object> getSomeInfoSachByIdPhat(int IdPhat) { // lede vibe coding
+        String sql = "SELECT "
+                + "s.ISBN, "
+                + "s.TenSach, "
+                + "tg.TenTacGia, "
+                + "tl.TenTheLoai, "
+                + "s.NamXuatBan, "
+                + "nxb.TenNXB\n" +
+                "FROM PHAT p\n" +
+                "JOIN BANSAO bs ON bs.MaBanSao = p.MaBanSao\n" +
+                "JOIN SACH s ON bs.ISBN = s.ISBN\n" +
+                "JOIN TACGIA tg ON s.MaTacGia = tg.MaTacGia\n" +
+                "JOIN THELOAI tl ON s.MaTheLoai = tl.MaTheLoai\n" +
+                "JOIN NHAXUATBAN nxb ON s.MaNXB = nxb.MaNXB\n" +
+                "WHERE p.IdPhat = ?;";
+        ArrayList<Object> ans = new ArrayList<Object>();
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, IdPhat);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ans.add(rs.getString("ISBN"));
+                    ans.add(rs.getString("TenSach"));
+                    ans.add(rs.getString("TenTacGia"));
+                    ans.add(rs.getString("TenTheLoai"));
+                    ans.add(rs.getString("TenNXB"));
+                    ans.add(rs.getInt("NamXuatBan"));
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
 }
