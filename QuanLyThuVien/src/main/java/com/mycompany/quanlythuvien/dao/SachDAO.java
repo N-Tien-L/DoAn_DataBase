@@ -348,4 +348,23 @@ public class SachDAO {
         }
         return ans;
     }
+    
+    public int getMaBanSaoByIdPhat(int IdPhat) { // lede vibe coding
+        String sql = "SELECT p.MaBanSao\n"
+                + "FROM PHAT p\n"
+                + "WHERE p.IdPhat = ?;";
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, IdPhat);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("MaBanSao");
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return Integer.MIN_VALUE;
+    }
 }
