@@ -103,6 +103,11 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
 
         btnHuy.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
         btnHuy.setText("[×] Hủy");
+        btnHuy.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnHuyActionPerformed(evt);
+            }
+        });
         jPanel2.add(btnHuy);
 
         getContentPane().add(jPanel2, java.awt.BorderLayout.PAGE_END);
@@ -263,6 +268,11 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
                     "Lỗi Database/Server", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnTaoActionPerformed
+
+    private void btnHuyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHuyActionPerformed
+        // TODO add your handling code here:
+        this.dispose();
+    }//GEN-LAST:event_btnHuyActionPerformed
 
     /**
      * @param args the command line arguments
