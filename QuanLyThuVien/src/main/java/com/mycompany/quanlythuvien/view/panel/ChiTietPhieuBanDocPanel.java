@@ -9,174 +9,302 @@ import com.mycompany.quanlythuvien.dao.ChiTietPhieuMuonDAO;
 import com.mycompany.quanlythuvien.dao.SachDAO;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 
 /**
  *
  * @author DMX MSI
  */
 public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
+    
     private CardLayout cardLayout;
     private BanDoc cur;
-    
+    Map<Integer, ArrayList<Object>> bookInfoCache = new HashMap<>();
+    Map<Integer, Integer> bookInfoCacheIdPhat = new HashMap<>();
     private boolean detailVisible = false;
     private int lastSelectedModelRow = -1;
     private int savedDividerLocation = -1;
     private final int DETAIL_WIDTH = 340; // chỉnh theo mong muốn
     private final int MA_BAN_SAO_COL = 4; // cột MaBanSao ở tblPhieuMuon (0-based)
-    
+
     // --- MỚI: cho PHIEU_PHAT (tách biệt trạng thái)
     private boolean detailVisible1 = false;
     private int lastSelectedModelRow1 = -1;
     private int savedDividerLocation1 = -1;
     private final int DETAIL_WIDTH1 = 340; // width bên phải cho phieu phat (có thể khác)
     private final int ID_PHAT_COL = 0; // cột chứa IdPhat trong tblPhieuPhat (0-based)
-    
+
+    private int currentPagePhat = 1;
+    private int pageSizePhat = 20; // rows per page, chỉnh theo ý
+    private int totalRowsPhat = 0;
+    private int totalPagesPhat = 1;
+    // pagination for PHIEU_MUON (nếu muốn phân trang phiếu mượn)
+    private int currentPageMuon = 1;
+    private int pageSizeMuon = 20;
+    private int totalRowsMuon = 0;
+    private int totalPagesMuon = 1;
+    private final int FIELDS_PER_RECORD = 8;
+    // --- lưu cache kết quả để phân trang
+    private ArrayList<Object> cachePhieuPhat = null;
+    private ArrayList<Object> cachePhieuMuon = null;
+
+
     
     void setThongKePhieuMuonBanDoc(ArrayList<Object> arr) {
-        int fieldsPerRecord = 8;
-        int cntSoSachDangMuon = 0, cntSoSachDaMuon = arr.size()/fieldsPerRecord; 
-        ArrayList<Integer> cntSoLanMuon = new ArrayList<Integer>();
+        if (arr == null || arr.isEmpty()) {
+            lblShowSoLanMuon.setText("0");
+            lblShowSoSachDaMuon.setText("0");
+            lblShowSoSachDangMuon.setText("0");
+            return;
+        }
+        int fieldsPerRecord = FIELDS_PER_RECORD;
+        int cntSoSachDangMuon = 0;
+        int cntSoSachDaMuon = arr.size() / fieldsPerRecord;
+        ArrayList<Integer> cntSoLanMuon = new ArrayList<>();
         for (int i = 0; i + fieldsPerRecord - 1 < arr.size(); i += fieldsPerRecord) {
             Object idPM = arr.get(i);
-            cntSoLanMuon.add(Integer.parseInt(idPM.toString()));
-            Object emailNguoiLap = arr.get(i + 1);
-            Object ngayMuon = arr.get(i + 2);
-            Object hanTra = arr.get(i + 3);
-            Object maBanSao = arr.get(i + 4);
+            try {
+                if (idPM != null) cntSoLanMuon.add(Integer.parseInt(idPM.toString()));
+            } catch (NumberFormatException ex) {
+                // bỏ qua nếu không parse được
+            }
             Object ngayTraThucTe = arr.get(i + 5);
-            Object tinhTrang = arr.get(i + 6);
-            Object emailNguoiNhan = arr.get(i + 7);
-            if(ngayTraThucTe.equals(null)) {
+            if (ngayTraThucTe == null) {
                 ++cntSoSachDangMuon;
             }
         }
         HashSet<Integer> set = new HashSet<>(cntSoLanMuon);
-        
+
         lblShowSoLanMuon.setText(Integer.toString(set.size()));
         lblShowSoSachDaMuon.setText(Integer.toString(cntSoSachDaMuon));
         lblShowSoSachDangMuon.setText(Integer.toString(cntSoSachDangMuon));
     }
+
     void setThongKePhieuPhatBanDoc(ArrayList<Object> arr) {
-        int fieldsPerRecord = 8;
-        int cntSoPhieuPhat = arr.size(); 
+        if (arr == null || arr.isEmpty()) {
+            lblShowSoPhieuPhat.setText("0");
+            lblShowTongSoTienPhatChuaDong.setText("0.0");
+            lblShowTongSoTienPhatDaDong.setText("0.0");
+            return;
+        }
+        int fieldsPerRecord = FIELDS_PER_RECORD;
+        int cntSoPhieuPhat = arr.size() / fieldsPerRecord;
         double totTongTienPhatChuaDong = 0.0;
         double totTongTienPhatDaDong = 0.0;
         for (int i = 0; i + fieldsPerRecord - 1 < arr.size(); i += fieldsPerRecord) {
-            Object idPhat = arr.get(i);
-            Object idPM = arr.get(i + 1);
-            Object emailNguoiLap = arr.get(i + 2);
-            Object ngayMuon = arr.get(i + 3);
-            Object loaiPhat = arr.get(i + 4);
             Object soTien = arr.get(i + 5);
-            Object ngayGhiNhan = arr.get(i + 6);
             Object trangThai = arr.get(i + 7);
-            if(trangThai.toString().equals("Da dong")) {
-                totTongTienPhatDaDong += Double.parseDouble(soTien.toString());
+
+            String sTien = safeToStr(soTien);
+            String sTrangThai = safeToStr(trangThai);
+
+            double val = 0.0;
+            try {
+                if (!sTien.isEmpty()) val = Double.parseDouble(sTien);
+            } catch (NumberFormatException ex) {
+                // bỏ qua / hoặc log
+            }
+
+            if ("Da dong".equalsIgnoreCase(sTrangThai.trim())) {
+                totTongTienPhatDaDong += val;
             } else {
-                totTongTienPhatChuaDong += Double.parseDouble(soTien.toString());
+                totTongTienPhatChuaDong += val;
             }
         }
         lblShowSoPhieuPhat.setText(Integer.toString(cntSoPhieuPhat));
-        lblShowTongSoTienPhatChuaDong.setText(Double.toString(totTongTienPhatChuaDong));
-        lblShowTongSoTienPhatDaDong.setText(Double.toString(totTongTienPhatDaDong));
+        lblShowTongSoTienPhatChuaDong.setText(String.format("%.2f", totTongTienPhatChuaDong));
+        lblShowTongSoTienPhatDaDong.setText(String.format("%.2f", totTongTienPhatDaDong));
     }
-    
-    void loadPhieuMuon() throws Exception {
+
+    private String safeToStr(Object o) {
+        return (o == null) ? "" : o.toString();
+    }
+
+    void loadPhieuMuon() {
+        lastSelectedModelRow = -1;
+        hideDetail();
+
+        new javax.swing.SwingWorker<ArrayList<Object>, Void>() {
+            @Override
+            protected ArrayList<Object> doInBackground() throws Exception {
+                ChiTietPhieuMuonDAO qr = new ChiTietPhieuMuonDAO();
+                return qr.getAllPhieuMuonBanDoc(cur);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    ArrayList<Object> arr = get(); // từ background
+                    cachePhieuMuon = (arr == null) ? new ArrayList<>() : arr;
+                    if (cachePhieuMuon.size() % FIELDS_PER_RECORD != 0) {
+                        System.err.println("Warning: cachePhieuMuon size not multiple of FIELDS_PER_RECORD");
+                    }
+                    totalRowsMuon = cachePhieuMuon.size() / FIELDS_PER_RECORD;
+                    totalPagesMuon = Math.max(1, (int) Math.ceil((double) totalRowsMuon / pageSizeMuon));
+                    currentPageMuon = Math.min(Math.max(1, currentPageMuon), totalPagesMuon);
+                    setThongKePhieuMuonBanDoc(cachePhieuMuon);
+                    renderPagePhieuMuon();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }.execute();
+    }
+
+    private Object safeGetFromCache(ArrayList<Object> cache, int idx) {
+        if (cache == null) return null;
+        if (idx < 0 || idx >= cache.size()) return null;
+        return cache.get(idx);
+    }
+
+    private void renderPagePhieuMuon() {
         DefaultTableModel model = (DefaultTableModel) tblPhieuMuon.getModel();
-        model.setRowCount(0); // xóa dữ liệu cũ
+        model.setRowCount(0);
 
-        if (cur == null) {
-            System.out.println("BanDoc null -> không load phiếu mượn");
+        // nếu không có dữ liệu
+        if (cur == null || cachePhieuMuon == null || cachePhieuMuon.isEmpty()) {
+            lblPageInfo.setText("Trang 0/0");
+            btnPrv.setEnabled(false);
+            btnNxt.setEnabled(false);
+            // reset selection/detail
+            lastSelectedModelRow = -1;
+            hideDetail();
             return;
         }
 
-        ChiTietPhieuMuonDAO qr = new ChiTietPhieuMuonDAO();
-        ArrayList<Object> arr = qr.getAllPhieuMuonBanDoc(cur);
-        setThongKePhieuMuonBanDoc(arr);
+        int startRecord = (currentPageMuon - 1) * pageSizeMuon; // record index (0-based)
+        int fields = FIELDS_PER_RECORD;
+        int endRecordExclusive = Math.min(totalRowsMuon, startRecord + pageSizeMuon);
 
-        if (arr == null || arr.isEmpty()) {
-            // không có dữ liệu
-            return;
-        }
+        for (int rec = startRecord; rec < endRecordExclusive; ++rec) {
+            int base = rec * fields;
+            if (base + fields - 1 >= cachePhieuMuon.size()) break;
+            Object idPM = safeGetFromCache(cachePhieuMuon, base);
+            Object emailNguoiLap = safeGetFromCache(cachePhieuMuon, base + 1);
+            Object ngayMuon = safeGetFromCache(cachePhieuMuon, base + 2);
+            Object hanTra = safeGetFromCache(cachePhieuMuon, base + 3);
+            Object maBanSao = safeGetFromCache(cachePhieuMuon, base + 4);
+            Object ngayTraThucTe = safeGetFromCache(cachePhieuMuon, base + 5);
+            Object tinhTrang = safeGetFromCache(cachePhieuMuon, base + 6);
+            Object emailNguoiNhan = safeGetFromCache(cachePhieuMuon, base + 7);
 
-        int fieldsPerRecord = 8;
-        if (arr.size() % fieldsPerRecord != 0) {
-            System.out.println("Warning: arr.size() không chia hết cho 8: " + arr.size());
-        }
-        for (int i = 0; i + fieldsPerRecord - 1 < arr.size(); i += fieldsPerRecord) {
-            Object idPM = arr.get(i);
-            Object emailNguoiLap = arr.get(i + 1);
-            Object ngayMuon = arr.get(i + 2);
-            Object hanTra = arr.get(i + 3);
-            Object maBanSao = arr.get(i + 4);
-            Object ngayTraThucTe = arr.get(i + 5);
-            Object tinhTrang = arr.get(i + 6);
-            Object emailNguoiNhan = arr.get(i + 7);
-
-            // Nếu muốn format riêng các LocalDate -> String, có thể làm ở đây:
-            // (nhưng DefaultTableModel hiển thị LocalDate.toString() cũng ok)
             model.addRow(new Object[] {
-                idPM,
-                emailNguoiLap,
-                ngayMuon,
-                hanTra,
-                maBanSao,
-                ngayTraThucTe,
-                tinhTrang,
-                emailNguoiNhan
+                safeToStr(idPM),
+                safeToStr(emailNguoiLap),
+                safeToStr(ngayMuon),
+                safeToStr(hanTra),
+                safeToStr(maBanSao),
+                safeToStr(ngayTraThucTe),
+                safeToStr(tinhTrang),
+                safeToStr(emailNguoiNhan)
             });
         }
+
+        // reset selection + hide detail when switching page
+        lastSelectedModelRow = -1;
+        hideDetail();
+
+        lblPageInfo.setText(String.format("Trang %d/%d (Hiển thị %d-%d / %d)",
+                currentPageMuon, totalPagesMuon,
+                startRecord + 1, Math.min(totalRowsMuon, startRecord + pageSizeMuon),
+                totalRowsMuon));
+
+        btnPrv.setEnabled(currentPageMuon > 1);
+        btnNxt.setEnabled(currentPageMuon < totalPagesMuon);
     }
-    
+
+
     void loadPhieuPhat() throws Exception {
-        DefaultTableModel model = (DefaultTableModel) tblPhieuPhat.getModel();
-        model.setRowCount(0); // xóa dữ liệu cũ
+        lastSelectedModelRow1 = -1;
+        hideDetail1();
 
-        if (cur == null) {
-            System.out.println("BanDoc null -> không load phiếu phạt");
-            return;
-        }
+        new javax.swing.SwingWorker<ArrayList<Object>, Void>() {
+            @Override
+            protected ArrayList<Object> doInBackground() throws Exception {
+                ChiTietPhieuMuonDAO qr = new ChiTietPhieuMuonDAO();
+                return qr.getAllPhieuPhatBanDoc(cur);
+            }
 
-        ChiTietPhieuMuonDAO qr = new ChiTietPhieuMuonDAO();
-        ArrayList<Object> arr = qr.getAllPhieuPhatBanDoc(cur);
-        setThongKePhieuPhatBanDoc(arr);
-        if (arr == null || arr.isEmpty()) {
-            // không có dữ liệu
-            return;
-        }
-
-        int fieldsPerRecord = 8; // tương ứng với DAO trả về 8 giá trị/record
-        if (arr.size() % fieldsPerRecord != 0) {
-            System.out.println("Warning: arr.size() không chia hết cho 8: " + arr.size());
-        }
-        for (int i = 0; i + fieldsPerRecord - 1 < arr.size(); i += fieldsPerRecord) {
-            Object idPhat = arr.get(i);
-            Object idPM = arr.get(i + 1);
-            Object emailNguoiLap = arr.get(i + 2);
-            Object ngayMuon = arr.get(i + 3);
-            Object loaiPhat = arr.get(i + 4);
-            Object soTien = arr.get(i + 5);
-            Object ngayGhiNhan = arr.get(i + 6);
-            Object trangThai = arr.get(i + 7);
-
-            // Nếu muốn format LocalDate -> String (ví dụ dd/MM/yyyy) bạn có thể chuyển ở đây.
-            model.addRow(new Object[] {
-                idPhat,
-                idPM,
-                emailNguoiLap,
-                ngayMuon,
-                loaiPhat,
-                soTien,
-                ngayGhiNhan,
-                trangThai
-            });
-        }
+            @Override
+            protected void done() {
+                try {
+                    ArrayList<Object> arr = get(); // từ background
+                    cachePhieuPhat = (arr == null) ? new ArrayList<>() : arr;
+                    if (cachePhieuPhat.size() % FIELDS_PER_RECORD != 0) {
+                        // *** SỬA: in đúng biến cachePhieuPhat thay vì cachePhieuMuon
+                        System.err.println("Warning: cachePhieuPhat size not multiple of FIELDS_PER_RECORD");
+                    }
+                    totalRowsPhat = cachePhieuPhat.size() / FIELDS_PER_RECORD;
+                    totalPagesPhat = Math.max(1, (int) Math.ceil((double) totalRowsPhat / pageSizePhat));
+                    currentPagePhat = Math.min(Math.max(1, currentPagePhat), totalPagesPhat);
+                    setThongKePhieuPhatBanDoc(cachePhieuPhat);
+                    renderPagePhieuPhat();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }.execute();
     }
 
+    private void renderPagePhieuPhat() {
+        DefaultTableModel model = (DefaultTableModel) tblPhieuPhat.getModel();
+        model.setRowCount(0);
+        if (cur == null || cachePhieuPhat == null || cachePhieuPhat.isEmpty()) {
+            lblPageInfo1.setText("Trang 0/0");
+            btnPrv1.setEnabled(false);
+            btnNxt1.setEnabled(false);
+            // reset selection/detail
+            lastSelectedModelRow1 = -1;
+            hideDetail1();
+            return;
+        }
 
+        int startRecord = (currentPagePhat - 1) * pageSizePhat;
+        int fields = FIELDS_PER_RECORD;
+        int endRecordExclusive = Math.min(totalRowsPhat, startRecord + pageSizePhat);
+        for (int rec = startRecord; rec < endRecordExclusive; ++rec) {
+            int base = rec * fields;
+            if (base + fields - 1 >= cachePhieuPhat.size()) break;
+            Object idPhat = safeGetFromCache(cachePhieuPhat, base);
+            Object idPM = safeGetFromCache(cachePhieuPhat, base + 1);
+            Object emailNguoiLap = safeGetFromCache(cachePhieuPhat, base + 2);
+            Object ngayMuon = safeGetFromCache(cachePhieuPhat, base + 3);
+            Object loaiPhat = safeGetFromCache(cachePhieuPhat, base + 4);
+            Object soTien = safeGetFromCache(cachePhieuPhat, base + 5);
+            Object ngayGhiNhan = safeGetFromCache(cachePhieuPhat, base + 6);
+            Object trangThai = safeGetFromCache(cachePhieuPhat, base + 7);
+
+            model.addRow(new Object[] {
+                safeToStr(idPhat),
+                safeToStr(idPM),
+                safeToStr(emailNguoiLap),
+                safeToStr(ngayMuon),
+                safeToStr(loaiPhat),
+                safeToStr(soTien),
+                safeToStr(ngayGhiNhan),
+                safeToStr(trangThai)
+            });
+
+        }
+        lastSelectedModelRow1 = -1;
+        hideDetail1();
+        lblPageInfo1.setText(String.format("Trang %d/%d (Hiển thị %d-%d / %d)",
+                currentPagePhat, totalPagesPhat,
+                startRecord + 1, Math.min(totalRowsPhat, startRecord + pageSizePhat),
+                totalRowsPhat));
+
+        btnPrv1.setEnabled(currentPagePhat > 1);
+        btnNxt1.setEnabled(currentPagePhat < totalPagesPhat);
+    }
 
     /**
      * Creates new form ChiTietPhieuBanDocPanel
@@ -184,12 +312,29 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
     public ChiTietPhieuBanDocPanel() {
         initComponents();
     }
+    // helper để lấy giá trị từ TableModel an toàn
     private Object safeGet(javax.swing.table.TableModel model, int row, int col) {
         if (model == null) return null;
         if (row < 0 || row >= model.getRowCount()) return null;
         if (col < 0 || col >= model.getColumnCount()) return null;
         return model.getValueAt(row, col);
     }
+
+    // Lấy info sách an toàn từ maBanSao (kiểm tra null / -1)
+    private ArrayList<Object> getBookInfoByMaBanSaoSafe(Integer maBanSao) {
+        if (maBanSao == null || maBanSao <= 0) return null;
+        if (bookInfoCache.containsKey(maBanSao)) return bookInfoCache.get(maBanSao);
+        try {
+            SachDAO tmp = new SachDAO();
+            ArrayList<Object> info = tmp.getSomeInfoSachByMaBanSao(maBanSao);
+            if (info != null) bookInfoCache.put(maBanSao, info);
+            return info;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
     private void showDetail() {
         if (splitMain == null) return;
         // nếu form mới vừa mở và width = 0, postpone để tránh set sai vị trí
@@ -321,17 +466,19 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
 
     public ChiTietPhieuBanDocPanel(BanDoc x) throws Exception {
         initComponents(); 
+
         cur = x;
         cardLayout = (CardLayout) pnlCards.getLayout();
         cardLayout.show(pnlCards, "PHIEU_MUON");
         btnPhieuMuon.setSelected(true);
-        btnPhieuMuon.setSelected(false);
+
         loadPhieuMuon();
         pnlDetailBook.setVisible(false);
         pnlDetailBook1.setVisible(false);
 
-        
-        
+        // ---------------------------
+        // PHIEU_MUON listeners
+        // ---------------------------
         tblPhieuMuon.getSelectionModel().addListSelectionListener(e -> {
             if (e.getValueIsAdjusting()) return;
 
@@ -340,31 +487,32 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
 
             int modelRow = tblPhieuMuon.convertRowIndexToModel(viewRow);
 
-            // toggle: click lại cùng row sẽ ẩn
+            // toggle: click lại cùng row sẽ ẩn (chỉ khi người dùng dùng keyboard để thay đổi selection)
             if (modelRow == lastSelectedModelRow && detailVisible) {
                 hideDetail();
                 lastSelectedModelRow = -1;
                 tblPhieuMuon.clearSelection();
-            } else {
-                lastSelectedModelRow = modelRow;
-                // lấy MaBanSao từ table model (đổi MA_BAN_SAO_COL nếu khác)
-                Object maBanSaoObj = safeGet(tblPhieuMuon.getModel(), modelRow, MA_BAN_SAO_COL);
-                if (maBanSaoObj != null) {
-                    int maBanSao;
-                    try {
-                        maBanSao = Integer.parseInt(String.valueOf(maBanSaoObj));
-                        SachDAO tmp = new SachDAO();
-                        ArrayList<Object> info = tmp.getSomeInfoSachByMaBanSao(maBanSao);
-                        populateDetailPanel(info);
-                    } catch (NumberFormatException ex) {
-                        clearBookDetail();
-                    }
-                } else {
+                return;
+            }
+
+            // nếu chọn hàng mới
+            lastSelectedModelRow = modelRow;
+            // lấy MaBanSao từ table model (đổi MA_BAN_SAO_COL nếu khác)
+            Object maBanSaoObj = safeGet(tblPhieuMuon.getModel(), modelRow, MA_BAN_SAO_COL);
+            if (maBanSaoObj != null) {
+                try {
+                    int maBanSao = Integer.parseInt(String.valueOf(maBanSaoObj));
+                    ArrayList<Object> info = getBookInfoByMaBanSaoSafe(maBanSao);
+                    populateDetailPanel(info);
+                } catch (NumberFormatException ex) {
                     clearBookDetail();
                 }
-                showDetail();
+            } else {
+                clearBookDetail();
             }
+            showDetail();
         });
+
         tblPhieuMuon.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -380,15 +528,15 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                     return;
                 }
 
-                // khác hàng hiện tại -> chọn và show (mouse click thường cũng thay selection, nhưng đảm bảo xử lý)
+                // khác hàng hiện tại -> chọn và show
                 lastSelectedModelRow = modelRow;
-                tblPhieuMuon.setRowSelectionInterval(viewRow, viewRow); // ensure selected
+                // set selection using view index
+                tblPhieuMuon.setRowSelectionInterval(viewRow, viewRow);
                 Object maBanSaoObj = safeGet(tblPhieuMuon.getModel(), modelRow, MA_BAN_SAO_COL);
                 if (maBanSaoObj != null) {
                     try {
                         int maBanSao = Integer.parseInt(String.valueOf(maBanSaoObj));
-                        SachDAO tmp = new SachDAO();
-                        ArrayList<Object> info = tmp.getSomeInfoSachByMaBanSao(maBanSao);
+                        ArrayList<Object> info = getBookInfoByMaBanSaoSafe(maBanSao);
                         populateDetailPanel(info);
                     } catch (NumberFormatException ex) {
                         clearBookDetail();
@@ -399,6 +547,10 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                 showDetail();
             }
         });
+
+        // ---------------------------
+        // PHIEU_PHAT listeners
+        // ---------------------------
         tblPhieuPhat.getSelectionModel().addListSelectionListener(e -> {
             if (e.getValueIsAdjusting()) return;
 
@@ -409,21 +561,34 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
 
             if (modelRow == lastSelectedModelRow1 && detailVisible1) {
                 // nếu selection không thay đổi và hiện rồi thì không tắt ở đây
-                // (tắt sẽ do mouseClicked bắt)
                 return;
             }
 
-            // chọn row mới -> lấy IdPhat (col 0), từ IdPhat lấy MaBanSao, rồi lấy info sách
             lastSelectedModelRow1 = modelRow;
             Object idPhatObj = safeGet(tblPhieuPhat.getModel(), modelRow, ID_PHAT_COL);
             if (idPhatObj != null) {
                 try {
                     int idPhat = Integer.parseInt(String.valueOf(idPhatObj));
 
-                    SachDAO tmp = new SachDAO();
-                    ArrayList<Object> info = tmp.getSomeInfoSachByIdPhat(idPhat);
+                    ArrayList<Object> info = null;
+                    if(!bookInfoCacheIdPhat.containsKey(idPhat)) {
+                        SachDAO tmp = new SachDAO();
+                        int maBanSao = tmp.getMaBanSaoByIdPhat(idPhat);
+                        if (maBanSao > 0) {
+                            info = getBookInfoByMaBanSaoSafe(maBanSao);
+                            if (info != null) {
+                                bookInfoCacheIdPhat.put(idPhat, maBanSao);
+                            }
+                        }
+                    } else {
+                        Integer maBanSao = bookInfoCacheIdPhat.get(idPhat);
+                        info = (maBanSao != null) ? bookInfoCache.get(maBanSao) : null;
+                    }
                     populateDetailPanel1(info);
                 } catch (NumberFormatException ex) {
+                    clearBookDetail1();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                     clearBookDetail1();
                 }
             } else {
@@ -432,7 +597,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
             showDetail1();
         });
 
-        // MouseListener: bắt click lại cùng hàng để toggle off
         tblPhieuPhat.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -455,11 +619,25 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                 if (idPhatObj != null) {
                     try {
                         int idPhat = Integer.parseInt(String.valueOf(idPhatObj));
-                        
-                        SachDAO tmp = new SachDAO();
-                        ArrayList<Object> info = tmp.getSomeInfoSachByIdPhat(idPhat);
+
+                        ArrayList<Object> info = null;
+                        if(!bookInfoCacheIdPhat.containsKey(idPhat)) {
+                            SachDAO tmp = new SachDAO();
+                            int maBanSao = tmp.getMaBanSaoByIdPhat(idPhat);
+                            if (maBanSao > 0) {
+                                info = getBookInfoByMaBanSaoSafe(maBanSao);
+                                if (info != null) bookInfoCacheIdPhat.put(idPhat, maBanSao);
+                            }
+                        } else {
+                            Integer maBanSao = bookInfoCacheIdPhat.get(idPhat);
+                            info = (maBanSao != null) ? bookInfoCache.get(maBanSao) : null;
+                        }
+
                         populateDetailPanel1(info);
                     } catch (NumberFormatException ex) {
+                        clearBookDetail1();
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
                         clearBookDetail1();
                     }
                 } else {
@@ -468,6 +646,102 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                 showDetail1();
             }
         });
+        // --- đăng ký phân trang cho PHIEU_MUON
+        btnPrv.addActionListener(evt -> {
+            if (currentPageMuon > 1) {
+                currentPageMuon--;
+                try {
+                    // render từ cache (không gọi DB)
+                    renderPagePhieuMuon();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        btnNxt.addActionListener(evt -> {
+            if (currentPageMuon < totalPagesMuon) {
+                currentPageMuon++;
+                try {
+                    renderPagePhieuMuon();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        // --- đăng ký phân trang cho PHIEU_PHAT
+        btnPrv1.addActionListener(evt -> {
+            if (currentPagePhat > 1) {
+                currentPagePhat--;
+                try {
+                    renderPagePhieuPhat();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        btnNxt1.addActionListener(evt -> {
+            if (currentPagePhat < totalPagesPhat) {
+                currentPagePhat++;
+                try {
+                    renderPagePhieuPhat();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        // alternating rows + selection color
+        tblPhieuMuon.setRowHeight(26);
+        tblPhieuMuon.setIntercellSpacing(new Dimension(6,6));
+        tblPhieuMuon.setGridColor(new Color(230,230,230));
+        tblPhieuMuon.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (isSelected) { setBackground(new Color(51, 153, 255)); setForeground(Color.white); }
+                else { setBackground(row % 2 == 0 ? Color.white : new Color(248, 249, 250)); setForeground(Color.darkGray); }
+                return this;
+            }
+        });
+
+        // header style
+        tblPhieuMuon.getTableHeader().setFont(tblPhieuMuon.getTableHeader().getFont().deriveFont(Font.BOLD));
+        ((DefaultTableCellRenderer) tblPhieuMuon.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+
+        // center ID column
+        if (tblPhieuMuon.getColumnModel().getColumnCount() > 0) {
+            DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+            center.setHorizontalAlignment(SwingConstants.CENTER);
+            tblPhieuMuon.getColumnModel().getColumn(0).setCellRenderer(center);
+        }
+        // alternating rows + selection color
+        tblPhieuPhat.setRowHeight(26);
+        tblPhieuPhat.setIntercellSpacing(new Dimension(6,6));
+        tblPhieuPhat.setGridColor(new Color(230,230,230));
+        tblPhieuPhat.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (isSelected) { setBackground(new Color(51, 153, 255)); setForeground(Color.white); }
+                else { setBackground(row % 2 == 0 ? Color.white : new Color(248, 249, 250)); setForeground(Color.darkGray); }
+                return this;
+            }
+        });
+
+        // header style
+        tblPhieuPhat.getTableHeader().setFont(tblPhieuPhat.getTableHeader().getFont().deriveFont(Font.BOLD));
+        ((DefaultTableCellRenderer) tblPhieuPhat.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+
+        // center ID column
+        if (tblPhieuPhat.getColumnModel().getColumnCount() > 0) {
+            DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+            center.setHorizontalAlignment(SwingConstants.CENTER);
+            tblPhieuPhat.getColumnModel().getColumn(0).setCellRenderer(center);
+        }
+        
         
     }
 
@@ -508,6 +782,10 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         jLabel12 = new javax.swing.JLabel();
         jLabel13 = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
+        jPanel1 = new javax.swing.JPanel();
+        btnPrv1 = new javax.swing.JButton();
+        lblPageInfo1 = new javax.swing.JLabel();
+        btnNxt1 = new javax.swing.JButton();
         cardPhieuMuon = new javax.swing.JPanel();
         splitMain = new javax.swing.JSplitPane();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -532,6 +810,10 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         lblShowSoLanMuon = new javax.swing.JLabel();
         lblShowSoSachDaMuon = new javax.swing.JLabel();
         lblShowSoSachDangMuon = new javax.swing.JLabel();
+        jPanel2 = new javax.swing.JPanel();
+        btnPrv = new javax.swing.JButton();
+        lblPageInfo = new javax.swing.JLabel();
+        btnNxt = new javax.swing.JButton();
 
         buttonGroup1.add(btnPhieuMuon);
         btnPhieuMuon.setText("Phiếu Mượn");
@@ -630,7 +912,7 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                         .addGroup(pnlDetailBook1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(lblDetailNamXB1)
                             .addComponent(lblDetailNXB1))))
-                .addContainerGap(251, Short.MAX_VALUE))
+                .addContainerGap(609, Short.MAX_VALUE))
         );
         pnlDetailBook1Layout.setVerticalGroup(
             pnlDetailBook1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -666,6 +948,20 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
 
         splitMain1.setRightComponent(pnlDetailBook1);
 
+        btnPrv1.setText("Trang trước");
+        btnPrv1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPrv1ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(btnPrv1);
+
+        lblPageInfo1.setText("Trang 1/1");
+        jPanel1.add(lblPageInfo1);
+
+        btnNxt1.setText("Trang sau");
+        jPanel1.add(btnNxt1);
+
         javax.swing.GroupLayout cardPhieuPhatLayout = new javax.swing.GroupLayout(cardPhieuPhat);
         cardPhieuPhat.setLayout(cardPhieuPhatLayout);
         cardPhieuPhatLayout.setHorizontalGroup(
@@ -673,24 +969,28 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
             .addGroup(cardPhieuPhatLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(cardPhieuPhatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1222, Short.MAX_VALUE)
                     .addGroup(cardPhieuPhatLayout.createSequentialGroup()
-                        .addComponent(lblTongSoTienPhatDaDong)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblShowTongSoTienPhatDaDong))
-                    .addGroup(cardPhieuPhatLayout.createSequentialGroup()
-                        .addComponent(lblTongSoTienPhatChuaDong)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblShowTongSoTienPhatChuaDong))
-                    .addGroup(cardPhieuPhatLayout.createSequentialGroup()
-                        .addComponent(lblSoPhieuPhat)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblShowSoPhieuPhat, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(993, Short.MAX_VALUE))
+                        .addGroup(cardPhieuPhatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(cardPhieuPhatLayout.createSequentialGroup()
+                                .addComponent(lblTongSoTienPhatDaDong)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(lblShowTongSoTienPhatDaDong))
+                            .addGroup(cardPhieuPhatLayout.createSequentialGroup()
+                                .addComponent(lblTongSoTienPhatChuaDong)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(lblShowTongSoTienPhatChuaDong))
+                            .addGroup(cardPhieuPhatLayout.createSequentialGroup()
+                                .addComponent(lblSoPhieuPhat)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(lblShowSoPhieuPhat, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
             .addGroup(cardPhieuPhatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(cardPhieuPhatLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(splitMain1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
+                    .addContainerGap()
+                    .addComponent(splitMain1)
+                    .addContainerGap()))
         );
         cardPhieuPhatLayout.setVerticalGroup(
             cardPhieuPhatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -707,12 +1007,13 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                 .addGroup(cardPhieuPhatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lblTongSoTienPhatDaDong)
                     .addComponent(lblShowTongSoTienPhatDaDong))
-                .addContainerGap(590, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 459, Short.MAX_VALUE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addGroup(cardPhieuPhatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(cardPhieuPhatLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, cardPhieuPhatLayout.createSequentialGroup()
+                    .addContainerGap(131, Short.MAX_VALUE)
                     .addComponent(splitMain1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
+                    .addContainerGap(132, Short.MAX_VALUE)))
         );
 
         pnlCards.add(cardPhieuPhat, "PHIEU_PHAT");
@@ -837,6 +1138,20 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
 
         lblSoLanMuon.setText("Số lần mượn:");
 
+        btnPrv.setText("Trang trước");
+        btnPrv.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPrvActionPerformed(evt);
+            }
+        });
+        jPanel2.add(btnPrv);
+
+        lblPageInfo.setText("Trang 1/1");
+        jPanel2.add(lblPageInfo);
+
+        btnNxt.setText("Trang sau");
+        jPanel2.add(btnNxt);
+
         javax.swing.GroupLayout cardPhieuMuonLayout = new javax.swing.GroupLayout(cardPhieuMuon);
         cardPhieuMuon.setLayout(cardPhieuMuonLayout);
         cardPhieuMuonLayout.setHorizontalGroup(
@@ -845,23 +1160,27 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(cardPhieuMuonLayout.createSequentialGroup()
-                        .addComponent(lblSoLanMuon)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblShowSoLanMuon, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(cardPhieuMuonLayout.createSequentialGroup()
-                        .addComponent(lblSoSachDaMuon)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblShowSoSachDaMuon, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(cardPhieuMuonLayout.createSequentialGroup()
-                        .addComponent(lblSoSachDangMuon)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblShowSoSachDangMuon, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(1024, Short.MAX_VALUE))
+                        .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(cardPhieuMuonLayout.createSequentialGroup()
+                                .addComponent(lblSoLanMuon)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(lblShowSoLanMuon, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(cardPhieuMuonLayout.createSequentialGroup()
+                                .addComponent(lblSoSachDaMuon)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(lblShowSoSachDaMuon, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(cardPhieuMuonLayout.createSequentialGroup()
+                                .addComponent(lblSoSachDangMuon)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(lblShowSoSachDangMuon, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 1018, Short.MAX_VALUE))
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 1222, Short.MAX_VALUE))
+                .addContainerGap())
             .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(cardPhieuMuonLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(splitMain, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
+                    .addContainerGap()
+                    .addComponent(splitMain, javax.swing.GroupLayout.DEFAULT_SIZE, 1222, Short.MAX_VALUE)
+                    .addContainerGap()))
         );
         cardPhieuMuonLayout.setVerticalGroup(
             cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -878,12 +1197,14 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                 .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lblSoSachDangMuon)
                     .addComponent(lblShowSoSachDangMuon))
-                .addContainerGap(590, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 446, Short.MAX_VALUE)
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
             .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(cardPhieuMuonLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, cardPhieuMuonLayout.createSequentialGroup()
+                    .addContainerGap(119, Short.MAX_VALUE)
                     .addComponent(splitMain, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
+                    .addContainerGap(119, Short.MAX_VALUE)))
         );
 
         pnlCards.add(cardPhieuMuon, "PHIEU_MUON");
@@ -918,7 +1239,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         btnPhieuPhat.setSelected(false);
         cardLayout.show(pnlCards, "PHIEU_MUON");
         try {
-            // nếu muốn load dữ liệu khi chuyển:
             loadPhieuMuon();
         } catch (Exception ex) {
             System.getLogger(ChiTietPhieuBanDocPanel.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
@@ -931,7 +1251,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         btnPhieuMuon.setSelected(false);
         btnPhieuPhat.setSelected(true);
         cardLayout.show(pnlCards, "PHIEU_PHAT");
-        // nếu muốn load dữ liệu khi chuyển:
         try {
             loadPhieuPhat();
         } catch (Exception ex) {
@@ -939,10 +1258,22 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_btnPhieuPhatActionPerformed
 
+    private void btnPrv1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrv1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnPrv1ActionPerformed
+
+    private void btnPrvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrvActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnPrvActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnNxt;
+    private javax.swing.JButton btnNxt1;
     private javax.swing.JToggleButton btnPhieuMuon;
     private javax.swing.JToggleButton btnPhieuPhat;
+    private javax.swing.JButton btnPrv;
+    private javax.swing.JButton btnPrv1;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JPanel cardPhieuMuon;
     private javax.swing.JPanel cardPhieuPhat;
@@ -960,6 +1291,8 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblDetailISBN;
@@ -974,6 +1307,8 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
     private javax.swing.JLabel lblDetailTenSach1;
     private javax.swing.JLabel lblDetailTheLoai;
     private javax.swing.JLabel lblDetailTheLoai1;
+    private javax.swing.JLabel lblPageInfo;
+    private javax.swing.JLabel lblPageInfo1;
     private javax.swing.JLabel lblShowSoLanMuon;
     private javax.swing.JLabel lblShowSoPhieuPhat;
     private javax.swing.JLabel lblShowSoSachDaMuon;
