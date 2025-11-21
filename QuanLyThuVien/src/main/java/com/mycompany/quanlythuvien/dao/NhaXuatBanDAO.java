@@ -64,7 +64,7 @@ public class NhaXuatBanDAO {
     }
     
     //Them NXB
-    public boolean insert(NhaXuatBan nxb) {
+    public boolean insert(NhaXuatBan nxb) throws Exception {
         String sql = "INSERT INTO NHAXUATBAN (TenNXB) VALUES (?)";
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)) 
@@ -72,16 +72,15 @@ public class NhaXuatBanDAO {
             ps.setString(1, nxb.getTenNXB());
             return ps.executeUpdate() > 0;
         } catch (SQLIntegrityConstraintViolationException ex) {
-            System.out.println("Tên nhà xuất bản đã tồn tại!");
-            return false;
+            throw new Exception("Lỗi: Tên nhà xuất bản đã tồn tại!", ex);
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+            throw e;
         }
     }
     
     //Cap nhat NXB
-    public boolean update(NhaXuatBan nxb) {
+    public boolean update(NhaXuatBan nxb) throws Exception {
         String sql = "UPDATE NHAXUATBAN SET TenNXB=? WHERE MaNXB=?";
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)) 
@@ -90,16 +89,15 @@ public class NhaXuatBanDAO {
             ps.setInt(2, nxb.getMaNXB());
             return ps.executeUpdate() > 0;
         } catch (SQLIntegrityConstraintViolationException ex) {
-            System.out.println("Tên nhà xuất bản bị trùng!");
-            return false;
+            throw new Exception("Lỗi: Tên nhà xuất bản bị trùng!", ex);
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+            throw e;
         }
     }
     
     //Xoa NXB
-    public boolean delete(int maNXB) {
+    public boolean delete(int maNXB) throws Exception {
         String sql = "DELETE FROM NHAXUATBAN WHERE MaNXB=?";
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql))
@@ -107,11 +105,10 @@ public class NhaXuatBanDAO {
             ps.setInt(1, maNXB);
             return ps.executeUpdate() > 0;
         } catch (SQLIntegrityConstraintViolationException ex) {
-            System.out.println("Không thể xóa! Nhà xuất bản này đang được dùng trong bảng SACH");
-            return false;
+            throw new Exception("Lỗi: Không thể xóa! Nhà xuất bản này đang được dùng trong bảng SACH.", ex);
         } catch (Exception e){
             e.printStackTrace();
-            return false;
+            throw e;
         }
     }
     
@@ -134,12 +131,12 @@ public class NhaXuatBanDAO {
     public List<NhaXuatBan> search(String keyword, String column, Integer lastMaNXB, int pageSize) {
         List<NhaXuatBan> list = new ArrayList<>();
         String likePattern = "%" + (keyword == null ? "" : keyword.trim()) + "%";
-        
+        String trimmedKeyword = keyword == null ? "" : keyword.trim(); // Dùng cho MaNXB
         String sql;
         
         switch (column) {
             case "MaNXB":
-                sql = "SELECT TOP (?) * FROM NHAXUATBAN WHERE CAST(MaNXB AS VARCHAR) LIKE ? AND (? IS NULL OR MaNXB > ?) ORDER BY MaNXB ASC";
+                sql = "SELECT TOP (?) * FROM NHAXUATBAN WHERE MaNXB = ? AND (? IS NULL OR MaNXB > ?) ORDER BY MaNXB ASC";
                 break;
             case "TenNXB":
                 sql = "SELECT TOP (?) * FROM NHAXUATBAN WHERE TenNXB LIKE ? AND (? IS NULL OR MaNXB > ?) ORDER BY MaNXB ASC";
@@ -154,8 +151,17 @@ public class NhaXuatBanDAO {
             int idx = 1;
             ps.setInt(idx++, pageSize);
             
-            ps.setString(idx++, likePattern);
-            
+            if ("MaNXB".equals(column)) {
+                try {
+                    int id = Integer.parseInt(trimmedKeyword);
+                    ps.setInt(idx++, id);
+                } catch (NumberFormatException e) {
+                    ps.setInt(idx++, -1);
+                }
+            } else {
+                ps.setString(idx++, likePattern);
+            }
+    
             if (lastMaNXB == null) {
                 ps.setNull(idx++, java.sql.Types.INTEGER);
                 ps.setNull(idx++, java.sql.Types.INTEGER);

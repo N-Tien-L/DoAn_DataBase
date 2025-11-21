@@ -84,7 +84,7 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     
     private void loadBanSaoPage() {
         try {
-            List<BanSao> list = banSaoController.getPage(isbn, pageSize, currentCursor);
+            List<BanSao> list = banSaoController.getPage(isbn, pageSize + 1, currentCursor);
             hasNextPage = list.size() > pageSize;
             if (hasNextPage) list.remove(list.size() - 1);
             
@@ -92,11 +92,12 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
             model.setRowCount(0);
             
             for (BanSao b : list) {
+                String ngayNhapStr = b.getNgayNhapKho() != null ? b.getNgayNhapKho().toString() : "";
                 model.addRow(new Object[]{
                         b.getMaBanSao(),
                         b.getSoThuTuTrongKho(),
                         b.getTinhTrang(),
-                        b.getNgayNhapKho(),
+                        ngayNhapStr,
                         b.getViTriLuuTru()     
                 });
             }
@@ -139,13 +140,13 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     private void loadDataToTable(List<BanSao> list) {
         DefaultTableModel model = (DefaultTableModel) tblBanSao.getModel();
         model.setRowCount(0);
-        
         for (BanSao b : list) {
+            String ngayNhapStr = b.getNgayNhapKho() != null ? b.getNgayNhapKho().toString() : "";
             model.addRow(new Object[]{
                 b.getMaBanSao(),
                 b.getSoThuTuTrongKho(),
                 b.getTinhTrang(),
-                b.getNgayNhapKho(),
+                ngayNhapStr,
                 b.getViTriLuuTru()
             });
         }

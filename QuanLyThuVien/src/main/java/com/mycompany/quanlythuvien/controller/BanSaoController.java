@@ -3,7 +3,6 @@ package com.mycompany.quanlythuvien.controller;
 import com.mycompany.quanlythuvien.dao.BanSaoDAO;
 import com.mycompany.quanlythuvien.model.BanSao;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +53,8 @@ public class BanSaoController {
     // Thêm bản sao mới
     public void insert(BanSao bansao, String createdBy) throws Exception {
         validateAndSetDefault(bansao);
+        bansao.setNgayNhapKho(null);
+        bansao.setCreatedAt(null);
         banSaoDAO.insert(bansao, createdBy);
     }
     
@@ -63,6 +64,8 @@ public class BanSaoController {
         if (bansao.getMaBanSao() <= 0) {
             throw new Exception("Bản sao chưa tồn tại, không thể cập nhật!");
         }
+        bansao.setNgayNhapKho(null);
+        bansao.setCreatedAt(null);
         banSaoDAO.update(bansao);
     }
     // Lưu bản sao (insert hoặc update tùy)
@@ -126,20 +129,7 @@ public class BanSaoController {
         if (b.getISBN() == null || b.getISBN().isBlank())
             throw new Exception("ISBN không được để trống!");
 
-        if (b.getNgayNhapKho() == null)
-            throw new Exception("Ngày nhập không được để trống!");
-
         if (b.getTinhTrang() == null || b.getTinhTrang().isBlank())
             throw new Exception("Tình trạng bản sao không được để trống!");
-    }
-    
-    //String -> LocalDate
-    public LocalDate parseDate(String input) throws Exception {
-        if (input == null || input.isEmpty()) return null;
-        try {
-            return LocalDate.parse(input);
-        } catch (DateTimeParseException ex) {
-            throw new Exception("Ngày nhập không đúng định dạng yyyy-MM-dd");
-        }
     }
 }

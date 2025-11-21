@@ -12,6 +12,7 @@ import java.awt.Dimension;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import javax.swing.JOptionPane;
 
@@ -22,6 +23,8 @@ import javax.swing.JOptionPane;
 public class ChiTietBanSaoDialog extends javax.swing.JDialog {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ChiTietBanSaoDialog.class.getName());
+    private final String DATE_FORMAT = "dd/MM/yyyy";
+    private final String DATE_TIME_FORMAT = "dd/MM/yyyy HH:mm";
     private String isbn;
     private BanSao bansao; //null -> them moi
     private BanSaoController controller = new BanSaoController();
@@ -50,28 +53,42 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
         txtMaBanSao.setEditable(false);
         txtISBN.setEditable(false);
         txtISBN.setText(isbn);
+        
+        txtNgayNhapKho.setEditable(false);
+        txtNgayNhapKho.setDisabledTextColor(Color.BLACK);
+        
         txtCreatedAt.setEnabled(false);
         txtCreatedAt.setDisabledTextColor(Color.BLACK);
 
         txtCreatedBy.setEnabled(false);
         txtCreatedBy.setDisabledTextColor(Color.BLACK);
-        
+
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern(DATE_FORMAT);
+        SimpleDateFormat dateTimeFormat = new SimpleDateFormat(DATE_TIME_FORMAT);
         if (bansao != null) {
             txtMaBanSao.setText(String.valueOf(bansao.getMaBanSao()));
             txtSoThuTuTrongKho.setText(String.valueOf(bansao.getSoThuTuTrongKho()));
             txtTinhTrang.setText(bansao.getTinhTrang());
-            txtNgayNhapKho.setText((bansao.getNgayNhapKho() != null) ? bansao.getNgayNhapKho().toString() : "");
             txtViTriLuuTru.setText(bansao.getViTriLuuTru());
             txtCreatedBy.setText(bansao.getCreatedBy());
 
+            if (bansao.getNgayNhapKho() != null) {
+                txtNgayNhapKho.setText(bansao.getNgayNhapKho().format(dateFormat));
+            } else {
+                txtNgayNhapKho.setText("");
+            }
+            
             // Format CreatedAt
             if (bansao.getCreatedAt() != null) {
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-                txtCreatedAt.setText(sdf.format(bansao.getCreatedAt()));
+                txtCreatedAt.setText(dateTimeFormat.format(bansao.getCreatedAt()));
             } else {
                 txtCreatedAt.setText("");
             }
         } else {
+            txtNgayNhapKho.setText(LocalDate.now().format(dateFormat));
+            txtNgayNhapKho.setEnabled(false);
+            
             txtCreatedBy.setText(currentUser.getEmail());
             txtCreatedAt.setText("");
         }
@@ -221,8 +238,6 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
             String tinhTrang = txtTinhTrang.getText().trim();
             String viTri = txtViTriLuuTru.getText().trim();
             int soThuTu = Integer.parseInt(txtSoThuTuTrongKho.getText().trim());
-            LocalDate ngayNhap = controller.parseDate(txtNgayNhapKho.getText().trim());
-                    
             String createdBy = (bansao != null) ? bansao.getCreatedBy() : currentUser.getEmail();
 
             BanSao b = new BanSao(
@@ -230,7 +245,7 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
                     isbn,
                     soThuTu,
                     tinhTrang,
-                    ngayNhap,
+                    null,
                     viTri,
                     null,
                     createdBy
@@ -239,11 +254,15 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
             controller.save(b, currentUser.getEmail());
             
             BanSao inserted = controller.findById(b.getMaBanSao());
+            this.bansao = inserted;
             b.setCreatedAt(inserted.getCreatedAt());
-            
+            b.setNgayNhapKho(inserted.getNgayNhapKho());
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             txtMaBanSao.setText(String.valueOf(b.getMaBanSao()));
             txtCreatedBy.setText(b.getCreatedBy());
-            txtCreatedAt.setText(b.getCreatedAt().toString());
+            txtCreatedAt.setText(sdf.format(b.getCreatedAt()));
+            txtNgayNhapKho.setText(inserted.getNgayNhapKho().format(dateFormat));
 
             JOptionPane.showMessageDialog(this, "Lưu thành công");
             dispose();

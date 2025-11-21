@@ -6,6 +6,7 @@ package com.mycompany.quanlythuvien.view.dialog;
 
 import com.mycompany.quanlythuvien.controller.BanSaoController;
 import com.mycompany.quanlythuvien.model.TaiKhoan;
+import java.awt.Color;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import javax.swing.JOptionPane;
@@ -19,7 +20,7 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
     private TaiKhoan currentUser;
     private BanSaoController banSaoController = new BanSaoController();
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ThemHangLoatBanSaoDialog.class.getName());
-
+    private final String DATE_FORMAT = "dd/MM/yyyy";
     /**
      * Creates new form ThemHangLoatBanSaoDialog
      */
@@ -47,10 +48,11 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
 
     // START: Tự động điền ngày nhập kho từ hệ thống (cho người dùng xem)
         LocalDate ngayHienTai = LocalDate.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
         txtNgayNhapKho.setText(ngayHienTai.format(formatter));
         
         txtNgayNhapKho.setEditable(false);
+        txtNgayNhapKho.setDisabledTextColor(Color.BLACK);
     }
     /**
      * This method is called from within the constructor to initialize the form.

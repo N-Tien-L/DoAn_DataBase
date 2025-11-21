@@ -24,31 +24,27 @@ public class NhaXuatBanController {
         return nxbDAO.getTotalNXB();
     }
     
-    public boolean addNXB(NhaXuatBan nxb) {
+    public boolean addNXB(NhaXuatBan nxb) throws Exception {
         if (nxb.getTenNXB() == null || nxb.getTenNXB().trim().isEmpty()) {
-            System.out.println("Tên nhà xuất bản không được để trống!");
-            return false;
+            throw new Exception("Tên nhà xuất bản không được để trống!");
         }
         return nxbDAO.insert(nxb);
     }
     
-    public boolean updateNXB(NhaXuatBan nxb) {
+    public boolean updateNXB(NhaXuatBan nxb) throws Exception {
         if (nxb.getMaNXB() <= 0) {
-            System.out.println("Mã nhà xuất bản không hợp lệ!");
-            return false;
+            throw new Exception("Mã nhà xuất bản không hợp lệ!");
         }
         
         if (nxb.getTenNXB() == null || nxb.getTenNXB().trim().isEmpty()){
-            System.out.println("Tên nhà xuất bản không được để trống!");
-            return false;
+            throw new Exception("Tên nhà xuất bản không được để trống!");
         }
         return nxbDAO.update(nxb);
     }
     
-    public boolean deleteNXB(int maNXB) {
+    public boolean deleteNXB(int maNXB) throws Exception {
         if (maNXB <= 0) {
-            System.out.println("Mã nhà xuất bản không hợp lệ!");
-            return false;
+            throw new Exception("Mã nhà xuất bản không hợp lệ!");
         }
         return nxbDAO.delete(maNXB);
     }

@@ -71,7 +71,7 @@ public class TacGiaDAO {
         return 0;
     }
     
-    public boolean insert(TacGia tg) {
+    public boolean insert(TacGia tg) throws Exception{
         String sql = "INSERT INTO TACGIA (TenTacGia, Website, GhiChu) VALUES (?,?,?)";
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)) 
@@ -82,15 +82,14 @@ public class TacGiaDAO {
             
             return ps.executeUpdate() > 0;
         } catch (SQLIntegrityConstraintViolationException ex) {
-            System.out.println("Tên tác giả đã tồn tại!");
-            return false;
+            throw new Exception("Lỗi: Tên tác giả đã tồn tại!", ex);
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+            throw e;
         }
     }
     
-    public boolean update(TacGia tg) {
+    public boolean update(TacGia tg) throws Exception {
         String sql = "UPDATE TACGIA SET TenTacGia=?, Website=?, GhiChu=? WHERE MaTacGia=?";
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql))
@@ -102,15 +101,14 @@ public class TacGiaDAO {
             
             return ps.executeUpdate() > 0;
         } catch (SQLIntegrityConstraintViolationException ex) {
-            System.out.println("Tên tác giả bị trùng!");
-            return false;
+            throw new Exception("Lỗi: Tên tác giả bị trùng!", ex);
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+            throw e;
         }
     }
     
-    public boolean delete(int id) {
+    public boolean delete(int id) throws Exception {
         String sql = "DELETE FROM TACGIA WHERE MaTacGia=?";
         
         try (Connection con = DBConnector.getConnection();
@@ -119,22 +117,22 @@ public class TacGiaDAO {
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
         } catch (SQLIntegrityConstraintViolationException ex) {
-            System.out.println("Không thể xóa! Tác giả đang được dùng trong bảng SACH");
-            return false;
+            throw new Exception("Lỗi: Không thể xóa! Tác giả đang được sử dụng trong bảng SACH.", ex);
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+            throw e;
         }
     }
     
         public List<TacGia> search(String keyword, String column, Integer lastMaTacGia, int pageSize) {
             List<TacGia> list = new ArrayList<>();
             String likePattern = "%" + (keyword == null ? "" : keyword.trim()) + "%";
-
+            String trimmedKeyword = keyword == null ? "" : keyword.trim(); // Dùng cho trường hợp MaTacGia
+            
             String sql;
             switch (column) {
                 case "MaTacGia":
-                    sql = "SELECT TOP (?) * FROM TACGIA WHERE CAST(MaTacGia AS VARCHAR) LIKE ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
+                    sql = "SELECT TOP (?) * FROM TACGIA WHERE MaTacGia = ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
                     break;
                 case "TenTacGia":
                     sql = "SELECT TOP (?) * FROM TACGIA WHERE TenTacGia LIKE ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
@@ -154,8 +152,16 @@ public class TacGiaDAO {
             {
                 int idx = 1;
                 ps.setInt(idx++, pageSize);
-                
-                ps.setString(idx++, likePattern);
+                if ("MaTacGia".equals(column)) {
+                    try {
+                        int id = Integer.parseInt(trimmedKeyword);
+                        ps.setInt(idx++, id);
+                    } catch (NumberFormatException e) {
+                        ps.setInt(idx++, -1);
+                    }
+                } else {
+                    ps.setString(idx++, likePattern);
+                }
                 
                 if (lastMaTacGia == null) {
                     ps.setNull(idx++, java.sql.Types.INTEGER);

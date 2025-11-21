@@ -27,34 +27,31 @@ public class TheLoaiController {
     public int getTotalPages(int pageSize) {
         int total = getTotalTheLoai();
         if (total <= 0) return 0;
+        if (pageSize <= 0) pageSize = 10;
         return (int) Math.ceil((double) total / pageSize);
     }
     
-    public boolean addTheLoai(TheLoai tl) {
+    public boolean addTheLoai(TheLoai tl) throws Exception {
         if (tl.getTenTheLoai() == null || tl.getTenTheLoai().trim().isEmpty()){
-            System.out.println("Tên thể loại không được để trống!");
-            return false;
+            throw new Exception("Tên thể loại không được để trống!");
         }
         return theLoaiDAO.insert(tl);
     }
     
-    public boolean updateTheLoai(TheLoai tl) {
+    public boolean updateTheLoai(TheLoai tl) throws Exception {
         if (tl.getMaTheLoai() <= 0) {
-            System.out.println("Mã thể loại không hợp lệ!");
-            return false;
+            throw new Exception("Mã thể loại không hợp lệ!");
         }
         
         if (tl.getTenTheLoai() == null || tl.getTenTheLoai().trim().isEmpty()) {
-            System.out.print("Tên thể loại không được để trống!");
-            return false;
+            throw new Exception("Tên thể loại không được để trống!");
         }
         return theLoaiDAO.update(tl);
     }
     
-    public boolean deleteTheLoai(int maTheLoai) {
+    public boolean deleteTheLoai(int maTheLoai) throws Exception {
         if (maTheLoai <= 0) {
-            System.out.println("Mã thể loại không hợp lệ!");
-            return false;
+            throw new Exception("Mã thể loại không hợp lệ!");
         }
         return theLoaiDAO.delete(maTheLoai);
     }

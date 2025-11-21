@@ -40,13 +40,13 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private TheLoaiController theLoaiController = new TheLoaiController();
     
     private String lastISBNCursor = null;
-    private final int pageSize = 20;
+    private final int pageSize = 10;
     private String currentCursor = null;
     private boolean hasNextPage = false;
     private Stack<String> cursorHistory = new Stack<>();
 
     private int lastTacGiaCursor = 0;
-    private final int pageSizeTG = 20;
+    private final int pageSizeTG = 10;
     private int currentCursorTG = 0;
     private boolean hasNextPageTG = false;
     private Stack<Integer> cursorHistoryTG = new Stack<>();
@@ -54,14 +54,14 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     
     private int currentCursorNXB = 0;
     private int lastMaNXBOnPage = 0;
-    private final int pageSizeNXB = 20;
+    private final int pageSizeNXB = 10;
     private boolean hasNextPageNXB = false;
     private Stack<Integer> cursorHistoryNXB = new Stack<>();
     private boolean isAddingNXB = false;
     
     private int currentCursorTL = 0;
     private int lastMaTLOnPage = 0;
-    private final int pageSizeTL = 20;
+    private final int pageSizeTL = 10;
     private boolean hasNextPageTL = false;
     private Stack<Integer> cursorHistoryTL = new Stack<>();
     private boolean isAddingTL = false;
@@ -333,6 +333,11 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
         jPanel15.setLayout(new javax.swing.BoxLayout(jPanel15, javax.swing.BoxLayout.LINE_AXIS));
 
+        jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        jScrollPane1.setColumnHeaderView(null);
+        jScrollPane1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+
         tblSach.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         tblSach.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -353,6 +358,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                 return canEdit [columnIndex];
             }
         });
+        tblSach.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(tblSach);
 
         jPanel15.add(jScrollPane1);
@@ -580,6 +586,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
         jPanel18.setLayout(new javax.swing.BoxLayout(jPanel18, javax.swing.BoxLayout.LINE_AXIS));
 
+        jScrollPane2.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane2.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
         jScrollPane2.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jScrollPane2MouseClicked(evt);
@@ -830,6 +838,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
         jPanel21.setLayout(new javax.swing.BoxLayout(jPanel21, javax.swing.BoxLayout.LINE_AXIS));
 
+        jScrollPane3.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane3.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
         jScrollPane3.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jScrollPane3MouseClicked(evt);
@@ -1046,6 +1056,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
         jPanel24.setLayout(new javax.swing.BoxLayout(jPanel24, javax.swing.BoxLayout.LINE_AXIS));
 
+        jScrollPane4.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane4.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
         jScrollPane4.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jScrollPane4MouseClicked(evt);
