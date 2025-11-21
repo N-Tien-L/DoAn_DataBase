@@ -54,6 +54,10 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         txtCreatedBy.setEnabled(false);
         txtCreatedBy.setDisabledTextColor(Color.BLACK);
 
+        if (isEditMode) {
+            txtISBN.setEnabled(false);
+            txtISBN.setDisabledTextColor(Color.BLACK);
+        }
         loadComboBoxes();
         
         if (sach != null) {
@@ -254,10 +258,6 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnHuy)
-                .addGap(124, 124, 124))
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGap(60, 60, 60)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -301,6 +301,8 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGap(216, 216, 216)
                 .addComponent(btnLuu)
+                .addGap(18, 18, 18)
+                .addComponent(btnHuy)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
@@ -358,10 +360,10 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblMoTa, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnHuy)
-                .addGap(18, 18, 18)
-                .addComponent(btnLuu)
+                .addGap(50, 50, 50)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnLuu)
+                    .addComponent(btnHuy))
                 .addGap(25, 25, 25))
         );
 

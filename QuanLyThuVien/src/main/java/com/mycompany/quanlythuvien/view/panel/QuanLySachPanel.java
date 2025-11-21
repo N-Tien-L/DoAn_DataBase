@@ -236,6 +236,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         jScrollPane4 = new javax.swing.JScrollPane();
         tblTheLoai = new javax.swing.JTable();
 
+        setPreferredSize(new java.awt.Dimension(779, 700));
         setLayout(new java.awt.BorderLayout());
 
         tabQLSach.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -251,8 +252,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         jPanel2.add(cboTieuChi);
 
         txtTimKiem.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
-        txtTimKiem.setMinimumSize(new java.awt.Dimension(250, 25));
-        txtTimKiem.setPreferredSize(new java.awt.Dimension(250, 25));
+        txtTimKiem.setMinimumSize(new java.awt.Dimension(250, 33));
+        txtTimKiem.setPreferredSize(new java.awt.Dimension(250, 33));
         txtTimKiem.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtTimKiemActionPerformed(evt);
@@ -336,7 +337,6 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
         jScrollPane1.setColumnHeaderView(null);
-        jScrollPane1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
 
         tblSach.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         tblSach.setModel(new javax.swing.table.DefaultTableModel(
@@ -408,7 +408,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         jLabel2.setText("W:ebsite");
 
         lblMaTacGiaTG.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        lblMaTacGiaTG.setPreferredSize(new java.awt.Dimension(200, 26));
+        lblMaTacGiaTG.setPreferredSize(new java.awt.Dimension(200, 33));
 
         txtGhiChuTG.setColumns(20);
         txtGhiChuTG.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
@@ -416,10 +416,12 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         jScrollPane5.setViewportView(txtGhiChuTG);
 
         txtTenTG.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        txtTenTG.setPreferredSize(new java.awt.Dimension(200, 26));
+        txtTenTG.setMinimumSize(new java.awt.Dimension(64, 33));
+        txtTenTG.setPreferredSize(new java.awt.Dimension(200, 33));
 
         txtWebsiteTG.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        txtWebsiteTG.setPreferredSize(new java.awt.Dimension(200, 26));
+        txtWebsiteTG.setMinimumSize(new java.awt.Dimension(64, 33));
+        txtWebsiteTG.setPreferredSize(new java.awt.Dimension(200, 33));
 
         btnLuuTG.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
         btnLuuTG.setText("[✓]Lưu");
@@ -447,7 +449,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(lblMaTacGiaTG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 81, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLabel6))
                     .addComponent(txtTenTG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtWebsiteTG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -521,8 +523,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         cboTieuChiTG.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
         txtTimKiemTG.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
-        txtTimKiemTG.setMinimumSize(new java.awt.Dimension(250, 26));
-        txtTimKiemTG.setPreferredSize(new java.awt.Dimension(250, 25));
+        txtTimKiemTG.setMinimumSize(new java.awt.Dimension(250, 33));
+        txtTimKiemTG.setPreferredSize(new java.awt.Dimension(250, 33));
         txtTimKiemTG.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtTimKiemTGActionPerformed(evt);
@@ -660,8 +662,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         jPanel5.add(cboTieuChiNXB);
 
         txtTimKiemNXB.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
-        txtTimKiemNXB.setMinimumSize(new java.awt.Dimension(250, 25));
-        txtTimKiemNXB.setPreferredSize(new java.awt.Dimension(250, 25));
+        txtTimKiemNXB.setMinimumSize(new java.awt.Dimension(250, 33));
+        txtTimKiemNXB.setPreferredSize(new java.awt.Dimension(250, 33));
         txtTimKiemNXB.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtTimKiemNXBActionPerformed(evt);
@@ -691,11 +693,11 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         jLabel4.setText("Tên nhà xuất bản:");
 
         txtTenNXB.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        txtTenNXB.setMinimumSize(new java.awt.Dimension(150, 26));
-        txtTenNXB.setPreferredSize(new java.awt.Dimension(200, 26));
+        txtTenNXB.setMinimumSize(new java.awt.Dimension(150, 30));
+        txtTenNXB.setPreferredSize(new java.awt.Dimension(200, 33));
 
         lblMaNXB.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        lblMaNXB.setPreferredSize(new java.awt.Dimension(200, 26));
+        lblMaNXB.setPreferredSize(new java.awt.Dimension(200, 30));
 
         btnLuuNXB.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
         btnLuuNXB.setText("[✓]Lưu");
@@ -720,12 +722,12 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                             .addGroup(jPanel9Layout.createSequentialGroup()
                                 .addComponent(jLabel3)
                                 .addGap(0, 0, Short.MAX_VALUE))
-                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, 168, Short.MAX_VALUE))
+                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, 158, Short.MAX_VALUE))
                         .addGap(18, 18, 18)
                         .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(txtTenNXB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(lblMaNXB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(67, Short.MAX_VALUE))
+                .addContainerGap(52, Short.MAX_VALUE))
         );
         jPanel9Layout.setVerticalGroup(
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -794,7 +796,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                         .addComponent(btnXoaNXB, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(btnLamMoiNXB)))
-                .addContainerGap(27, Short.MAX_VALUE))
+                .addContainerGap(52, Short.MAX_VALUE))
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -807,7 +809,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                 .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnLamMoiNXB)
                     .addComponent(btnXoaNXB))
-                .addContainerGap(67, Short.MAX_VALUE))
+                .addContainerGap(78, Short.MAX_VALUE))
         );
 
         jPanel6.add(jPanel10);
@@ -884,8 +886,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         jPanel7.add(cboTieuChiTL);
 
         txtTimKiemTL.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
-        txtTimKiemTL.setMinimumSize(new java.awt.Dimension(250, 25));
-        txtTimKiemTL.setPreferredSize(new java.awt.Dimension(250, 25));
+        txtTimKiemTL.setMinimumSize(new java.awt.Dimension(250, 30));
+        txtTimKiemTL.setPreferredSize(new java.awt.Dimension(250, 33));
         txtTimKiemTL.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtTimKiemTLActionPerformed(evt);
@@ -915,8 +917,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         jLabel10.setText("Tên thể loại:");
 
         txtTenTL.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        txtTenTL.setMinimumSize(new java.awt.Dimension(150, 26));
-        txtTenTL.setPreferredSize(new java.awt.Dimension(200, 26));
+        txtTenTL.setMinimumSize(new java.awt.Dimension(150, 33));
+        txtTenTL.setPreferredSize(new java.awt.Dimension(200, 33));
 
         btnLuuTL.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
         btnLuuTL.setText("[✓] Lưu");
@@ -927,7 +929,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         });
 
         lblMaTL.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        lblMaTL.setPreferredSize(new java.awt.Dimension(200, 26));
+        lblMaTL.setPreferredSize(new java.awt.Dimension(200, 33));
 
         javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
         jPanel11.setLayout(jPanel11Layout);
@@ -945,7 +947,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                         .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(txtTenTL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(lblMaTL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(125, Short.MAX_VALUE))
+                .addContainerGap(63, Short.MAX_VALUE))
         );
         jPanel11Layout.setVerticalGroup(
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1004,7 +1006,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         jPanel12Layout.setHorizontalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel12Layout.createSequentialGroup()
-                .addContainerGap(38, Short.MAX_VALUE)
+                .addContainerGap(63, Short.MAX_VALUE)
                 .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(btnXoaTL, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(btnThemTL, javax.swing.GroupLayout.DEFAULT_SIZE, 108, Short.MAX_VALUE))
@@ -1012,7 +1014,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                 .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(btnLamMoiTL, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(btnSuaTL, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(26, Short.MAX_VALUE))
+                .addContainerGap(63, Short.MAX_VALUE))
         );
         jPanel12Layout.setVerticalGroup(
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1025,7 +1027,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                 .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnLamMoiTL)
                     .addComponent(btnXoaTL))
-                .addContainerGap(50, Short.MAX_VALUE))
+                .addContainerGap(64, Short.MAX_VALUE))
         );
 
         jPanel8.add(jPanel12);
@@ -1095,30 +1097,50 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void initTable() {
-        tableModel.setColumnIdentifiers(new String[]{
+        tableModel = new DefaultTableModel(new Object[][] {}, new String[] {
             "ISBN", "Tên sách", "Tác giả", "Nhà xuất bản", "Năm", "Thể loại"
-        });
+        }) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // tất cả ô không thể edit
+            }
+        };
         tblSach.setModel(tableModel);
     }
     
     private void initTableTG() {
-        tableModelTG.setColumnIdentifiers(new String[]{
+        tableModelTG = new DefaultTableModel(new Object[][] {}, new String[] {
             "Mã tác giả", "Tên tác giả", "Website", "Ghi chú"
-        });
+        }) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         tblTacGia.setModel(tableModelTG);
     }
     
     private void initTableNXB() {
-        tableModelNXB.setColumnIdentifiers(new String[]{
+        tableModelNXB = new DefaultTableModel(new Object[][] {}, new String[] {
             "Mã nhà xuất bản", "Tên nhà xuất bản"
-        });
+        }) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         tblNXB.setModel(tableModelNXB);
     }
     
     private void initTableTL() {
-        tableModelTL.setColumnIdentifiers(new String[]{
+        tableModelTL = new DefaultTableModel(new Object[][] {}, new String[] {
             "Mã thể loại", "Tên thể loại"
-        });
+        }) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         tblTheLoai.setModel(tableModelTL);
     }
     
