@@ -60,7 +60,6 @@ public class PhieuMuonDAO {
         String sql = "INSERT INTO PHIEUMUON (IdBD, EmailNguoiLap, NgayMuon, HanTra) VALUES (?, ?, ?, ?)";
         try (Connection con = DBConnector.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            // correct parameter mapping
             ps.setInt(1, pm.getIdBD());
             ps.setString(2, pm.getEmailNguoiLap());
 

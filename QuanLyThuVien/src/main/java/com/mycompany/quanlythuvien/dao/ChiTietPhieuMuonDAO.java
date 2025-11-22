@@ -266,19 +266,19 @@ public class ChiTietPhieuMuonDAO {
     }
 
     // Get the active (unreturned) CT_PM record for a given MaBanSao, or null if none
-    public ChiTietPhieuMuon getActiveByMaBanSao(int maBanSao) throws Exception {
-        String sql = "SELECT * FROM CT_PM WHERE MaBanSao = ? AND NgayTraThucTe IS NULL";
-        try (Connection con = DBConnector.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, maBanSao);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapRow(rs);
-                return null;
-            }
-        } catch (SQLException ex) {
-            throw new Exception("Failed to get active loan by MaBanSao: " + ex.getMessage(), ex);
-        }
-    }
+    // public ChiTietPhieuMuon getActiveByMaBanSao(int maBanSao) throws Exception {
+    //     String sql = "SELECT * FROM CT_PM WHERE MaBanSao = ? AND NgayTraThucTe IS NULL";
+    //     try (Connection con = DBConnector.getConnection();
+    //          PreparedStatement ps = con.prepareStatement(sql)) {
+    //         ps.setInt(1, maBanSao);
+    //         try (ResultSet rs = ps.executeQuery()) {
+    //             if (rs.next()) return mapRow(rs);
+    //             return null;
+    //         }
+    //     } catch (SQLException ex) {
+    //         throw new Exception("Failed to get active loan by MaBanSao: " + ex.getMessage(), ex);
+    //     }
+    // }
 
     // Count overdue items for a reader (IdBD)
     public int countOverdueByBanDoc(int idBD) throws Exception {

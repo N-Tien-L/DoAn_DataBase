@@ -32,7 +32,7 @@ public class LoanHistoryEntry {
         this.phat = phat;
     }
 
-    // getters/setters
+
     public int getIdPM() { return idPM; }
     public void setIdPM(int idPM) { this.idPM = idPM; }
     public int getMaBanSao() { return maBanSao; }
