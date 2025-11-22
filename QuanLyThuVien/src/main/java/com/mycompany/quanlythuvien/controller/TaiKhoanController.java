@@ -25,8 +25,8 @@ public class TaiKhoanController {
             throw new AuthException("Mật khẩu không được để trống");
         }
 
-//        return dao.checkLogin(email, password);
-         return new TaiKhoan("admin@thuvien.com", "Seeded Admin", "Admin"); // bypass real login to SEED test account (admin)
+        // return dao.checkLogin(email, password);
+        return new TaiKhoan("admin@thuvien.com", "Seeded Admin", "Admin"); // bypass real login to SEED test account (admin)
     }
     
     public boolean createAccount(TaiKhoan currentUser, String email, String hoTen, String role) throws Exception {

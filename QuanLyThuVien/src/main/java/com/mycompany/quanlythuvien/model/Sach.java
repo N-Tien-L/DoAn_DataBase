@@ -1,13 +1,13 @@
 package com.mycompany.quanlythuvien.model;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 
 /**
  *
  * @author Tien
  */
 public class Sach {
-
     private String ISBN;
     private String tenSach;
     private Integer maTacGia;
@@ -19,7 +19,8 @@ public class Sach {
     private BigDecimal giaBia;
     private Integer soLuongTon;
     private Integer soTrang;
-
+    private Timestamp createdAt;
+    private String createdBy;
     //Thêm thuộc tính phụ để HIỂN THỊ Tên tác giả, NXB, thể loại trong bảng rút gọn
     private String tenTacGia;
     private String tenTheLoai;
@@ -28,7 +29,7 @@ public class Sach {
     public Sach() {
     }
 
-    public Sach(String ISBN, String tenSach, Integer maTacGia, Integer maTheLoai, Integer namXuatBan, String dinhDang, String moTa, Integer maNXB, BigDecimal giaBia, Integer soLuongTon, Integer soTrang) {
+    public Sach(String ISBN, String tenSach, Integer maTacGia, Integer maTheLoai, Integer namXuatBan, String dinhDang, String moTa, Integer maNXB, BigDecimal giaBia, Integer soLuongTon, Integer soTrang, Timestamp createdAt, String createdBy) {
         this.ISBN = ISBN;
         this.tenSach = tenSach;
         this.maTacGia = maTacGia;
@@ -40,6 +41,8 @@ public class Sach {
         this.giaBia = giaBia;
         this.soLuongTon = soLuongTon;
         this.soTrang = soTrang;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
     }
 
     public String getISBN() {
@@ -154,4 +157,19 @@ public class Sach {
         this.tenNXB = tenNXB;
     }
 
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
 }
