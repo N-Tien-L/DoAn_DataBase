@@ -91,12 +91,26 @@ public class SachController {
         }
     }
     
-    public List<Sach> search(String keyword, String tieuChi, String lastISBNCursor, int pageSize) {
+    public List<Sach> search(String keyword, Integer maTheLoai, Integer maNXB, Integer maTacGia, 
+                             Integer namBatDau, Integer namKetThuc, int pageNumber, int pageSize) {
         try {
-            if (pageSize < 1 || pageSize > 100) {
-                pageSize = 20;
+            // 1. Validate Pagination
+            if (pageSize < 1 || pageSize > 100) pageSize = 20;
+            if (pageNumber < 1) pageNumber = 1;
+
+            // 2. Validate Logic Năm (Swap nếu Start > End)
+            if (namBatDau != null && namKetThuc != null && namBatDau > namKetThuc) {
+                int temp = namBatDau;
+                namBatDau = namKetThuc;
+                namKetThuc = temp;
             }
-            return sachDAO.search(keyword, tieuChi, lastISBNCursor, pageSize);
+            
+            // 3. Validate Keyword
+            if (keyword != null) {
+                keyword = keyword.trim();
+            }
+            
+            return sachDAO.search(keyword, maTheLoai, maNXB, maTacGia, namBatDau, namKetThuc, pageNumber, pageSize);
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -180,5 +194,17 @@ public class SachController {
     
     public int getTotalTheLoai() {
         return theLoaiController.getTotalTheLoai();
+    }
+
+    public List<TacGia> getAllTacGiaNoPaging() {
+        return tacGiaController.getAllTacGiaNoPaging();
+    }
+    
+    public List<NhaXuatBan> getAllNXBNoPaging() {
+        return nxbController.getAllNXBNoPaging();
+    }
+    
+    public List<TheLoai> getAllTheLoaiNoPaging() {
+        return theLoaiController.getAllTheLoaiNoPaging();
     }
 }

@@ -16,6 +16,10 @@ public class NhaXuatBanController {
         this.nxbDAO = new NhaXuatBanDAO();
     }
     
+    public List<NhaXuatBan> getAllNXBNoPaging() {
+        return nxbDAO.findAll();
+    }
+
     public List<NhaXuatBan> getAllNXB(int lastMaNXBCursor, int pageSize){
         if (pageSize < 1 || pageSize > 100) pageSize = 20;
         return nxbDAO.getAll(lastMaNXBCursor, pageSize);

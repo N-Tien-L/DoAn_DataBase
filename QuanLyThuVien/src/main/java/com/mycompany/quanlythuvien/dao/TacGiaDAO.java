@@ -28,6 +28,21 @@ public class TacGiaDAO {
                 rs.getString("GhiChu")
         );
     }
+
+    public List<TacGia> findAll() {
+        List<TacGia> list = new ArrayList<>();
+        String sql = "SELECT * FROM TACGIA ORDER BY TenTacGia ASC";
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
   
     public List<TacGia> getAll(int lastIdCursor, int pageSize) {
         List<TacGia> list = new ArrayList<>();

@@ -21,6 +21,21 @@ public class NhaXuatBanDAO {
                 rs.getString("TenNXB")
         );
     }
+
+    public List<NhaXuatBan> findAll() {
+        List<NhaXuatBan> list = new ArrayList<>();
+        String sql = "SELECT * FROM NHAXUATBAN ORDER BY TenNXB ASC";
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
     
     //Lay toan bo NXB
     public List<NhaXuatBan> getAll(int lastMaNXBCursor, int pageSize) {

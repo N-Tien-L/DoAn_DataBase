@@ -386,8 +386,7 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
             cboMaTacGia.removeAllItems();
             cboMaTacGia.addItem("Không xác định");
             
-            int totalTacGia = sachController.getTotalTacGia();
-            listTacGia = sachController.getAllTacGia(totalTacGia);
+            listTacGia = sachController.getAllTacGiaNoPaging();
             for (var tg : listTacGia){
                 cboMaTacGia.addItem(tg.getTenTacGia());
             }
@@ -395,8 +394,7 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
             cboMaNXB.removeAllItems();
             cboMaNXB.addItem("Không xác định");
             
-            int totalNXB = sachController.getTotalNXB();
-            listNXB = sachController.getAllNXB(totalNXB);
+            listNXB = sachController.getAllNXBNoPaging();
             for (var nxb : listNXB){
                 cboMaNXB.addItem(nxb.getTenNXB());
             }
@@ -404,8 +402,7 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
             cboMaTheLoai.removeAllItems();
             cboMaTheLoai.addItem("Không xác định");
             
-            int totalTheLoai = sachController.getTotalTheLoai();
-            listTheLoai = sachController.getAllTheLoai(totalTheLoai);
+            listTheLoai = sachController.getAllTheLoaiNoPaging();
             for (var tl : listTheLoai) {
                 cboMaTheLoai.addItem(tl.getTenTheLoai());
             }

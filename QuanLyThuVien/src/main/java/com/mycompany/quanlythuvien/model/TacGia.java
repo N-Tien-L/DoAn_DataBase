@@ -62,5 +62,8 @@ public class TacGia {
         this.ghiChu = ghiChu;
     }
     
-    
+    @Override
+    public String toString() {
+        return tenTacGia != null ? tenTacGia : "(Không có tên)";
+    }
 }

@@ -21,6 +21,21 @@ public class TheLoaiDAO {
                 rs.getString("TenTheLoai")
         );
     }
+
+    public List<TheLoai> findAll() {
+        List<TheLoai> list = new ArrayList<>();
+        String sql = "SELECT * FROM THELOAI ORDER BY TenTheLoai ASC";
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
     
     //Lay toan bo the loai
     public List<TheLoai> getAll(int lastMaTheLoaiCursor, int pageSize) {

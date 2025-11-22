@@ -16,6 +16,10 @@ public class TheLoaiController {
         this.theLoaiDAO = new TheLoaiDAO();
     }
     
+    public List<TheLoai> getAllTheLoaiNoPaging() {
+        return theLoaiDAO.findAll();
+    }
+
     public List<TheLoai> getAllTheLoai(int lastMaTLCursor, int pageSize) {
         if (pageSize < 1 || pageSize > 100) pageSize = 10;
         return theLoaiDAO.getAll(lastMaTLCursor, pageSize);

@@ -36,24 +36,6 @@ public class SachDAO {
     """;
     
     private static final String SQL_COUNT_TOTAL = "SELECT COUNT(*) FROM SACH";
-
-    private static final String SQL_SEARCH_BOOKS = """
-        SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
-        FROM SACH AS S
-        LEFT JOIN TACGIA AS TG ON S.MaTacGia = TG.MaTacGia
-        LEFT JOIN NHAXUATBAN AS NXB ON S.MaNXB = NXB.MaNXB
-        LEFT JOIN THELOAI AS TL ON S.MaTheLoai = TL.MaTheLoai
-        WHERE (
-            (? = 'Tất cả' AND (S.TenSach LIKE ? OR TG.TenTacGia LIKE ? OR NXB.TenNXB LIKE ? OR TL.TenTheLoai LIKE ? OR S.ISBN LIKE ?))
-            OR (? = 'Tên sách' AND S.TenSach LIKE ?)
-            OR (? = 'Tác giả' AND TG.TenTacGia LIKE ?)
-            OR (? = 'Nhà xuất bản' AND NXB.TenNXB LIKE ?)
-            OR (? = 'Thể loại' AND TL.TenTheLoai LIKE ?)
-            OR (? = 'ISBN' AND S.ISBN LIKE ?)
-        )
-        AND (? IS NULL OR S.ISBN > ?)                                              
-        ORDER BY S.ISBN ASC
-    """;
     
     // them sach
     public boolean insert(Sach s, String createdBy) throws Exception {
@@ -238,146 +220,165 @@ public class SachDAO {
         return 0;
     }
     
-    //Tim kiem theo tieu chi (All/Tac gia/Ten sach/NXB/The Loai/ISBN)
-    public List<Sach> search(String keyword, String tieuChi, String lastISBNCursor, int pageSize) {
-        List<Sach> books = new ArrayList<>();
-        String searchKeyword = (keyword == null ? "" : keyword.trim());
-        String likePattern = "%" + searchKeyword + "%";
-
-        String sql = null;
-        switch (tieuChi) {
-            case "Tất cả":
-                sql = """
-                    SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
-                    FROM SACH S
-                    LEFT JOIN TACGIA TG ON S.MaTacGia = TG.MaTacGia
-                    LEFT JOIN NHAXUATBAN NXB ON S.MaNXB = NXB.MaNXB
-                    LEFT JOIN THELOAI TL ON S.MaTheLoai = TL.MaTheLoai
-                    WHERE (S.TenSach LIKE ? OR TG.TenTacGia LIKE ? OR NXB.TenNXB LIKE ? OR TL.TenTheLoai LIKE ? OR S.ISBN LIKE ? OR CAST(S.NamXuatBan AS VARCHAR) LIKE ?)
-                      AND (? IS NULL OR S.ISBN > ?)
-                    ORDER BY S.ISBN ASC
-                """;
-                break;
-            case "Tên sách":
-                sql = """
-                    SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
-                    FROM SACH S
-                    LEFT JOIN TACGIA TG ON S.MaTacGia = TG.MaTacGia
-                    LEFT JOIN NHAXUATBAN NXB ON S.MaNXB = NXB.MaNXB
-                    LEFT JOIN THELOAI TL ON S.MaTheLoai = TL.MaTheLoai
-                    WHERE S.TenSach LIKE ?
-                      AND (? IS NULL OR S.ISBN > ?)
-                    ORDER BY S.ISBN ASC
-                """;
-                break;
-            case "Tác giả":
-                sql = """
-                    SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
-                    FROM SACH S
-                    LEFT JOIN TACGIA TG ON S.MaTacGia = TG.MaTacGia
-                    LEFT JOIN NHAXUATBAN NXB ON S.MaNXB = NXB.MaNXB
-                    LEFT JOIN THELOAI TL ON S.MaTheLoai = TL.MaTheLoai
-                    WHERE TG.TenTacGia LIKE ?
-                      AND (? IS NULL OR S.ISBN > ?)
-                    ORDER BY S.ISBN ASC
-                """;
-                break;
-            case "Nhà xuất bản":
-                sql = """
-                    SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
-                    FROM SACH S
-                    LEFT JOIN TACGIA TG ON S.MaTacGia = TG.MaTacGia
-                    LEFT JOIN NHAXUATBAN NXB ON S.MaNXB = NXB.MaNXB
-                    LEFT JOIN THELOAI TL ON S.MaTheLoai = TL.MaTheLoai
-                    WHERE NXB.TenNXB LIKE ?
-                      AND (? IS NULL OR S.ISBN > ?)
-                    ORDER BY S.ISBN ASC
-                """;
-                break;
-            case "Thể loại":
-                sql = """
-                    SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
-                    FROM SACH S
-                    LEFT JOIN TACGIA TG ON S.MaTacGia = TG.MaTacGia
-                    LEFT JOIN NHAXUATBAN NXB ON S.MaNXB = NXB.MaNXB
-                    LEFT JOIN THELOAI TL ON S.MaTheLoai = TL.MaTheLoai
-                    WHERE TL.TenTheLoai LIKE ?
-                      AND (? IS NULL OR S.ISBN > ?)
-                    ORDER BY S.ISBN ASC
-                """;
-                break;
-            case "ISBN":
-                sql = """
-                    SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
-                    FROM SACH S
-                    LEFT JOIN TACGIA TG ON S.MaTacGia = TG.MaTacGia
-                    LEFT JOIN NHAXUATBAN NXB ON S.MaNXB = NXB.MaNXB
-                    LEFT JOIN THELOAI TL ON S.MaTheLoai = TL.MaTheLoai
-                    WHERE S.ISBN LIKE ?
-                      AND (? IS NULL OR S.ISBN > ?)
-                    ORDER BY S.ISBN ASC
-                """;
-                break;
-            case "Năm":
-                sql = """
-                    SELECT TOP (?) S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai
-                    FROM SACH S
-                    LEFT JOIN TACGIA TG ON S.MaTacGia = TG.MaTacGia
-                    LEFT JOIN NHAXUATBAN NXB ON S.MaNXB = NXB.MaNXB
-                    LEFT JOIN THELOAI TL ON S.MaTheLoai = TL.MaTheLoai
-                    WHERE CAST(S.NamXuatBan AS VARCHAR) LIKE ?
-                      AND (? IS NULL OR S.ISBN > ?)
-                    ORDER BY S.ISBN ASC
-                """;
-                break;
-            default:
-                return books; // ko tìm tiêu chí lạ
+    // Helper: Format từ khóa cho Full-Text Search
+    private String getFtsQuery(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return null;
         }
 
+        // 1. Xóa ký tự đặc biệt có thể gây lỗi syntax cho CONTAINS
+        String cleanKeyword = keyword.trim().replaceAll("['\"]", "");
+
+        // 2. Tách từ
+        String[] words = cleanKeyword.split("\\s+");
+        
+        if (words.length == 0) return null;
+
+        StringBuilder queryBuilder = new StringBuilder();
+
+        for (int i = 0; i < words.length; i++) {
+            String word = words[i];
+            
+            // Bỏ qua từ quá ngắn
+            if (word.length() < 2) continue; 
+
+            if (queryBuilder.length() > 0) {
+                queryBuilder.append(" AND ");
+            }
+
+            // Bọc trong ngoặc kép để FTS hiểu là một cụm từ (literal)
+            // Thêm * để tìm kiếm kiểu Prefix
+            queryBuilder.append("\"").append(word).append("*\"");
+        }
+
+        return queryBuilder.toString().isEmpty() ? null : queryBuilder.toString();
+    }
+
+    /**
+     * Tìm kiếm sách
+     *
+     * @param keyword       Từ khóa tìm kiếm trên Tên sách, Mô tả, Tên tác giả (sử dụng Full-Text Search).
+     * @param maTheLoai     ID của thể loại để lọc.
+     * @param maNXB         ID của nhà xuất bản để lọc.
+     * @param maTacGia      ID của tác giả để lọc.
+     * @param namBatDau     Năm xuất bản bắt đầu của khoảng tìm kiếm.
+     * @param namKetThuc    Năm xuất bản kết thúc của khoảng tìm kiếm.
+     * @param pageNumber    Trang hiện tại (bắt đầu từ 1).
+     * @param pageSize      Số lượng kết quả tối đa trên một trang.
+     * @return Danh sách sách thỏa mãn điều kiện.
+     */
+    public List<Sach> search(String keyword, Integer maTheLoai, 
+                             Integer maNXB, Integer maTacGia, Integer namBatDau, 
+                             Integer namKetThuc, int pageNumber, int pageSize) {
+        List<Sach> books = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        StringBuilder sql = new StringBuilder();
+
+        // xử lý keyword
+        String ftsKeyword = getFtsQuery(keyword);
+        boolean hasSearch = (ftsKeyword != null);
+
+        // SELECT
+        sql.append("SELECT S.ISBN, S.TenSach, TG.TenTacGia, NXB.TenNXB, S.NamXuatBan, TL.TenTheLoai ");
+
+        // nếu có search, select thêm score để log debug
+        if(hasSearch) {
+            sql.append(", (ISNULL(K_S.RANK, 0) + ISNULL(K_TG.RANK, 0)) AS Score ");
+        }
+
+        // join các bảng
+        sql.append("FROM SACH AS S ");
+        sql.append("LEFT JOIN TACGIA AS TG ON S.MaTacGia = TG.MaTacGia ");
+        sql.append("LEFT JOIN NHAXUATBAN AS NXB ON S.MaNXB = NXB.MaNXB ");
+        sql.append("LEFT JOIN THELOAI AS TL ON S.MaTheLoai = TL.MaTheLoai ");
+
+        // join thêm CONTAINSTABLE nếu có search
+        if (hasSearch) {
+            // Join FTS Sách
+            sql.append("LEFT JOIN CONTAINSTABLE(SACH, TenSach, ?) AS K_S ON S.ISBN = K_S.[KEY] ");
+            params.add(ftsKeyword);
+            
+            // Join FTS Tác giả
+            sql.append("LEFT JOIN CONTAINSTABLE(TACGIA, TenTacGia, ?) AS K_TG ON TG.MaTacGia = K_TG.[KEY] ");
+            params.add(ftsKeyword);
+        }
+
+        sql.append("WHERE 1=1 "); // để nối các AND phía sau
+
+        // điều kiện search
+        if (hasSearch) {
+            // Phải tìm thấy ở ít nhất 1 trong 2 bảng
+            sql.append("AND (K_S.RANK IS NOT NULL OR K_TG.RANK IS NOT NULL) ");
+        }
+
+        // điều kiện filter
+        if (maTheLoai != null && maTheLoai > 0) {
+            sql.append(" AND S.MaTheLoai = ?");
+            params.add(maTheLoai);
+        }
+        if (maNXB != null && maNXB > 0) {
+            sql.append(" AND S.MaNXB = ?");
+            params.add(maNXB);
+        }
+        if (maTacGia != null && maTacGia > 0) {
+            sql.append(" AND S.MaTacGia = ?");
+            params.add(maTacGia);
+        }
+
+        // Thêm điều kiện lọc theo khoảng năm (Range Picker)
+        if (namBatDau != null && namBatDau > 0) {
+            sql.append(" AND S.NamXuatBan >= ?");
+            params.add(namBatDau);
+        }
+        if (namKetThuc != null && namKetThuc > 0) {
+            sql.append(" AND S.NamXuatBan <= ?");
+            params.add(namKetThuc);
+        }
+
+        // Order by để sắp xếp kết quả theo "điểm" trùng khớp
+        if (hasSearch) {
+            // Ưu tiên điểm cao nhất xếp trước
+            sql.append("ORDER BY (ISNULL(K_S.RANK, 0) + ISNULL(K_TG.RANK, 0)) DESC, S.ISBN ASC ");
+        } else {
+            // Nếu không search từ khóa, xếp theo ngày tạo
+            sql.append("ORDER BY S.CreatedAt DESC ");
+        }
+
+        // Pagination bằng OFFSET - FETCH
+        // Sắp xếp theo rank thì không dùng cursor based được
+        sql.append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        int offset = (pageNumber - 1) * pageSize; // Trang 1 -> offset 0
+        params.add(offset);
+        params.add(pageSize);
+
+
+        // Execute
         try (Connection conn = DBConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            int idx = 1;
-            ps.setInt(idx++, pageSize);
-
-            if ("Tất cả".equals(tieuChi)) {
-                ps.setString(idx++, likePattern); // S.TenSach
-                ps.setString(idx++, likePattern); // TG.TenTacGia
-                ps.setString(idx++, likePattern); // NXB.TenNXB
-                ps.setString(idx++, likePattern); // TL.TenTheLoai
-                ps.setString(idx++, likePattern); // S.ISBN
-                ps.setString(idx++, likePattern); // S.NamXuatBan
-            } else {
-                ps.setString(idx++, likePattern);
+            // Tự động gán tham số vào PreparedStatement
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
 
-            // Cursor pagination
-            if (lastISBNCursor == null || lastISBNCursor.isEmpty()) {
-                ps.setNull(idx++, java.sql.Types.VARCHAR);
-                ps.setNull(idx++, java.sql.Types.VARCHAR);
-            } else {
-                ps.setString(idx++, lastISBNCursor);
-                ps.setString(idx++, lastISBNCursor);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Sach s = new Sach();
+                    s.setISBN(rs.getString("ISBN"));
+                    s.setTenSach(rs.getString("TenSach"));
+                    s.setTenTacGia(rs.getString("TenTacGia"));
+                    s.setTenNXB(rs.getString("TenNXB"));
+                    s.setNamXuatBan(rs.getInt("NamXuatBan"));
+                    s.setTenTheLoai(rs.getString("TenTheLoai"));
+                    books.add(s);
+                }
             }
-
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Sach s = new Sach();
-                s.setISBN(rs.getString("ISBN"));
-                s.setTenSach(rs.getString("TenSach"));
-                s.setTenTacGia(rs.getString("TenTacGia"));
-                s.setTenNXB(rs.getString("TenNXB"));
-                s.setNamXuatBan(rs.getInt("NamXuatBan"));
-                s.setTenTheLoai(rs.getString("TenTheLoai"));
-                books.add(s);
-            }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return books;
-    }
 
+        return books;                      
+    }
     
     // Kiểm tra ISBN đã tồn tại chưa
     public boolean existsByISBN(String isbn) {

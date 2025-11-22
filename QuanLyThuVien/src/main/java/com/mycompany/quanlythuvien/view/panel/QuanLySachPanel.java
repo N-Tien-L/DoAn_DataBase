@@ -15,6 +15,7 @@ import com.mycompany.quanlythuvien.model.Sach;
 import com.mycompany.quanlythuvien.model.TacGia;
 import com.mycompany.quanlythuvien.model.TaiKhoan;
 import com.mycompany.quanlythuvien.model.TheLoai;
+import com.mycompany.quanlythuvien.view.panel.SachSearchPanel.SearchCriteria;
 import java.util.List;
 import java.util.Stack;
 import javax.swing.JOptionPane;
@@ -40,7 +41,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private TheLoaiController theLoaiController = new TheLoaiController();
     
     private String lastISBNCursor = null;
-    private final int pageSize = 20;
+    private final int pageSize = 30;
     private String currentCursor = null;
     private boolean hasNextPage = false;
     private Stack<String> cursorHistory = new Stack<>();
@@ -68,11 +69,12 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     
     private TaiKhoan currentUser;
     
+    // Search panel
+    private SachSearchPanel searchPanel;
+    
     //SEARCH MODE - book
     private boolean isSearching = false;
-    private String searchKeyword = null;
-    private String searchTieuChi = null;
-    private String lastSearchCursor = null;
+    private int currentSearchPage = 1;
     
     //SEARCH MODE - TacGia
     private boolean isSearchingTG = false;
@@ -108,7 +110,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private void initAfterInitComponents() {
         initTable();
         resetPaginationAndLoadSach();
-        initComboBox();
+        initSearchPanel();
         tblSach.setRowHeight(28);
 
         initTableTG();
@@ -138,11 +140,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
         tabQLSach = new javax.swing.JTabbedPane();
         panelSach = new javax.swing.JPanel();
-        jPanel2 = new javax.swing.JPanel();
-        lblTimKiem = new javax.swing.JLabel();
-        cboTieuChi = new javax.swing.JComboBox<>();
-        txtTimKiem = new javax.swing.JTextField();
-        btnTim = new javax.swing.JButton();
+        searchPanel = new SachSearchPanel();
         jPanel1 = new javax.swing.JPanel();
         btnThem = new javax.swing.JButton();
         btnSua = new javax.swing.JButton();
@@ -152,7 +150,6 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         btnXemBanSao = new javax.swing.JButton();
         jPanel13 = new javax.swing.JPanel();
         jPanel15 = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
         tblSach = new javax.swing.JTable();
         jPanel14 = new javax.swing.JPanel();
         btnSachTruoc = new javax.swing.JButton();
@@ -242,34 +239,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
         panelSach.setLayout(new java.awt.BorderLayout());
 
-        lblTimKiem.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
-        lblTimKiem.setText("[⌕] Tìm kiếm sách");
-        jPanel2.add(lblTimKiem);
-
-        cboTieuChi.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
-        cboTieuChi.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        jPanel2.add(cboTieuChi);
-
-        txtTimKiem.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
-        txtTimKiem.setMinimumSize(new java.awt.Dimension(250, 25));
-        txtTimKiem.setPreferredSize(new java.awt.Dimension(250, 25));
-        txtTimKiem.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtTimKiemActionPerformed(evt);
-            }
-        });
-        jPanel2.add(txtTimKiem);
-
-        btnTim.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
-        btnTim.setText("Tìm");
-        btnTim.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTimActionPerformed(evt);
-            }
-        });
-        jPanel2.add(btnTim);
-
-        panelSach.add(jPanel2, java.awt.BorderLayout.PAGE_START);
+        panelSach.add(searchPanel, java.awt.BorderLayout.PAGE_START);
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Tùy chọn thêm", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 3, 14))); // NOI18N
 
@@ -331,7 +301,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
         jPanel13.setLayout(new java.awt.BorderLayout());
 
-        jPanel15.setLayout(new javax.swing.BoxLayout(jPanel15, javax.swing.BoxLayout.LINE_AXIS));
+        jPanel15.setLayout(new java.awt.BorderLayout());
 
         tblSach.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         tblSach.setModel(new javax.swing.table.DefaultTableModel(
@@ -353,9 +323,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                 return canEdit [columnIndex];
             }
         });
-        jScrollPane1.setViewportView(tblSach);
-
-        jPanel15.add(jScrollPane1);
+        jPanel15.add(tblSach.getTableHeader(), java.awt.BorderLayout.PAGE_START);
+        jPanel15.add(tblSach, java.awt.BorderLayout.CENTER);
 
         jPanel13.add(jPanel15, java.awt.BorderLayout.PAGE_START);
 
@@ -1169,23 +1138,36 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         loadDataSach();
     }
   
-    private void loadSearchPage(){
-        List<Sach> list = sachController.search(searchKeyword, searchTieuChi, lastSearchCursor, pageSize + 1);
+    private void loadSearchPage() {
+        // Lấy tiêu chí từ search panel
+        SearchCriteria criteria = searchPanel.getSearchCriteria();
+
+        System.out.println("[QuanLySachPanel] Search criteria: " + criteria);
+
+        // Gọi hàm search mới
+        // pageSize + 1 để check hasNextPage
+        List<Sach> list = sachController.search(
+            criteria.getKeyword(), 
+            criteria.getMaTheLoai(), 
+            criteria.getMaNXB(), 
+            criteria.getMaTacGia(), 
+            criteria.getNamBatDau(), 
+            criteria.getNamKetThuc(), 
+            currentSearchPage, 
+            pageSize + 1);
+        
         hasNextPage = list.size() > pageSize;
         if (hasNextPage) {
-            list.remove(list.size() - 1); 
-        }
-        
-        if (!list.isEmpty()) {
-            lastSearchCursor = list.get(list.size() - 1).getISBN();
+            list.remove(list.size() - 1);
         }
         
         loadDataToTable(list);
         
-        btnSachTruoc.setEnabled(!cursorHistory.isEmpty());
+        // Update button state
+        btnSachTruoc.setEnabled(currentSearchPage > 1);
         btnSachSau.setEnabled(hasNextPage);
         
-        if (list.isEmpty()) {
+        if (list.isEmpty() && currentSearchPage == 1) {
             JOptionPane.showMessageDialog(this, "Không tìm thấy sách nào!");
         }
     }
@@ -1388,16 +1370,13 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         }
     }
     
-    private void initComboBox(){
-        cboTieuChi.removeAllItems();
-        cboTieuChi.addItem("Tất cả");
-        cboTieuChi.addItem("Tên sách");
-        cboTieuChi.addItem("Tác giả");
-        cboTieuChi.addItem("Nhà xuất bản");
-        cboTieuChi.addItem("Thể loại");
-        cboTieuChi.addItem("ISBN");
-        cboTieuChi.addItem("Năm");
-        cboTieuChi.setSelectedIndex(1);
+    private void initSearchPanel() {
+        // Set up search listener
+        searchPanel.setSearchListener(criteria -> {
+            isSearching = true;
+            currentSearchPage = 1;
+            loadSearchPage();
+        });
     }
     private void initComboBoxTG() {
         cboTieuChiTG.removeAllItems(); 
@@ -1480,11 +1459,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private void btnLamMoiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLamMoiActionPerformed
         // TODO add your handling code here:
         isSearching = false;
-        searchKeyword = null;
-        searchTieuChi = null;
-        lastSearchCursor = null;
         
-        txtTimKiem.setText("");
+        searchPanel.clearSearch();
         resetPaginationAndLoadSach();
     }//GEN-LAST:event_btnLamMoiActionPerformed
 
@@ -1523,34 +1499,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         dialog.setVisible(true);
     }//GEN-LAST:event_btnXemBanSaoActionPerformed
 
-    private void btnTimActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTimActionPerformed
-        // TODO add your handling code here:      
-        try {
-            String keyword = txtTimKiem.getText().trim();
-            String tieuChi = cboTieuChi.getSelectedItem().toString();
-            
-            if (keyword.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Vui lòng nhập từ khóa để tìm kiếm!",
-                        "Thiếu dữ liệu", JOptionPane.WARNING_MESSAGE);
-                txtTimKiem.requestFocus();
-                return;
-            }
-            
-            // Bật Search Mode
-            isSearching = true;
-            searchKeyword = keyword;
-            searchTieuChi = tieuChi;
-            
-            cursorHistory.clear();          // reset pagination
-            lastSearchCursor = null;
-            currentCursor = null; 
-            lastISBNCursor = null;  
-            loadSearchPage();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi tìm kiếm: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }//GEN-LAST:event_btnTimActionPerformed
+
 
     private void initFormTG() {
         txtTenTG.setEditable(false);
@@ -1715,29 +1664,30 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btnXoaNXBActionPerformed
 
     private void btnSachTruocActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSachTruocActionPerformed
-        // TODO add your handling code here:
-        if (!cursorHistory.isEmpty()) {
-            currentCursor = cursorHistory.pop();
-            if (isSearching) {
-                lastSearchCursor = currentCursor;
+        if (isSearching) {
+            if (currentSearchPage > 1) {
+                currentSearchPage--;
                 loadSearchPage();
-            } else {
+            }
+        } else {
+            if (!cursorHistory.isEmpty()) {
+                currentCursor = cursorHistory.pop();
                 lastISBNCursor = currentCursor;
                 loadDataSach();
-            } 
+            }
         }
     }//GEN-LAST:event_btnSachTruocActionPerformed
 
     private void btnSachSauActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSachSauActionPerformed
-        // TODO add your handling code here:
-        if (hasNextPage) {
-            cursorHistory.push(currentCursor);
-            
-            if (isSearching) {
-                currentCursor = lastSearchCursor;
+        if (isSearching) {
+            if (hasNextPage) {
+                currentSearchPage++;
                 loadSearchPage();
-            } else {
-                currentCursor = lastISBNCursor;
+            }
+        } else {
+            if (hasNextPage) {
+                cursorHistory.push(currentCursor);
+                currentCursor = lastISBNCursor; // lastISBNCursor đã được cập nhật trong loadDataSach
                 loadDataSach();
             }
         }
@@ -2007,10 +1957,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         
     }//GEN-LAST:event_btnLuuNXBActionPerformed
 
-    private void txtTimKiemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTimKiemActionPerformed
-        // TODO add your handling code here:
-        btnTimActionPerformed(evt);
-    }//GEN-LAST:event_txtTimKiemActionPerformed
+
 
     private void jScrollPane4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jScrollPane4MouseClicked
         // TODO add your handling code here:
@@ -2211,7 +2158,6 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private javax.swing.JButton btnThemNXB;
     private javax.swing.JButton btnThemTG;
     private javax.swing.JButton btnThemTL;
-    private javax.swing.JButton btnTim;
     private javax.swing.JButton btnTimNXB;
     private javax.swing.JButton btnTimTG;
     private javax.swing.JButton btnTimTL;
@@ -2221,7 +2167,6 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private javax.swing.JButton btnXoaNXB;
     private javax.swing.JButton btnXoaTG;
     private javax.swing.JButton btnXoaTL;
-    private javax.swing.JComboBox<String> cboTieuChi;
     private javax.swing.JComboBox<String> cboTieuChiNXB;
     private javax.swing.JComboBox<String> cboTieuChiTG;
     private javax.swing.JComboBox<String> cboTieuChiTL;
@@ -2244,7 +2189,6 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private javax.swing.JPanel jPanel17;
     private javax.swing.JPanel jPanel18;
     private javax.swing.JPanel jPanel19;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel20;
     private javax.swing.JPanel jPanel21;
     private javax.swing.JPanel jPanel22;
@@ -2257,7 +2201,6 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
-    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
@@ -2265,7 +2208,6 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private javax.swing.JLabel lblMaNXB;
     private javax.swing.JLabel lblMaTL;
     private javax.swing.JLabel lblMaTacGiaTG;
-    private javax.swing.JLabel lblTimKiem;
     private javax.swing.JLabel lblTimKiemNXB;
     private javax.swing.JLabel lblTimKiemTG;
     private javax.swing.JLabel lblTimKiemTL;
@@ -2282,7 +2224,6 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     private javax.swing.JTextField txtTenNXB;
     private javax.swing.JTextField txtTenTG;
     private javax.swing.JTextField txtTenTL;
-    private javax.swing.JTextField txtTimKiem;
     private javax.swing.JTextField txtTimKiemNXB;
     private javax.swing.JTextField txtTimKiemTG;
     private javax.swing.JTextField txtTimKiemTL;

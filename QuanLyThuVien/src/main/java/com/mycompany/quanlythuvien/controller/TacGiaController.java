@@ -22,6 +22,10 @@ public class TacGiaController {
         this.dao = new TacGiaDAO();
     }
     
+    public List<TacGia> getAllTacGiaNoPaging() {
+        return dao.findAll();
+    }
+
     public List<TacGia> getAllTacGia(int lastMaTacGiaCursor, int pageSize) {
         return dao.getAll(lastMaTacGiaCursor, pageSize);
     }
