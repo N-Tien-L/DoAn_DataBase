@@ -78,7 +78,7 @@ public class TheLoaiDAO {
     }
     
     //Them the loai moi
-    public boolean insert(TheLoai tl) {
+    public boolean insert(TheLoai tl) throws Exception {
         String sql = "INSERT INTO THELOAI (TenTheLoai) VALUES(?)";
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)) 
@@ -86,16 +86,15 @@ public class TheLoaiDAO {
             ps.setString(1, tl.getTenTheLoai());
             return ps.executeUpdate() > 0;
         } catch (SQLIntegrityConstraintViolationException ex) {
-            System.out.println("Tên thể loại đã tồn tại!");
-            return false;
+            throw new Exception("Lỗi: Tên thể loại đã tồn tại!", ex);
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+            throw e;
         }
     }
     
     //Cap nhat the loai
-    public boolean update(TheLoai tl) {
+    public boolean update(TheLoai tl) throws Exception {
         String sql = "UPDATE THELOAI SET TenTheLoai=? WHERE MaTheLoai=?";
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)) 
@@ -104,16 +103,15 @@ public class TheLoaiDAO {
             ps.setInt(2, tl.getMaTheLoai());
             return ps.executeUpdate() > 0;
         } catch (SQLIntegrityConstraintViolationException ex) {
-            System.out.println("Tên thể loại bị trùng!");
-            return false;
+            throw new Exception("Lỗi: Tên thể loại bị trùng!", ex);
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+            throw e;
         }
     }
     
     //Xoa the loai
-    public boolean delete(int maTheLoai) {
+    public boolean delete(int maTheLoai) throws Exception {
         String sql = "DELETE FROM THELOAI WHERE MaTheLoai=?";
         try (Connection con = DBConnector.getConnection();
             PreparedStatement ps = con.prepareStatement(sql)) 
@@ -121,11 +119,10 @@ public class TheLoaiDAO {
             ps.setInt(1, maTheLoai);
             return ps.executeUpdate() > 0;
         } catch (SQLIntegrityConstraintViolationException ex) {
-            System.out.println("Không thể xóa! Thể loại đang được dùng trong bảng SACH");
-            return false;
+            throw new Exception("Lỗi: Không thể xóa! Thể loại đang được dùng trong bảng SACH.", ex);
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+            throw e;
         }
     }
     
@@ -148,12 +145,13 @@ public class TheLoaiDAO {
     public List<TheLoai> search(String keyword, String column, Integer lastMaTheLoai, int pageSize) {
         List<TheLoai> list = new ArrayList<>();
         String likePattern = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+        String trimmedKeyword = keyword == null ? "" : keyword.trim();
         
         String sql;
         
         switch (column) {
             case "MaTheLoai":
-                sql = "SELECT TOP (?) * FROM THELOAI WHERE CAST(MaTheLoai AS VARCHAR) LIKE ? AND (? IS NULL OR MaTheLoai > ?) ORDER BY MaTheLoai ASC";
+                sql = "SELECT TOP (?) * FROM THELOAI WHERE MaTheLoai = ? AND (? IS NULL OR MaTheLoai > ?) ORDER BY MaTheLoai ASC";
                 break;
             case "TenTheLoai":
                 sql = "SELECT TOP (?) * FROM THELOAI WHERE TenTheLoai LIKE ? AND (? IS NULL OR MaTheLoai > ?) ORDER BY MaTheLoai ASC";
@@ -168,7 +166,17 @@ public class TheLoaiDAO {
 
             int idx = 1;
             ps.setInt(idx++, pageSize);
-            ps.setString(idx++, likePattern);
+            
+            if ("MaTheLoai".equals(column)) {
+                try {
+                    int id = Integer.parseInt(trimmedKeyword);
+                    ps.setInt(idx++, id);
+                } catch (NumberFormatException e) {
+                    ps.setInt(idx++, -1);
+                }
+            } else {
+                ps.setString(idx++, likePattern);
+            }
             
             if (lastMaTheLoai == null) {
                 ps.setNull(idx++, java.sql.Types.INTEGER);

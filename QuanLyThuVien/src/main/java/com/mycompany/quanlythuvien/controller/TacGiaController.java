@@ -33,70 +33,60 @@ public class TacGiaController {
         return dao.getTotalTacGia();
     }
     
-    public boolean insertTacGia(TacGia tg) {
+    public boolean insertTacGia(TacGia tg) throws Exception {
         if (tg.getTenTacGia() == null || tg.getTenTacGia().isEmpty()) {
-            System.out.println("Tên tác giả không được để trống");
-            return false;
+            throw new Exception("Tên tác giả không được để trống");
         }
         
         if (tg.getTenTacGia().length() > 100) {
-            System.out.println("Tên tác giả quá dài, tối đa 100 ký tự");
-            return false;
+            throw new Exception("Tên tác giả quá dài, tối đa 100 ký tự");
         }
         
         if (tg.getWebsite() != null && tg.getWebsite().length() > 255) {
-            System.out.println("Website quá dài, tối đa 255 ký tự");
-            return false;
+            throw new Exception("Website quá dài, tối đa 255 ký tự");
         }
         
         if (tg.getWebsite() != null && !tg.getWebsite().isEmpty()) {
             try {
                 new URL(tg.getWebsite());
             } catch (MalformedURLException e) {
-                System.out.println("Website không hợp lệ");
-                return false;
+                throw new Exception("Website không hợp lệ: " + e.getMessage());
             }
         }
         return dao.insert(tg);
     }
     
-    public boolean updateTacGia(TacGia tg) {
+    public boolean updateTacGia(TacGia tg) throws Exception {
         if (tg.getMaTacGia() <= 0) {
-            System.out.println("ID tác giả không hợp lệ!");
-            return false;
+            throw new Exception("ID tác giả không hợp lệ!");
         }
         
         if (tg.getTenTacGia() == null || tg.getTenTacGia().isEmpty()) {
-            System.out.println("Tên tác giả không được để trống!");
-            return false;
+            throw new Exception("Tên tác giả không được để trống!");
         }
         
         if (tg.getTenTacGia().length() > 100) {
-            System.out.println("Tên tác giả quá dài, tối đa 100 kí tự");
-            return false;
+            throw new Exception("Tên tác giả quá dài, tối đa 100 kí tự");
         }
         
         if (tg.getWebsite() != null && tg.getWebsite().length() > 255) {
-            System.out.println("Website quá dài, tối đa 255 ký tự!");
-            return false;
+            throw new Exception("Website quá dài, tối đa 255 ký tự!");
         }
         
         if (tg.getWebsite() != null && !tg.getWebsite().isEmpty()) {
             try {
                 new URL(tg.getWebsite());
             } catch (MalformedURLException e) {
-                System.out.println("Website không hợp lệ");
-                return false;
+                throw new Exception("Website không hợp lệ: " + e.getMessage());
             }
         }
         
         return dao.update(tg);
     }
     
-    public boolean deleteTacGia(int maTG) {
+    public boolean deleteTacGia(int maTG) throws Exception {
         if (maTG <= 0) {
-            System.out.println("Mã tác giả không hợp lệ!");
-            return false;
+            throw new Exception("Mã tác giả không hợp lệ!");
         }
         return dao.delete(maTG);
     }

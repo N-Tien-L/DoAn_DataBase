@@ -83,8 +83,8 @@ public class BanSaoDAO {
     }
     public boolean insert(BanSao b, String createdBy) throws Exception {
         String sql = """
-            INSERT INTO BANSAO (ISBN, SoThuTuTrongKho, TinhTrang, NgayNhapKho, ViTriLuuTru, CreatedBy)
-            VALUES (?,?,?,?,?,?)
+            INSERT INTO BANSAO (ISBN, SoThuTuTrongKho, TinhTrang, ViTriLuuTru, CreatedBy)
+            VALUES (?,?,?,?,?)
                      """;
         
         try (Connection con = DBConnector.getConnection();
@@ -93,15 +93,8 @@ public class BanSaoDAO {
             ps.setString(1, b.getISBN());
             ps.setInt(2, b.getSoThuTuTrongKho());
             ps.setString(3, b.getTinhTrang());
-            
-            if (b.getNgayNhapKho() != null) {
-                ps.setDate(4, Date.valueOf(b.getNgayNhapKho()));
-            } else {
-                ps.setNull(4, Types.DATE);
-            }
-            
-            ps.setString(5, b.getViTriLuuTru());
-            ps.setString(6, createdBy);
+            ps.setString(4, b.getViTriLuuTru());
+            ps.setString(5, createdBy);
             
             int affectedRows = ps.executeUpdate();
             if (affectedRows == 0) return false;
@@ -122,7 +115,7 @@ public class BanSaoDAO {
     public boolean update (BanSao b) throws Exception {
         String sql = """
             UPDATE BANSAO
-            SET ISBN = ?, SoThuTuTrongKho = ?, TinhTrang = ?, NgayNhapKho = ?, ViTriLuuTru = ?
+            SET ISBN = ?, SoThuTuTrongKho = ?, TinhTrang = ?, ViTriLuuTru = ?
             WHERE MaBanSao = ?
                      """;
         
@@ -131,16 +124,9 @@ public class BanSaoDAO {
         {
             ps.setString(1, b.getISBN());
             ps.setInt(2, b.getSoThuTuTrongKho());
-            ps.setString(3, b.getTinhTrang());
-            
-            if (b.getNgayNhapKho() != null) {
-                ps.setDate(4, Date.valueOf(b.getNgayNhapKho()));
-            } else {
-                ps.setNull(4, Types.DATE);
-            }
-            
-            ps.setString(5, b.getViTriLuuTru());
-            ps.setInt(6, b.getMaBanSao());
+            ps.setString(3, b.getTinhTrang());            
+            ps.setString(4, b.getViTriLuuTru());
+            ps.setInt(5, b.getMaBanSao());
             
             return ps.executeUpdate() > 0;
         } 
@@ -329,33 +315,56 @@ public class BanSaoDAO {
         String sql = "INSERT INTO BANSAO (ISBN, SoThuTuTrongKho, TinhTrang, ViTriLuuTru, CreatedBy) VALUES (?, ?, ?, ?, ?)";
         
         int totalInserted = 0;
-        
-        try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) 
-        {
-            for (int i = 0; i < soLuong; i++) {
-                int currentSoThuTu = soThuTuBatDau + i;
-                
-                int idx = 1;
-                ps.setString(idx++, isbn);
-                ps.setInt(idx++, currentSoThuTu);
-                ps.setString(idx++, tinhTrang);
-                ps.setString(idx++, viTriLuuTru);
-                ps.setString(idx++, createdBy);
-                
-                ps.addBatch();
-            }
-            
-            int[] result = ps.executeBatch();
-            for (int count : result) {
-                if (count > 0) {
-                    totalInserted += count;
+        Connection con = null;
+        try {
+            con = DBConnector.getConnection();
+            con.setAutoCommit(false);
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
+                for (int i = 0; i < soLuong; i++) {
+                    int currentSoThuTu = soThuTuBatDau + i;
+
+                    int idx = 1;
+                    ps.setString(idx++, isbn);
+                    ps.setInt(idx++, currentSoThuTu);
+                    ps.setString(idx++, tinhTrang);
+                    ps.setString(idx++, viTriLuuTru);
+                    ps.setString(idx++, createdBy);
+
+                    ps.addBatch();
+                }
+
+                int[] result = ps.executeBatch();
+                for (int count : result) {
+                    if (count > 0) {
+                        totalInserted += count;
+                    }
+                }
+                con.commit();
+                return totalInserted;
+            } catch (SQLIntegrityConstraintViolationException e) {
+                if (con != null) {
+                    con.rollback();
+                }
+                throw new Exception("Lỗi: Số thứ tự trong kho bị trùng lặp. Vui lòng kiểm tra lại số thứ tự bắt đầu.", e);
+            }   
+        } catch (Exception e) {
+            if (con != null) {
+                try {
+                    con.rollback();
+                } catch (Exception rollbackEx) {
+                    System.err.println("Lỗi rollback: " + rollbackEx.getMessage());
                 }
             }
-            
-            return totalInserted;
-        } catch (SQLIntegrityConstraintViolationException e) {
-            throw new Exception("Lỗi: Số thứ tự trong kho bị trùng lặp. Vui lòng kiểm tra lại số thứ tự bắt đầu.", e);
+            throw e;
+        } finally {
+            if (con != null) {
+                try {
+                    con.setAutoCommit(true);
+                    con.close();
+                } catch (Exception closeEx) {
+                    System.err.println("Lỗi đóng connection: " + closeEx.getMessage());
+                }
+            }
         }
     }
 }

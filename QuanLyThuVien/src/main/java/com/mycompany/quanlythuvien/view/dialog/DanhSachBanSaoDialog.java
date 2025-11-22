@@ -54,9 +54,22 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         lblTieuDe.setText("Danh sách bản sao của sách: " + isbn);
         resetPaginationAndLoadBanSao();
     }
-    
+
+    private void initTableBanSao() {
+        DefaultTableModel model = new DefaultTableModel(new Object[][] {}, new String[] {
+            "Mã Bản Sao", "Số Thứ Tự", "Tình Trạng", "Ngày Nhập", "Vị Trí Lưu Trữ"
+        }) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        tblBanSao.setModel(model);
+    }
+
     private void initBase() {
         initComponents();
+        initTableBanSao();
         initComboBox();
         setLocationRelativeTo(null);
         txtTimKiemBSEnd.setVisible(false);
@@ -84,7 +97,7 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     
     private void loadBanSaoPage() {
         try {
-            List<BanSao> list = banSaoController.getPage(isbn, pageSize, currentCursor);
+            List<BanSao> list = banSaoController.getPage(isbn, pageSize + 1, currentCursor);
             hasNextPage = list.size() > pageSize;
             if (hasNextPage) list.remove(list.size() - 1);
             
@@ -92,11 +105,12 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
             model.setRowCount(0);
             
             for (BanSao b : list) {
+                String ngayNhapStr = b.getNgayNhapKho() != null ? b.getNgayNhapKho().toString() : "";
                 model.addRow(new Object[]{
                         b.getMaBanSao(),
                         b.getSoThuTuTrongKho(),
                         b.getTinhTrang(),
-                        b.getNgayNhapKho(),
+                        ngayNhapStr,
                         b.getViTriLuuTru()     
                 });
             }
@@ -139,13 +153,13 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
     private void loadDataToTable(List<BanSao> list) {
         DefaultTableModel model = (DefaultTableModel) tblBanSao.getModel();
         model.setRowCount(0);
-        
         for (BanSao b : list) {
+            String ngayNhapStr = b.getNgayNhapKho() != null ? b.getNgayNhapKho().toString() : "";
             model.addRow(new Object[]{
                 b.getMaBanSao(),
                 b.getSoThuTuTrongKho(),
                 b.getTinhTrang(),
-                b.getNgayNhapKho(),
+                ngayNhapStr,
                 b.getViTriLuuTru()
             });
         }
@@ -203,10 +217,17 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         cboTieuChiBS.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         jPanel6.add(cboTieuChiBS);
 
-        txtTimKiemBS.setPreferredSize(new java.awt.Dimension(120, 26));
+        txtTimKiemBS.setMinimumSize(new java.awt.Dimension(64, 30));
+        txtTimKiemBS.setPreferredSize(new java.awt.Dimension(120, 30));
+        txtTimKiemBS.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtTimKiemBSActionPerformed(evt);
+            }
+        });
         jPanel6.add(txtTimKiemBS);
 
-        txtTimKiemBSEnd.setPreferredSize(new java.awt.Dimension(120, 26));
+        txtTimKiemBSEnd.setMinimumSize(new java.awt.Dimension(64, 30));
+        txtTimKiemBSEnd.setPreferredSize(new java.awt.Dimension(120, 30));
         jPanel6.add(txtTimKiemBSEnd);
 
         btnTimBS.setText("Tìm");
@@ -512,6 +533,11 @@ public class DanhSachBanSaoDialog extends javax.swing.JDialog {
         new ThemHangLoatBanSaoDialog(this, true, this.isbn, this.currentUser).setVisible(true);
         resetPaginationAndLoadBanSao();
     }//GEN-LAST:event_btnThemHangLoatActionPerformed
+
+    private void txtTimKiemBSActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTimKiemBSActionPerformed
+        // TODO add your handling code here:
+        btnTimBSActionPerformed(evt);
+    }//GEN-LAST:event_txtTimKiemBSActionPerformed
 
     /**
      * @param args the command line arguments

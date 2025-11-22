@@ -83,29 +83,35 @@
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="lblTongSoTienPhatDaDong" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="lblShowTongSoTienPhatDaDong" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="lblTongSoTienPhatChuaDong" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="lblShowTongSoTienPhatChuaDong" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="lblSoPhieuPhat" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="lblShowSoPhieuPhat" min="-2" pref="155" max="-2" attributes="0"/>
+                          <Component id="jPanel1" pref="1222" max="32767" attributes="0"/>
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="lblTongSoTienPhatDaDong" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="lblShowTongSoTienPhatDaDong" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="lblTongSoTienPhatChuaDong" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="lblShowTongSoTienPhatChuaDong" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="lblSoPhieuPhat" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="lblShowSoPhieuPhat" min="-2" pref="155" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                           </Group>
                       </Group>
-                      <EmptySpace pref="993" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
                   <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
-                      <Group type="102" attributes="0">
-                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                          <Component id="splitMain1" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <Group type="102" alignment="0" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="splitMain1" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
               </Group>
@@ -128,13 +134,14 @@
                           <Component id="lblTongSoTienPhatDaDong" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="lblShowTongSoTienPhatDaDong" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="590" max="32767" attributes="0"/>
+                      <EmptySpace pref="459" max="32767" attributes="0"/>
+                      <Component id="jPanel1" min="-2" pref="131" max="-2" attributes="0"/>
                   </Group>
                   <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
-                      <Group type="102" attributes="0">
-                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <Group type="102" alignment="1" attributes="0">
+                          <EmptySpace pref="131" max="32767" attributes="0"/>
                           <Component id="splitMain1" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                          <EmptySpace pref="132" max="32767" attributes="0"/>
                       </Group>
                   </Group>
               </Group>
@@ -239,7 +246,7 @@
                                       </Group>
                                   </Group>
                               </Group>
-                              <EmptySpace pref="251" max="32767" attributes="0"/>
+                              <EmptySpace pref="609" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -353,6 +360,30 @@
                 </Container>
               </SubComponents>
             </Container>
+            <Container class="javax.swing.JPanel" name="jPanel1">
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JButton" name="btnPrv1">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Trang tr&#x1b0;&#x1edb;c"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnPrv1ActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JLabel" name="lblPageInfo1">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Trang 1/1"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JButton" name="btnNxt1">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Trang sau"/>
+                  </Properties>
+                </Component>
+              </SubComponents>
+            </Container>
           </SubComponents>
         </Container>
         <Container class="javax.swing.JPanel" name="cardPhieuMuon">
@@ -365,32 +396,38 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" alignment="0" attributes="0">
+                  <Group type="102" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" alignment="0" attributes="0">
-                              <Component id="lblSoLanMuon" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="lblShowSoLanMuon" min="-2" pref="64" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="lblSoLanMuon" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="lblShowSoLanMuon" min="-2" pref="64" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="lblSoSachDaMuon" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="lblShowSoSachDaMuon" min="-2" pref="76" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="lblSoSachDangMuon" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="lblShowSoSachDangMuon" min="-2" pref="88" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                              <EmptySpace min="0" pref="1018" max="32767" attributes="0"/>
                           </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="lblSoSachDaMuon" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="lblShowSoSachDaMuon" min="-2" pref="76" max="-2" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="lblSoSachDangMuon" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="lblShowSoSachDangMuon" min="-2" pref="88" max="-2" attributes="0"/>
-                          </Group>
+                          <Component id="jPanel2" alignment="0" pref="1222" max="32767" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="1024" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
                   <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
-                      <Group type="102" attributes="0">
-                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                          <Component id="splitMain" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <Group type="102" alignment="0" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="splitMain" pref="1222" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
               </Group>
@@ -413,13 +450,15 @@
                           <Component id="lblSoSachDangMuon" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="lblShowSoSachDangMuon" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="590" max="32767" attributes="0"/>
+                      <EmptySpace pref="446" max="32767" attributes="0"/>
+                      <Component id="jPanel2" min="-2" pref="113" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
                   <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
-                      <Group type="102" attributes="0">
-                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <Group type="102" alignment="1" attributes="0">
+                          <EmptySpace pref="119" max="32767" attributes="0"/>
                           <Component id="splitMain" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                          <EmptySpace pref="119" max="32767" attributes="0"/>
                       </Group>
                   </Group>
               </Group>
@@ -646,6 +685,30 @@
             </Component>
             <Component class="javax.swing.JLabel" name="lblShowSoSachDangMuon">
             </Component>
+            <Container class="javax.swing.JPanel" name="jPanel2">
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JButton" name="btnPrv">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Trang tr&#x1b0;&#x1edb;c"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnPrvActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JLabel" name="lblPageInfo">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Trang 1/1"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JButton" name="btnNxt">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Trang sau"/>
+                  </Properties>
+                </Component>
+              </SubComponents>
+            </Container>
           </SubComponents>
         </Container>
       </SubComponents>

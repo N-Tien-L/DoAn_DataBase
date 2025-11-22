@@ -6,6 +6,7 @@ package com.mycompany.quanlythuvien.view.dialog;
 
 import com.mycompany.quanlythuvien.controller.BanSaoController;
 import com.mycompany.quanlythuvien.model.TaiKhoan;
+import java.awt.Color;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import javax.swing.JOptionPane;
@@ -19,7 +20,7 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
     private TaiKhoan currentUser;
     private BanSaoController banSaoController = new BanSaoController();
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ThemHangLoatBanSaoDialog.class.getName());
-
+    private final String DATE_FORMAT = "dd/MM/yyyy";
     /**
      * Creates new form ThemHangLoatBanSaoDialog
      */
@@ -47,10 +48,11 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
 
     // START: Tự động điền ngày nhập kho từ hệ thống (cho người dùng xem)
         LocalDate ngayHienTai = LocalDate.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
         txtNgayNhapKho.setText(ngayHienTai.format(formatter));
         
         txtNgayNhapKho.setEditable(false);
+        txtNgayNhapKho.setDisabledTextColor(Color.BLACK);
     }
     /**
      * This method is called from within the constructor to initialize the form.
@@ -103,6 +105,11 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
 
         btnHuy.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
         btnHuy.setText("[×] Hủy");
+        btnHuy.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnHuyActionPerformed(evt);
+            }
+        });
         jPanel2.add(btnHuy);
 
         getContentPane().add(jPanel2, java.awt.BorderLayout.PAGE_END);
@@ -263,6 +270,11 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
                     "Lỗi Database/Server", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnTaoActionPerformed
+
+    private void btnHuyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHuyActionPerformed
+        // TODO add your handling code here:
+        this.dispose();
+    }//GEN-LAST:event_btnHuyActionPerformed
 
     /**
      * @param args the command line arguments

@@ -69,6 +69,9 @@
             </Property>
             <Property name="text" type="java.lang.String" value="[&#xd7;] H&#x1ee7;y"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnHuyActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>
