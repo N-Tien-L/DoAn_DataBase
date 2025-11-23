@@ -2,6 +2,7 @@ package com.mycompany.quanlythuvien.dao;
 import com.mycompany.quanlythuvien.model.BanDoc;
 import com.mycompany.quanlythuvien.util.DBConnector;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 
@@ -147,4 +148,122 @@ public class BanDocDAO {
         }
         return null;
     }
+    
+    public int getSoLanMuonCuaBanDoc(int IdBD) throws Exception {
+        String sql = "SELECT count(*) FROM PHIEUMUON WHERE IdBD = ?";
+        int soPhieu = 0;
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, IdBD); 
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    soPhieu = rs.getInt(1);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return soPhieu;
+    }
+    public int getSoSachDangMuonCuaBanDoc(int IdBD) throws Exception {
+        String sql = "SELECT count(*) FROM PHIEUMUON pm, CT_PM ctpm WHERE pm.IdBD = ? AND pm.IdPM = ctpm.IdPM AND ctpm.NgayTraThucTe IS NULL";
+        int ans = 0;
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, IdBD); 
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ans = rs.getInt(1);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+    public int getSoSachDaMuonCuaBanDoc(int IdBD) throws Exception {
+        String sql = "SELECT count(*) FROM PHIEUMUON pm, CT_PM ctpm WHERE pm.IdBD = ? AND pm.IdPM = ctpm.IdPM";
+        int ans = 0;
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, IdBD); 
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ans = rs.getInt(1);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+    public int getSoPhieuPhatBanDoc(int IdBD) throws Exception {
+        String sql = "SELECT count(*) FROM PHIEUMUON pm, PHAT p WHERE pm.IdBD = ? AND pm.IdPM = p.IdPM";
+        int ans = 0;
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, IdBD); 
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ans = rs.getInt(1);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+    public int getSoTienPhatChuaDongBanDoc(int IdBD) throws Exception {
+        String sql = "SELECT COALESCE(SUM(p.SoTien), 0)\n" 
+                + "FROM PHIEUMUON pm\n" 
+                + "JOIN PHAT p ON pm.IdPM = p.IdPM\n" 
+                + "WHERE pm.IdBD = ?\n" 
+                + "  AND p.TrangThai = 'Chua dong';";
+        int ans = 0;
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, IdBD); 
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ans = rs.getInt(1);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+    public int getSoTienPhatDaDongBanDoc(int IdBD) throws Exception {
+        String sql = "SELECT COALESCE(SUM(p.SoTien), 0)\n" 
+                + "FROM PHIEUMUON pm\n" 
+                + "JOIN PHAT p ON pm.IdPM = p.IdPM\n" 
+                + "WHERE pm.IdBD = ?\n" 
+                + "  AND p.TrangThai = 'Da dong';";
+        int ans = 0;
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, IdBD); 
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ans = rs.getInt(1);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
 }

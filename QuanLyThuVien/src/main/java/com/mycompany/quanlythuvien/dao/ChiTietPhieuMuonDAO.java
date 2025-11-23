@@ -297,7 +297,7 @@ public class ChiTietPhieuMuonDAO {
         }
         return ans;
     }
-    public ArrayList<Object> getAllPhieuPhatBanDoc(BanDoc x) throws Exception {
+    public ArrayList<Object> getAllPhieuPhatBanDoc(BanDoc x) throws Exception {  //lede vibe coding
         String sql = "SELECT p.IdPhat, pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, "
                    + "p.LoaiPhat, p.SoTien, p.NgayGhiNhan, p.TrangThai "
                    + "FROM PHIEUMUON pm "
