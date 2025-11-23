@@ -2,15 +2,18 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JDialog.java to edit this template
  */
-package com.mycompany.quanlythuvien.dialog;
+package com.mycompany.quanlythuvien.view.dialog;
 
 import com.mycompany.quanlythuvien.controller.SachController;
 import com.mycompany.quanlythuvien.model.NhaXuatBan;
 import com.mycompany.quanlythuvien.model.Sach;
 import com.mycompany.quanlythuvien.model.TacGia;
+import com.mycompany.quanlythuvien.model.TaiKhoan;
 import com.mycompany.quanlythuvien.model.TheLoai;
+import java.awt.Color;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -24,14 +27,19 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
     private boolean isEditMode;
     private boolean isViewMode;
     private SachController sachController = new SachController();
-
-    private static final String DINH_DANG_BAN_IN = "Bản in";
+    
+    private List<TacGia> listTacGia;
+    private List<NhaXuatBan> listNXB;
+    private List<TheLoai> listTheLoai;
+    
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ThongTinSachDialog.class.getName());
 
+    private TaiKhoan currentUser;
     /**
      * Creates new form ThongTinSachDialog
      */
-    public ThongTinSachDialog(java.awt.Frame parent, boolean modal, Sach sach, boolean isEditMode, boolean isViewMode) {
+    public ThongTinSachDialog(java.awt.Frame parent, boolean modal, Sach sach, 
+            boolean isEditMode, boolean isViewMode, TaiKhoan currentUser) {
         super(parent, modal);
         initComponents();
         setLocationRelativeTo(null);
@@ -39,7 +47,17 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         this.sach = sach;
         this.isEditMode = isEditMode;
         this.isViewMode = isViewMode;
-        
+        this.currentUser = currentUser;
+        txtCreatedAt.setEnabled(false);
+        txtCreatedAt.setDisabledTextColor(Color.BLACK);
+
+        txtCreatedBy.setEnabled(false);
+        txtCreatedBy.setDisabledTextColor(Color.BLACK);
+
+        if (isEditMode) {
+            txtISBN.setEnabled(false);
+            txtISBN.setDisabledTextColor(Color.BLACK);
+        }
         loadComboBoxes();
         
         if (sach != null) {
@@ -47,10 +65,21 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
             if (isViewMode) {
                 setViewMode();
             }
-        } 
+        } else {
+            //null -> them moi
+            txtSoLuongTon.setText("0");
+            txtSoLuongTon.setEnabled(false);
+
+            if (currentUser != null) {
+                txtCreatedBy.setText(currentUser.getEmail());
+                txtCreatedBy.setEditable(false);
+            }
+            txtCreatedAt.setText(""); // mới thêm thì chưa có ngày tạo
+            txtCreatedAt.setEditable(false);
+        }
     }
     public ThongTinSachDialog(javax.swing.JFrame parent, boolean modal) {
-        this((java.awt.Frame) parent, modal, null, false, false);
+        this((java.awt.Frame) parent, modal, null, false, false, null);
     }
 
     /**
@@ -91,6 +120,10 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         cboMaNXB = new javax.swing.JComboBox<>();
         txtNamXuatBan = new javax.swing.JTextField();
         cboMaTacGia = new javax.swing.JComboBox<>();
+        lblCreatedBy = new javax.swing.JLabel();
+        lblCreatedAt = new javax.swing.JLabel();
+        txtCreatedBy = new javax.swing.JTextField();
+        txtCreatedAt = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -174,14 +207,16 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         txtMoTa.setWrapStyleWord(true);
         jScrollPane1.setViewportView(txtMoTa);
 
-        btnLuu.setText("Lưu");
+        btnLuu.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
+        btnLuu.setText("[✓] Lưu");
         btnLuu.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnLuuActionPerformed(evt);
             }
         });
 
-        btnHuy.setText("Hủy");
+        btnHuy.setFont(new java.awt.Font("Arial Unicode MS", 0, 14)); // NOI18N
+        btnHuy.setText("[×] Hủy");
         btnHuy.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnHuyActionPerformed(evt);
@@ -199,48 +234,76 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         cboMaTacGia.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         cboMaTacGia.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
+        lblCreatedBy.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        lblCreatedBy.setText("Người tạo:");
+
+        lblCreatedAt.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        lblCreatedAt.setText("Ngày tạo:");
+
+        txtCreatedBy.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        txtCreatedBy.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtCreatedByActionPerformed(evt);
+            }
+        });
+
+        txtCreatedAt.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        txtCreatedAt.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtCreatedAtActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGap(60, 60, 60)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addGroup(jPanel3Layout.createSequentialGroup()
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(lblISBN, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(lblTenSach, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(lblMaTacGia, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(lblMaTheLoai, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(lblNamXuatBan, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(lblDinhDang, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(lblGiaBia, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(lblSoTrang, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(lblSoLuongTon, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(lblMoTa, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGap(41, 41, 41))
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                            .addComponent(lblMaNXB, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGap(27, 27, 27)))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblISBN, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblTenSach, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblMaTacGia, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblMaTheLoai, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblNamXuatBan, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblDinhDang, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblGiaBia, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblSoTrang, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblSoLuongTon, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblMoTa, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(41, 41, 41))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(btnLuu)
-                            .addComponent(lblMaNXB, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(27, 27, 27)))
+                            .addComponent(lblCreatedBy, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lblCreatedAt, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(41, 41, 41)))
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(txtDinhDang, javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(txtISBN, javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(cboMaTheLoai, javax.swing.GroupLayout.Alignment.LEADING, 0, 190, Short.MAX_VALUE)
-                        .addComponent(txtTenSach)
-                        .addComponent(txtGiaBia)
-                        .addComponent(txtSoTrang)
-                        .addComponent(txtSoLuongTon, javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                        .addComponent(cboMaNXB, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(txtNamXuatBan, javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(cboMaTacGia, javax.swing.GroupLayout.Alignment.LEADING, 0, 190, Short.MAX_VALUE))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGap(26, 26, 26)
-                        .addComponent(btnHuy)))
-                .addContainerGap(34, Short.MAX_VALUE))
+                    .addComponent(txtCreatedAt, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
+                    .addComponent(txtCreatedBy, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
+                    .addComponent(txtDinhDang)
+                    .addComponent(txtISBN)
+                    .addComponent(cboMaTheLoai, 0, 260, Short.MAX_VALUE)
+                    .addComponent(txtTenSach, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(txtGiaBia, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(txtSoTrang, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(txtSoLuongTon)
+                    .addComponent(cboMaNXB, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(txtNamXuatBan)
+                    .addComponent(cboMaTacGia, 0, 260, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addGap(105, 105, 105))
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(216, 216, 216)
+                .addComponent(btnLuu)
+                .addGap(18, 18, 18)
+                .addComponent(btnHuy)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -286,18 +349,22 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
                     .addComponent(lblSoTrang, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtSoTrang, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblCreatedBy, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtCreatedBy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblCreatedAt, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtCreatedAt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblMoTa, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 17, Short.MAX_VALUE)
-                        .addComponent(btnLuu)
-                        .addGap(27, 27, 27))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGap(18, 18, 18)
-                        .addComponent(btnHuy)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblMoTa, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(50, 50, 50)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnLuu)
+                    .addComponent(btnHuy))
+                .addGap(25, 25, 25))
         );
 
         jPanel1.add(jPanel3, java.awt.BorderLayout.CENTER);
@@ -320,19 +387,25 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         try {
             cboMaTacGia.removeAllItems();
             cboMaTacGia.addItem("Không xác định");
-            for (var tg : sachController.getAllTacGia()){
+            
+            listTacGia = sachController.getAllTacGiaNoPaging();
+            for (var tg : listTacGia){
                 cboMaTacGia.addItem(tg.getTenTacGia());
             }
             
             cboMaNXB.removeAllItems();
             cboMaNXB.addItem("Không xác định");
-            for (var nxb : sachController.getAllNXB()){
+            
+            listNXB = sachController.getAllNXBNoPaging();
+            for (var nxb : listNXB){
                 cboMaNXB.addItem(nxb.getTenNXB());
             }
             
             cboMaTheLoai.removeAllItems();
             cboMaTheLoai.addItem("Không xác định");
-            for (var tl : sachController.getAllTheLoai()) {
+            
+            listTheLoai = sachController.getAllTheLoaiNoPaging();
+            for (var tl : listTheLoai) {
                 cboMaTheLoai.addItem(tl.getTenTheLoai());
             }
             
@@ -345,16 +418,25 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
     private void fillForm() {
         txtISBN.setText(sach.getISBN());
         txtTenSach.setText(sach.getTenSach());
-        txtNamXuatBan.setText(String.valueOf(sach.getNamXuatBan()));
-        txtGiaBia.setText(String.valueOf(sach.getGiaBia()));
-        txtSoTrang.setText(String.valueOf(sach.getSoTrang()));
+        txtNamXuatBan.setText(sach.getNamXuatBan() == null ? "" : sach.getNamXuatBan().toString());
+        txtGiaBia.setText(sach.getGiaBia() == null ? "" : sach.getGiaBia().toString());
+        txtSoTrang.setText(sach.getSoTrang() == null ? "" : sach.getSoTrang().toString());
         txtDinhDang.setText(sach.getDinhDang());
         txtMoTa.setText(sach.getMoTa());
         txtSoLuongTon.setText(String.valueOf(sach.getSoLuongTon()));
         
-        selectComboBoxById(cboMaTacGia, sach.getMaTacGia(), sachController.getAllTacGia());
-        selectComboBoxById(cboMaNXB, sach.getMaNXB(), sachController.getAllNXB());
-        selectComboBoxById(cboMaTheLoai, sach.getMaTheLoai(), sachController.getAllTheLoai());
+        selectComboBoxById(cboMaTacGia, sach.getMaTacGia(), listTacGia);
+        selectComboBoxById(cboMaNXB, sach.getMaNXB(), listNXB);
+        selectComboBoxById(cboMaTheLoai, sach.getMaTheLoai(), listTheLoai);
+        
+        txtCreatedBy.setText(sach.getCreatedBy() == null ? "" : sach.getCreatedBy());
+        
+        if (sach.getCreatedAt() != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            txtCreatedAt.setText(sdf.format(sach.getCreatedAt()));  
+        } else {
+            txtCreatedAt.setText("");
+        }
     }
     
     private void setViewMode() {
@@ -407,49 +489,54 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
     private void txtSoLuongTonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSoLuongTonActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_txtSoLuongTonActionPerformed
-private Sach getSachFromForm() throws NumberFormatException {
-    Sach s = new Sach();
+    private Sach getSachFromForm() throws NumberFormatException {
+        Sach s = new Sach();
 
-    s.setISBN(txtISBN.getText().trim());
-    s.setTenSach(txtTenSach.getText().trim());
+        s.setISBN(txtISBN.getText().trim());
+        s.setTenSach(txtTenSach.getText().trim());
 
-    // Parse số
-    String namStr = txtNamXuatBan.getText().trim();
-    s.setNamXuatBan(namStr.isEmpty() ? null : Integer.parseInt(namStr));
+        // Parse số
+        String namStr = txtNamXuatBan.getText().trim();
+        s.setNamXuatBan(namStr.isEmpty() ? null : Integer.parseInt(namStr));
 
-    String giaStr = txtGiaBia.getText().trim();
-    s.setGiaBia(giaStr.isEmpty() ? null : new BigDecimal(giaStr));
+        String giaStr = txtGiaBia.getText().trim();
+        s.setGiaBia(giaStr.isEmpty() ? null : new BigDecimal(giaStr));
 
-    String trangStr = txtSoTrang.getText().trim();
-    s.setSoTrang(trangStr.isEmpty() ? null : Integer.parseInt(trangStr));
+        String trangStr = txtSoTrang.getText().trim();
+        s.setSoTrang(trangStr.isEmpty() ? null : Integer.parseInt(trangStr));
 
-    s.setDinhDang(txtDinhDang.getText().trim().isEmpty() ? "Bản in" : txtDinhDang.getText().trim());
-    s.setMoTa(txtMoTa.getText().trim());
-    s.setSoLuongTon(null); // trigger update
+        s.setDinhDang(txtDinhDang.getText().trim().isEmpty() ? "Bản in" : txtDinhDang.getText().trim());
+        s.setMoTa(txtMoTa.getText().trim());
+        s.setSoLuongTon(0); // trigger update
 
-    // Combobox -> id
-    int indexTG = cboMaTacGia.getSelectedIndex();
-    s.setMaTacGia(indexTG <= 0 ? null : sachController.getAllTacGia().get(indexTG - 1).getMaTacGia());
+        // Combobox -> id
+        int indexTG = cboMaTacGia.getSelectedIndex();
+        s.setMaTacGia(indexTG <= 0 ? null : listTacGia.get(indexTG - 1).getMaTacGia());
 
-    int indexNXB = cboMaNXB.getSelectedIndex();
-    s.setMaNXB(indexNXB <= 0 ? null : sachController.getAllNXB().get(indexNXB - 1).getMaNXB());
+        int indexNXB = cboMaNXB.getSelectedIndex();
+        s.setMaNXB(indexNXB <= 0 ? null : listNXB.get(indexNXB - 1).getMaNXB());
 
-    int indexTL = cboMaTheLoai.getSelectedIndex();
-    s.setMaTheLoai(indexTL <= 0 ? null : sachController.getAllTheLoai().get(indexTL - 1).getMaTheLoai());
+        int indexTL = cboMaTheLoai.getSelectedIndex();
+        s.setMaTheLoai(indexTL <= 0 ? null : listTheLoai.get(indexTL - 1).getMaTheLoai());
 
-    return s;
-}
+        return s;
+    }
 
     private void btnLuuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLuuActionPerformed
         // TODO add your handling code here:
         try {
             Sach sach = getSachFromForm(); // Lấy dữ liệu
-            if (isEditMode) {
+            if (!isEditMode) {
+                if (currentUser != null) {
+                    sach.setCreatedBy(currentUser.getEmail());
+                }
+                sachController.insert(sach, sach.getCreatedBy());
+                JOptionPane.showMessageDialog(this, "Thêm sách mới thành công!");
+            } else {
+                sach.setCreatedBy(this.sach.getCreatedBy());
+                sach.setCreatedAt(this.sach.getCreatedAt());
                 sachController.update(sach);
                 JOptionPane.showMessageDialog(this, "Cập nhật sách thành công!");
-            } else {
-                sachController.insert(sach);
-                JOptionPane.showMessageDialog(this, "Thêm sách mới thành công!");
             }
             dispose();
         } catch (NumberFormatException nfEx) {
@@ -464,6 +551,14 @@ private Sach getSachFromForm() throws NumberFormatException {
         // TODO add your handling code here:
         this.dispose();
     }//GEN-LAST:event_btnHuyActionPerformed
+
+    private void txtCreatedByActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCreatedByActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtCreatedByActionPerformed
+
+    private void txtCreatedAtActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCreatedAtActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtCreatedAtActionPerformed
     public Sach getSach() {
         return sach;
     }
@@ -515,6 +610,8 @@ private Sach getSachFromForm() throws NumberFormatException {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblCreatedAt;
+    private javax.swing.JLabel lblCreatedBy;
     private javax.swing.JLabel lblDinhDang;
     private javax.swing.JLabel lblGiaBia;
     private javax.swing.JLabel lblISBN;
@@ -526,6 +623,8 @@ private Sach getSachFromForm() throws NumberFormatException {
     private javax.swing.JLabel lblSoLuongTon;
     private javax.swing.JLabel lblSoTrang;
     private javax.swing.JLabel lblTenSach;
+    private javax.swing.JTextField txtCreatedAt;
+    private javax.swing.JTextField txtCreatedBy;
     private javax.swing.JTextField txtDinhDang;
     private javax.swing.JTextField txtGiaBia;
     private javax.swing.JTextField txtISBN;

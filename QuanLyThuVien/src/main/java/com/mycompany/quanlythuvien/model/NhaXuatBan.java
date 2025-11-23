@@ -33,4 +33,8 @@ public class NhaXuatBan {
         this.tenNXB = tenNXB;
     }
 
+    @Override
+    public String toString() {
+        return tenNXB != null ? tenNXB : "(Không có tên)";
+    }
 }

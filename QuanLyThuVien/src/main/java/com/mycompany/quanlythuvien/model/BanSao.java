@@ -1,5 +1,6 @@
 package com.mycompany.quanlythuvien.model;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 
 /**
@@ -14,17 +15,21 @@ public class BanSao {
     private String tinhTrang;
     private LocalDate ngayNhapKho;
     private String viTriLuuTru;
-
+    private Timestamp createdAt;
+    private String createdBy;
+    
     public BanSao() {
     }
 
-    public BanSao(int maBanSao, String ISBN, int soThuTuTrongKho, String tinhTrang, LocalDate ngayNhapKho, String viTriLuuTru) {
+    public BanSao(int maBanSao, String ISBN, int soThuTuTrongKho, String tinhTrang, LocalDate ngayNhapKho, String viTriLuuTru, Timestamp createdAt, String createdBy) {
         this.maBanSao = maBanSao;
         this.ISBN = ISBN;
         this.soThuTuTrongKho = soThuTuTrongKho;
         this.tinhTrang = tinhTrang;
         this.ngayNhapKho = ngayNhapKho;
         this.viTriLuuTru = viTriLuuTru;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
     }
 
     public int getMaBanSao() {
@@ -75,4 +80,19 @@ public class BanSao {
         this.viTriLuuTru = viTriLuuTru;
     }
 
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
 }

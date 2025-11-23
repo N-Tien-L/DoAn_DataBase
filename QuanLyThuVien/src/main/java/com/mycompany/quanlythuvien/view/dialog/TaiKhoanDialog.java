@@ -30,7 +30,7 @@ public class TaiKhoanDialog extends JDialog {
     }
     
     private final TaiKhoanController controller;
-    private final String currentUserRole;
+    private final TaiKhoan currentUser;
     private final Mode mode;
     private TaiKhoan taiKhoan;
     
@@ -46,25 +46,25 @@ public class TaiKhoanDialog extends JDialog {
     /**
      * Constructor cho chế độ ADD
      */
-    public TaiKhoanDialog(Window parent, String currentUserRole) {
-        this(parent, currentUserRole, Mode.ADD, null);
+    public TaiKhoanDialog(Window parent, TaiKhoan currentUser) {
+        this(parent, currentUser, Mode.ADD, null);
     }
     
     /**
      * Constructor cho chế độ EDIT
      */
-    public TaiKhoanDialog(Window parent, String currentUserRole, TaiKhoan taiKhoan) {
-        this(parent, currentUserRole, Mode.EDIT, taiKhoan);
+    public TaiKhoanDialog(Window parent, TaiKhoan currentUser, TaiKhoan taiKhoan) {
+        this(parent, currentUser, Mode.EDIT, taiKhoan);
     }
     
     /**
      * Constructor chính
      */
-    private TaiKhoanDialog(Window parent, String currentUserRole, Mode mode, TaiKhoan taiKhoan) {
+    private TaiKhoanDialog(Window parent, TaiKhoan currentUser, Mode mode, TaiKhoan taiKhoan) {
         super(parent, mode == Mode.ADD ? "Thêm tài khoản mới" : "Chỉnh sửa tài khoản", ModalityType.APPLICATION_MODAL);
         
         this.controller = new TaiKhoanController();
-        this.currentUserRole = currentUserRole;
+        this.currentUser = currentUser;
         this.mode = mode;
         this.taiKhoan = taiKhoan;
         
@@ -163,8 +163,8 @@ public class TaiKhoanDialog extends JDialog {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         
-        btnSave = new JButton(mode == Mode.ADD ? "💾 Tạo tài khoản" : "💾 Cập nhật");
-        btnCancel = new JButton("✖️ Hủy");
+        btnSave = new JButton(mode == Mode.ADD ? "[✓] Tạo tài khoản" : "[✓] Cập nhật");
+        btnCancel = new JButton("[X] Hủy");
         
         btnSave.setFont(new Font("Arial", Font.BOLD, 13));
         btnCancel.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -228,44 +228,33 @@ public class TaiKhoanDialog extends JDialog {
         btnSave.setEnabled(false);
         btnCancel.setEnabled(false);
         
-        boolean result;
-        
-        if (mode == Mode.ADD) {
-            result = controller.createAccount(currentUserRole, email, hoTen, role);
-            
-            if (result) {
+        try {
+            if (mode == Mode.ADD) {
+                controller.createAccount(currentUser, email, hoTen, role);
+                
                 JOptionPane.showMessageDialog(this,
                     "Tạo tài khoản thành công!\n" +
                     "Mật khẩu đã được gửi đến email: " + email,
                     "Thành công",
                     JOptionPane.INFORMATION_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(this,
-                    "Tạo tài khoản thất bại!\n" +
-                    "Email có thể đã tồn tại hoặc có lỗi xảy ra.",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
-            }
-        } else {
-            result = controller.updateAccount(currentUserRole, email, hoTen, role);
-            
-            if (result) {
+                controller.updateAccount(currentUser, email, hoTen, role);
+                
                 JOptionPane.showMessageDialog(this,
                     "Cập nhật tài khoản thành công!",
                     "Thành công",
                     JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    "Cập nhật tài khoản thất bại!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
             }
-        }
-        
-        if (result) {
+            
             this.success = true;
             dispose();
-        } else {
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                ex.getMessage(),
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE);
+            
             // Re-enable buttons if failed
             btnSave.setEnabled(true);
             btnCancel.setEnabled(true);

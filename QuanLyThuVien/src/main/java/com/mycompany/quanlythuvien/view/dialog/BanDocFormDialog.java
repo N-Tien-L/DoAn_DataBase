@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JDialog.java to edit this template
  */
-package com.mycompany.quanlythuvien.view.panel;
+package com.mycompany.quanlythuvien.view.dialog;
 
 import com.mycompany.quanlythuvien.model.BanDoc;
 import javax.swing.JOptionPane;
@@ -15,7 +15,7 @@ public class BanDocFormDialog extends javax.swing.JDialog {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(BanDocFormDialog.class.getName());
     private Boolean saved = false;
-    private BanDoc banDoc;
+    private BanDoc banDoc = null;
     /**
      * Creates new form BanDocFormDialog
      */
@@ -25,6 +25,12 @@ public class BanDocFormDialog extends javax.swing.JDialog {
     }
     public BanDoc getBanDoc() {
         return banDoc;
+    }
+    public void setBanDoc(BanDoc x) {
+        tfHoTen.setText(x.getHoTen());
+        tfEmail.setText(x.getEmail());
+        tfSDT.setText(x.getSdt());
+        tfDiaChi.setText(x.getDiaChi());
     }
     public boolean isSaved() {
         return saved;

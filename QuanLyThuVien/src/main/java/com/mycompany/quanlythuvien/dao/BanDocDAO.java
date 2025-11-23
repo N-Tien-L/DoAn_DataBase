@@ -97,6 +97,32 @@ public class BanDocDAO {
         }
         return true;
     }
+    private static final String SQL_UPDATE =
+        "UPDATE BANDOC SET HoTen = ?, Email = ?, DiaChi = ?, SDT = ? WHERE IdBD = ?";
+
+    public Boolean updateDAO(BanDoc cur) throws Exception {
+        if (cur == null) return false;
+
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_UPDATE)) {
+
+            ps.setString(1, cur.getHoTen());
+            ps.setString(2, cur.getEmail());
+            ps.setString(3, cur.getDiaChi());
+            ps.setString(4, cur.getSdt());
+            ps.setInt(5, cur.getIdBD());  
+            System.out.println(cur.getHoTen());
+
+            int affected = ps.executeUpdate();
+
+            return affected > 0;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
     
     private static final String SQL_GET_BY_ID =
         "SELECT * FROM BANDOC WHERE IdBD = ?";

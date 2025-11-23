@@ -293,6 +293,124 @@ public class PhieuMuonDAO {
         }
     }
 
+    // Count PhieuMuon matching filters (emailBanDoc = BANDOC.Email, emailNguoiLap = PHIEUMUON.EmailNguoiLap)
+    public int countSearch(String emailBanDoc, String emailNguoiLap, LocalDate from, LocalDate to, String status) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT COUNT(DISTINCT pm.IdPM) FROM PHIEUMUON pm ");
+        sb.append("LEFT JOIN BANDOC bd ON pm.IdBD = bd.IdBD ");
+        sb.append("LEFT JOIN CT_PM ct ON pm.IdPM = ct.IdPM ");
+        sb.append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+
+        if (emailBanDoc != null && !emailBanDoc.isBlank()) {
+            sb.append(" AND LOWER(bd.Email) = LOWER(?) ");
+            params.add(emailBanDoc.trim());
+        }
+        if (emailNguoiLap != null && !emailNguoiLap.isBlank()) {
+            sb.append(" AND LOWER(pm.EmailNguoiLap) = LOWER(?) ");
+            params.add(emailNguoiLap.trim());
+        }
+        if (from != null && to != null) {
+            sb.append(" AND pm.NgayMuon BETWEEN ? AND ? ");
+            params.add(Date.valueOf(from));
+            params.add(Date.valueOf(to));
+        } else if (from != null) {
+            sb.append(" AND pm.NgayMuon >= ? ");
+            params.add(Date.valueOf(from));
+        } else if (to != null) {
+            sb.append(" AND pm.NgayMuon <= ? ");
+            params.add(Date.valueOf(to));
+        }
+
+        if (status != null) {
+            if ("returned".equalsIgnoreCase(status)) {
+                // all copies returned => no CT_PM with NgayTraThucTe IS NULL
+                sb.append(" AND NOT EXISTS (SELECT 1 FROM CT_PM c WHERE c.IdPM = pm.IdPM AND c.NgayTraThucTe IS NULL) ");
+            } else if ("unreturned".equalsIgnoreCase(status)) {
+                sb.append(" AND EXISTS (SELECT 1 FROM CT_PM c WHERE c.IdPM = pm.IdPM AND c.NgayTraThucTe IS NULL) ");
+            }
+        }
+
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sb.toString())) {
+            int idx = 1;
+            for (Object p : params) {
+                if (p instanceof Date) ps.setDate(idx++, (Date)p);
+                else ps.setString(idx++, p.toString());
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException ex) {
+            throw new Exception("Failed to count search results: " + ex.getMessage(), ex);
+        }
+        return 0;
+    }
+
+    // Search with pagination (pageIndex is 1-based)
+    public List<PhieuMuon> searchPaginated(String emailBanDoc, String emailNguoiLap, LocalDate from, LocalDate to, String status, int pageIndex, int pageSize) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT DISTINCT pm.IdPM, pm.IdBD, pm.EmailNguoiLap, pm.NgayMuon, pm.HanTra FROM PHIEUMUON pm ");
+        sb.append("LEFT JOIN BANDOC bd ON pm.IdBD = bd.IdBD ");
+        sb.append("LEFT JOIN CT_PM ct ON pm.IdPM = ct.IdPM ");
+        sb.append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+
+        if (emailBanDoc != null && !emailBanDoc.isBlank()) {
+            sb.append(" AND LOWER(bd.Email) = LOWER(?) ");
+            params.add(emailBanDoc.trim());
+        }
+        if (emailNguoiLap != null && !emailNguoiLap.isBlank()) {
+            sb.append(" AND LOWER(pm.EmailNguoiLap) = LOWER(?) ");
+            params.add(emailNguoiLap.trim());
+        }
+        if (from != null && to != null) {
+            sb.append(" AND pm.NgayMuon BETWEEN ? AND ? ");
+            params.add(Date.valueOf(from));
+            params.add(Date.valueOf(to));
+        } else if (from != null) {
+            sb.append(" AND pm.NgayMuon >= ? ");
+            params.add(Date.valueOf(from));
+        } else if (to != null) {
+            sb.append(" AND pm.NgayMuon <= ? ");
+            params.add(Date.valueOf(to));
+        }
+
+        if (status != null) {
+            if ("returned".equalsIgnoreCase(status)) {
+                sb.append(" AND NOT EXISTS (SELECT 1 FROM CT_PM c WHERE c.IdPM = pm.IdPM AND c.NgayTraThucTe IS NULL) ");
+            } else if ("unreturned".equalsIgnoreCase(status)) {
+                sb.append(" AND EXISTS (SELECT 1 FROM CT_PM c WHERE c.IdPM = pm.IdPM AND c.NgayTraThucTe IS NULL) ");
+            }
+        }
+
+        sb.append(" ORDER BY pm.NgayMuon DESC, pm.IdPM DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
+        List<PhieuMuon> list = new ArrayList<>();
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sb.toString())) {
+            int idx = 1;
+            for (Object p : params) {
+                if (p instanceof Date) ps.setDate(idx++, (Date)p);
+                else ps.setString(idx++, p.toString());
+            }
+            int offset = Math.max(0, (pageIndex - 1) * pageSize);
+            ps.setInt(idx++, offset);
+            ps.setInt(idx++, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException ex) {
+            throw new Exception("Failed to search paginated: " + ex.getMessage(), ex);
+        }
+        return list;
+    }
+
     // Find by EmailNguoiLap
     public List<PhieuMuon> findByEmailNguoiLap(String email) throws Exception {
         String sql = "SELECT IdPM, IdBD, EmailNguoiLap, NgayMuon, HanTra FROM PHIEUMUON WHERE LOWER(EmailNguoiLap) = LOWER(?)";

@@ -45,28 +45,23 @@ public class PhatDAO {
     public PaginationResult<Phat> getAllPhatPaginated(int cursor, int pageSize) throws Exception {
         List<Phat> list = new ArrayList<>();
 
-        // Lấy tổng số bản ghi
-        int totalCount = getTotalPhatCount();
-
-        // Nếu cursor < 0, bắt đầu từ 0
-        if (cursor < 0)
-            cursor = 0;
-
-        // SQL lấy dữ liệu
+        // SQL lấy dữ liệu - dùng cursor (IdPhat) làm điểm tham chiếu
+        // Nếu cursor = 0, lấy từ đầu; ngược lại lấy những record có IdPhat > cursor
         String sql = """
                     SELECT * FROM PHAT
-                    ORDER BY NgayGhiNhan DESC, IdPhat DESC
-                    OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+                    WHERE IdPhat > ?
+                    ORDER BY IdPhat ASC
+                    OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY
                 """;
 
         try (Connection con = DBConnector.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, cursor);
+            ps.setInt(1, cursor); // cursor > 0 để lấy trang sau
             ps.setInt(2, pageSize + 1); // Lấy thêm 1 để biết có trang tiếp theo không
 
             try (ResultSet rs = ps.executeQuery()) {
                 int count = 0;
-                while (rs.next() && count < pageSize) {
+                while (rs.next() && count < pageSize + 1) {
                     Phat p = new Phat(
                             rs.getInt("IdPhat"),
                             rs.getInt("IdPM"),
@@ -82,8 +77,26 @@ public class PhatDAO {
         }
 
         // Tính toán nextCursor và previousCursor
-        int nextCursor = (cursor + pageSize < totalCount) ? cursor + pageSize : -1;
-        int previousCursor = (cursor > 0) ? Math.max(0, cursor - pageSize) : -1;
+        int nextCursor = -1;
+        int previousCursor = -1;
+
+        if (!list.isEmpty()) {
+            // nextCursor là IdPhat của record cuối cùng (nếu có thêm 1 record nữa)
+            if (list.size() == pageSize + 1) {
+                list.remove(list.size() - 1); // Bỏ record thứ pageSize + 1
+                nextCursor = list.get(list.size() - 1).getIdPhat();
+            }
+
+            // previousCursor là IdPhat của record đầu tiên trừ 1
+            // Nó được dùng để quay lại trang trước (WHERE IdPhat > previousCursor -
+            // pageSize)
+            if (cursor > 0) {
+                int firstIdPhat = list.get(0).getIdPhat();
+                previousCursor = Math.max(0, firstIdPhat - pageSize - 1);
+            }
+        }
+
+        int totalCount = getTotalPhatCount();
 
         return new PaginationResult<>(list, nextCursor, previousCursor, totalCount, pageSize, cursor);
     }
@@ -123,6 +136,28 @@ public class PhatDAO {
             }
         }
         return list;
+    }
+
+    // Lấy phạt theo IdPhat
+    public Phat getPhatById(int idPhat) throws Exception {
+        String sql = "SELECT * FROM PHAT WHERE IdPhat = ?";
+        try (Connection con = DBConnector.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idPhat);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Phat(
+                            rs.getInt("IdPhat"),
+                            rs.getInt("IdPM"),
+                            rs.getInt("MaBanSao"),
+                            rs.getString("LoaiPhat"),
+                            rs.getBigDecimal("SoTien"),
+                            rs.getDate("NgayGhiNhan").toLocalDate(),
+                            rs.getString("TrangThai"));
+                }
+            }
+        }
+        return null;
     }
 
     // Tạo vé phạt
@@ -256,43 +291,39 @@ public class PhatDAO {
     public PaginationResult<Phat> searchPhatByTextPaginated(String text, int cursor, int pageSize) throws Exception {
         List<Phat> list = new ArrayList<>();
 
-        // Lấy tổng số bản ghi khớp với tìm kiếm
-        int totalCount = getTotalSearchPhatCount(text);
-
-        // Nếu cursor < 0, bắt đầu từ 0
-        if (cursor < 0)
-            cursor = 0;
-
+        // SQL lấy dữ liệu - dùng cursor (IdPhat) làm điểm tham chiếu
         String sql = """
                     SELECT p.*, pm.IdBD AS IdBD
                     FROM PHAT p
                     JOIN PHIEUMUON pm ON p.IdPM = pm.IdPM
                     JOIN BANDOC bd ON pm.IdBD = bd.IdBD
-                    WHERE CAST(p.IdPhat AS VARCHAR) LIKE ?
-                       OR CAST(p.IdPM AS VARCHAR) LIKE ?
-                       OR CAST(p.MaBanSao AS VARCHAR) LIKE ?
-                       OR LOWER(bd.Email) LIKE LOWER(?)
-                       OR LOWER(bd.HoTen) LIKE LOWER(?)
-                       OR bd.SDT LIKE ?
-                    ORDER BY p.NgayGhiNhan DESC, p.IdPhat DESC
-                    OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+                    WHERE p.IdPhat > ?
+                      AND (CAST(p.IdPhat AS VARCHAR) LIKE ?
+                           OR CAST(p.IdPM AS VARCHAR) LIKE ?
+                           OR CAST(p.MaBanSao AS VARCHAR) LIKE ?
+                           OR LOWER(bd.Email) LIKE LOWER(?)
+                           OR LOWER(bd.HoTen) LIKE LOWER(?)
+                           OR bd.SDT LIKE ?)
+                    ORDER BY p.IdPhat ASC
+                    OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY
                 """;
 
         try (Connection con = DBConnector.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, cursor); // cursor > 0 để lấy trang sau
+
             String pattern = "%" + text + "%";
-            ps.setString(1, pattern);
             ps.setString(2, pattern);
             ps.setString(3, pattern);
             ps.setString(4, pattern);
             ps.setString(5, pattern);
             ps.setString(6, pattern);
-            ps.setInt(7, cursor);
+            ps.setString(7, pattern);
             ps.setInt(8, pageSize + 1); // Lấy thêm 1 để biết có trang tiếp theo không
 
             try (ResultSet rs = ps.executeQuery()) {
                 int count = 0;
-                while (rs.next() && count < pageSize) {
+                while (rs.next() && count < pageSize + 1) {
                     Phat p = new Phat(
                             rs.getInt("IdPhat"),
                             rs.getInt("IdPM"),
@@ -309,13 +340,29 @@ public class PhatDAO {
         }
 
         // Tính toán nextCursor và previousCursor
-        int nextCursor = (cursor + pageSize < totalCount) ? cursor + pageSize : -1;
-        int previousCursor = (cursor > 0) ? Math.max(0, cursor - pageSize) : -1;
+        int nextCursor = -1;
+        int previousCursor = -1;
+
+        if (!list.isEmpty()) {
+            // nextCursor là IdPhat của record cuối cùng (nếu có thêm 1 record nữa)
+            if (list.size() == pageSize + 1) {
+                list.remove(list.size() - 1); // Bỏ record thứ pageSize + 1
+                nextCursor = list.get(list.size() - 1).getIdPhat();
+            }
+
+            // previousCursor là IdPhat của record đầu tiên trừ 1
+            // Nó được dùng để quay lại trang trước (WHERE IdPhat > previousCursor)
+            if (cursor > 0) {
+                int firstIdPhat = list.get(0).getIdPhat();
+                previousCursor = Math.max(0, firstIdPhat - pageSize - 1);
+            }
+        }
+
+        int totalCount = getTotalSearchPhatCount(text);
 
         return new PaginationResult<>(list, nextCursor, previousCursor, totalCount, pageSize, cursor);
-    }
+    } // Đếm tổng số vé phạt khớp với tìm kiếm
 
-    // Đếm tổng số vé phạt khớp với tìm kiếm
     private int getTotalSearchPhatCount(String text) throws Exception {
         String sql = """
                     SELECT COUNT(*) AS total

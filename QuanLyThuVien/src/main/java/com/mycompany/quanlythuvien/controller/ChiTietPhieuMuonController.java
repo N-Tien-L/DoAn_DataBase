@@ -6,7 +6,9 @@ package com.mycompany.quanlythuvien.controller;
  */
 import com.mycompany.quanlythuvien.dao.ChiTietPhieuMuonDAO;
 import com.mycompany.quanlythuvien.model.ChiTietPhieuMuon;
+import com.mycompany.quanlythuvien.model.LoanHistoryEntry;
 import java.time.LocalDate;
+import java.util.Objects;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,10 +49,10 @@ public class ChiTietPhieuMuonController {
 		if (!ok) throw new Exception("Tạo chi tiết phiếu mượn thất bại");
 	}
 
-	public boolean markReturned(int idPM, int maBanSao, LocalDate ngayTra) {
+	public boolean markReturned(int idPM, int maBanSao, LocalDate ngayTra, String tinhTrang) {
 		try {
 			if (idPM <= 0 || maBanSao <= 0 || ngayTra == null) return false;
-			return dao.markReturned(idPM, maBanSao, ngayTra);
+			return dao.markReturned(idPM, maBanSao, ngayTra, tinhTrang);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
@@ -104,6 +106,84 @@ public class ChiTietPhieuMuonController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
+		}
+	}
+
+	// Kiểm tra bản sao có đang bị mượn hay không
+	public boolean isMaBanSaoBorrowed(int maBanSao) {
+		try {
+			if (maBanSao <= 0) return false;
+			return dao.isMaBanSaoBorrowed(maBanSao);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	// Lấy record CT_PM đang mở theo MaBanSao
+	public ChiTietPhieuMuon getActiveByMaBanSao(int maBanSao) {
+		try {
+			if (maBanSao <= 0) return null;
+			return dao.getActiveByMaBanSao(maBanSao);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	// Đếm số sách quá hạn của bạn đọc
+	public int countOverdueByBanDoc(int idBD) {
+		try {
+			if (idBD <= 0) return 0;
+			return dao.countOverdueByBanDoc(idBD);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+
+	// Số ngày trễ cho 1 CT_PM
+	public long getDaysLate(int idPM, int maBanSao) {
+		try {
+			if (idPM <= 0 || maBanSao <= 0) return 0;
+			return dao.getDaysLate(idPM, maBanSao);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+
+	// Lịch sử mượn của 1 bạn đọc
+	public List<LoanHistoryEntry> getLoanHistoryByBanDoc(int idBD) {
+		try {
+			if (idBD <= 0) return new ArrayList<>();
+			return dao.getLoanHistoryByBanDoc(idBD);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ArrayList<>();
+		}
+	}
+
+	// Đếm số sách quá hạn vào một ngày cụ thể
+	public int countOverdueOnDate(LocalDate date) {
+		try {
+			if (Objects.isNull(date)) return 0;
+			return dao.countOverdueOnDate(date);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+
+	// Paginated CT_PM listing by IdPM with filters
+	public com.mycompany.quanlythuvien.model.PageResult<ChiTietPhieuMuon> findByIdPMWithFiltersPaginated(int idPM, String returnedFilter, String overdueFilter, int pageIndex, int pageSize) {
+		try {
+			int total = dao.countByIdPMWithFilters(idPM, returnedFilter, overdueFilter);
+			List<ChiTietPhieuMuon> data = dao.findByIdPMWithFiltersPaginated(idPM, returnedFilter, overdueFilter, pageIndex, pageSize);
+			return new com.mycompany.quanlythuvien.model.PageResult<>(data, pageIndex, pageSize, total);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new com.mycompany.quanlythuvien.model.PageResult<>(new ArrayList<>(), pageIndex, pageSize, 0);
 		}
 	}
 

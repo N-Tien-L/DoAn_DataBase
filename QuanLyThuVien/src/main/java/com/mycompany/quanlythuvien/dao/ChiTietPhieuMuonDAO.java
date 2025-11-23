@@ -1,5 +1,6 @@
 package com.mycompany.quanlythuvien.dao;
 
+import com.mycompany.quanlythuvien.model.BanDoc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -122,7 +123,7 @@ public class ChiTietPhieuMuonDAO {
     }
 
     // Update ChiTietPhieuMuon
-    public boolean markReturned(int IdPM, int maBanSao, LocalDate ngayTra) throws Exception {
+    public boolean markReturned(int IdPM, int maBanSao, LocalDate ngayTra, String tinhTrang) throws Exception {
         String sql = """
             UPDATE CT_PM
             SET NgayTraThucTe=?, TinhTrangKhiTra=?
@@ -134,7 +135,7 @@ public class ChiTietPhieuMuonDAO {
 
             Date sqlNgayTra = ngayTra != null ? Date.valueOf(ngayTra) : null;
             ps.setDate(1, sqlNgayTra);
-            ps.setString(2, "Đã trả");
+            ps.setString(2, tinhTrang);
 
             ps.setInt(3, IdPM);
             ps.setInt(4, maBanSao);
@@ -250,7 +251,96 @@ public class ChiTietPhieuMuonDAO {
             }
         }
     }
+    public ArrayList<Object> getAllPhieuMuonBanDoc(BanDoc x) throws Exception { //lede vibe coding
+        String sql = "SELECT pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, pm.HanTra, "
+                + "ct.MaBanSao, ct.NgayTraThucTe, ct.TinhTrangKhiTra, ct.EmailNguoiNhan "
+                + "FROM PHIEUMUON pm "
+                + "JOIN CT_PM ct ON pm.IdPM = ct.IdPM "
+                + "WHERE pm.IdBD = ? "
+                + "ORDER BY pm.NgayMuon DESC";
+        ArrayList<Object> ans = new ArrayList<Object>();
+        try (Connection con = DBConnector.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql);) {
+            
+            ps.setInt(1, x.getIdBD());
 
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int idPM = rs.getInt("IdPM");
+                    String EmailNguoiLap = rs.getString("EmailNguoiLap");
+                    
+                    Date sqlNgayMuon = rs.getDate("NgayMuon");
+                    LocalDate ngayMuon = sqlNgayMuon != null ? sqlNgayMuon.toLocalDate() : null;
+                    
+                    Date sqlHanTra = rs.getDate("HanTra");
+                    LocalDate HanTra = sqlHanTra != null ? sqlHanTra.toLocalDate() : null;
+                    
+                    
+                    int maBanSao = rs.getInt("MaBanSao");
+                    
+                    Date sqlNgayTra = rs.getDate("NgayTraThucTe");
+                    
+                    LocalDate ngayTraThucTe = sqlNgayTra != null ? sqlNgayTra.toLocalDate() : null;
+                    String tinhTrang = rs.getString("TinhTrangKhiTra");
+                    
+                    String emailNguoiNhan = rs.getString("EmailNguoiNhan");
+                    ans.add(idPM);
+                    ans.add(EmailNguoiLap);
+                    ans.add(ngayMuon);
+                    ans.add(HanTra);
+                    ans.add(maBanSao);
+                    ans.add(ngayTraThucTe);
+                    ans.add(tinhTrang);
+                    ans.add(emailNguoiNhan);
+                }
+            }
+        }
+        return ans;
+    }
+    public ArrayList<Object> getAllPhieuPhatBanDoc(BanDoc x) throws Exception {
+        String sql = "SELECT p.IdPhat, pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, "
+                   + "p.LoaiPhat, p.SoTien, p.NgayGhiNhan, p.TrangThai "
+                   + "FROM PHIEUMUON pm "
+                   + "JOIN PHAT p ON pm.IdPM = p.IdPM "
+                   + "WHERE pm.IdBD = ? "
+                   + "ORDER BY p.NgayGhiNhan DESC";
+
+        ArrayList<Object> ans = new ArrayList<>();
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, x.getIdBD());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int idPhat = rs.getInt("IdPhat");
+                    int idPM = rs.getInt("IdPM");
+                    String emailNguoiLap = rs.getString("EmailNguoiLap");
+
+                    Date sqlNgayMuon = rs.getDate("NgayMuon");
+                    java.time.LocalDate ngayMuon = sqlNgayMuon != null ? sqlNgayMuon.toLocalDate() : null;
+
+                    String loaiPhat = rs.getString("LoaiPhat");
+                    double soTien = rs.getDouble("SoTien");
+
+                    Date sqlNgayGhi = rs.getDate("NgayGhiNhan");
+                    java.time.LocalDate ngayGhiNhan = sqlNgayGhi != null ? sqlNgayGhi.toLocalDate() : null;
+
+                    String trangThai = rs.getString("TrangThai");
+
+                    ans.add(idPhat);
+                    ans.add(idPM);
+                    ans.add(emailNguoiLap);
+                    ans.add(ngayMuon);
+                    ans.add(loaiPhat);
+                    ans.add(soTien);
+                    ans.add(ngayGhiNhan);
+                    ans.add(trangThai);
+                }
+            }
+        }
+        return ans;
+    }
     // Check if a physical copy is currently borrowed (not yet returned)
     public boolean isMaBanSaoBorrowed(int maBanSao) throws Exception {
         String sql = "SELECT 1 FROM CT_PM WHERE MaBanSao = ? AND NgayTraThucTe IS NULL";
@@ -266,19 +356,19 @@ public class ChiTietPhieuMuonDAO {
     }
 
     // Get the active (unreturned) CT_PM record for a given MaBanSao, or null if none
-    // public ChiTietPhieuMuon getActiveByMaBanSao(int maBanSao) throws Exception {
-    //     String sql = "SELECT * FROM CT_PM WHERE MaBanSao = ? AND NgayTraThucTe IS NULL";
-    //     try (Connection con = DBConnector.getConnection();
-    //          PreparedStatement ps = con.prepareStatement(sql)) {
-    //         ps.setInt(1, maBanSao);
-    //         try (ResultSet rs = ps.executeQuery()) {
-    //             if (rs.next()) return mapRow(rs);
-    //             return null;
-    //         }
-    //     } catch (SQLException ex) {
-    //         throw new Exception("Failed to get active loan by MaBanSao: " + ex.getMessage(), ex);
-    //     }
-    // }
+    public ChiTietPhieuMuon getActiveByMaBanSao(int maBanSao) throws Exception {
+        String sql = "SELECT * FROM CT_PM WHERE MaBanSao = ? AND NgayTraThucTe IS NULL";
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, maBanSao);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapRow(rs);
+                return null;
+            }
+        } catch (SQLException ex) {
+            throw new Exception("Failed to get active loan by MaBanSao: " + ex.getMessage(), ex);
+        }
+    }
 
     // Count overdue items for a reader (IdBD)
     public int countOverdueByBanDoc(int idBD) throws Exception {
@@ -367,6 +457,87 @@ public class ChiTietPhieuMuonDAO {
                 return 0;
             }
         }
+    }
+
+    // Count CT_PM for an IdPM with filters for returned/unreturned and overdue/notoverdue
+    public int countByIdPMWithFilters(int idPM, String returnedFilter, String overdueFilter) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT COUNT(*) FROM CT_PM c JOIN PHIEUMUON pm ON c.IdPM = pm.IdPM WHERE c.IdPM = ? ");
+        List<Object> params = new ArrayList<>();
+        params.add(idPM);
+
+        if (returnedFilter != null) {
+            if ("returned".equalsIgnoreCase(returnedFilter)) sb.append(" AND c.NgayTraThucTe IS NOT NULL ");
+            else if ("unreturned".equalsIgnoreCase(returnedFilter)) sb.append(" AND c.NgayTraThucTe IS NULL ");
+        }
+
+        if (overdueFilter != null) {
+            if ("overdue".equalsIgnoreCase(overdueFilter)) {
+                sb.append(" AND ((c.NgayTraThucTe IS NOT NULL AND c.NgayTraThucTe > pm.HanTra) OR (c.NgayTraThucTe IS NULL AND pm.HanTra < ?)) ");
+                params.add(Date.valueOf(LocalDate.now()));
+            } else if ("notoverdue".equalsIgnoreCase(overdueFilter)) {
+                sb.append(" AND NOT ((c.NgayTraThucTe IS NOT NULL AND c.NgayTraThucTe > pm.HanTra) OR (c.NgayTraThucTe IS NULL AND pm.HanTra < ?)) ");
+                params.add(Date.valueOf(LocalDate.now()));
+            }
+        }
+
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sb.toString())) {
+            int idx = 1;
+            for (Object p : params) {
+                if (p instanceof Date) ps.setDate(idx++, (Date)p);
+                else if (p instanceof Integer) ps.setInt(idx++, (Integer)p);
+                else ps.setString(idx++, p.toString());
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    // Get paginated CT_PM for an IdPM with filters
+    public List<ChiTietPhieuMuon> findByIdPMWithFiltersPaginated(int idPM, String returnedFilter, String overdueFilter, int pageIndex, int pageSize) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT c.* FROM CT_PM c JOIN PHIEUMUON pm ON c.IdPM = pm.IdPM WHERE c.IdPM = ? ");
+        List<Object> params = new ArrayList<>();
+        params.add(idPM);
+
+        if (returnedFilter != null) {
+            if ("returned".equalsIgnoreCase(returnedFilter)) sb.append(" AND c.NgayTraThucTe IS NOT NULL ");
+            else if ("unreturned".equalsIgnoreCase(returnedFilter)) sb.append(" AND c.NgayTraThucTe IS NULL ");
+        }
+
+        if (overdueFilter != null) {
+            if ("overdue".equalsIgnoreCase(overdueFilter)) {
+                sb.append(" AND ((c.NgayTraThucTe IS NOT NULL AND c.NgayTraThucTe > pm.HanTra) OR (c.NgayTraThucTe IS NULL AND pm.HanTra < ?)) ");
+                params.add(Date.valueOf(LocalDate.now()));
+            } else if ("notoverdue".equalsIgnoreCase(overdueFilter)) {
+                sb.append(" AND NOT ((c.NgayTraThucTe IS NOT NULL AND c.NgayTraThucTe > pm.HanTra) OR (c.NgayTraThucTe IS NULL AND pm.HanTra < ?)) ");
+                params.add(Date.valueOf(LocalDate.now()));
+            }
+        }
+
+        sb.append(" ORDER BY c.MaBanSao ASC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
+        List<ChiTietPhieuMuon> list = new ArrayList<>();
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(sb.toString())) {
+            int idx = 1;
+            for (Object p : params) {
+                if (p instanceof Date) ps.setDate(idx++, (Date)p);
+                else if (p instanceof Integer) ps.setInt(idx++, (Integer)p);
+                else ps.setString(idx++, p.toString());
+            }
+            int offset = Math.max(0, (pageIndex - 1) * pageSize);
+            ps.setInt(idx++, offset);
+            ps.setInt(idx++, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        }
+        return list;
     }
 
 
