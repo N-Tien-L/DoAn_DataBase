@@ -190,6 +190,14 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
             if (searchByCombo.getItemCount() > 0) searchByCombo.setSelectedIndex(0);
             sorterPhieuPhat.setRowFilter(null);
         });
+        btnClearSearch.setPreferredSize(new Dimension(24, 24));
+        btnClearSearch.setMargin(new Insets(0, 0, 0, 0));
+        btnClearSearch.setFont(new Font("Dialog", Font.BOLD, 12));
+        btnClearSearch.setToolTipText("Clear search");
+        btnClearSearch1.setPreferredSize(new Dimension(24, 24));
+        btnClearSearch1.setMargin(new Insets(0, 0, 0, 0));
+        btnClearSearch1.setFont(new Font("Dialog", Font.BOLD, 12));
+        btnClearSearch1.setToolTipText("Clear search");
     }
     
     void setThongKePhieuMuonBanDoc(ArrayList<Object> arr) {
@@ -1030,7 +1038,7 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                         .addGroup(pnlDetailBook1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(lblDetailNamXB1)
                             .addComponent(lblDetailNXB1))))
-                .addContainerGap(609, Short.MAX_VALUE))
+                .addContainerGap(709, Short.MAX_VALUE))
         );
         pnlDetailBook1Layout.setVerticalGroup(
             pnlDetailBook1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1083,7 +1091,7 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         panelSearch.setToolTipText("");
         panelSearch.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         panelSearch.setOpaque(false);
-        panelSearch.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 5, 10));
+        panelSearch.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 15, 10));
 
         Search.setText("Tìm kiếm:");
         panelSearch.add(Search);
@@ -1100,6 +1108,11 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         btnClearSearch.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         btnClearSearch.setPreferredSize(new java.awt.Dimension(26, 26));
         btnClearSearch.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnClearSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnClearSearchActionPerformed(evt);
+            }
+        });
         panelSearch.add(btnClearSearch);
 
         searchByCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ID Phiếu Phạt", "ID Phiếu Mượn", "Email Thủ Thư Lập", "Ngày Mượn", "Loại Phạt", "Số Tiền", "Ngày Ghi Nhận", "Trạng Thái Đóng" }));
@@ -1118,18 +1131,15 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(lblShowSoPhieuPhat, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(cardPhieuPhatLayout.createSequentialGroup()
-                        .addGroup(cardPhieuPhatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(cardPhieuPhatLayout.createSequentialGroup()
-                                .addComponent(lblTongSoTienPhatDaDong)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(lblShowTongSoTienPhatDaDong))
-                            .addGroup(cardPhieuPhatLayout.createSequentialGroup()
-                                .addComponent(lblTongSoTienPhatChuaDong)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(lblShowTongSoTienPhatChuaDong)))
-                        .addGap(67, 67, 67)))
+                        .addComponent(lblTongSoTienPhatDaDong)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblShowTongSoTienPhatDaDong))
+                    .addGroup(cardPhieuPhatLayout.createSequentialGroup()
+                        .addComponent(lblTongSoTienPhatChuaDong)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblShowTongSoTienPhatChuaDong)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 981, Short.MAX_VALUE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1081, Short.MAX_VALUE)
                 .addContainerGap())
             .addGroup(cardPhieuPhatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(cardPhieuPhatLayout.createSequentialGroup()
@@ -1138,9 +1148,9 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                     .addContainerGap()))
             .addGroup(cardPhieuPhatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, cardPhieuPhatLayout.createSequentialGroup()
-                    .addContainerGap(400, Short.MAX_VALUE)
+                    .addContainerGap(425, Short.MAX_VALUE)
                     .addComponent(panelSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(400, Short.MAX_VALUE)))
+                    .addContainerGap(425, Short.MAX_VALUE)))
         );
         cardPhieuPhatLayout.setVerticalGroup(
             cardPhieuPhatLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1312,7 +1322,7 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         panelSearch1.setToolTipText("");
         panelSearch1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         panelSearch1.setOpaque(false);
-        panelSearch1.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 5, 10));
+        panelSearch1.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 15, 10));
 
         Search1.setText("Tìm kiếm:");
         panelSearch1.add(Search1);
@@ -1357,38 +1367,35 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(lblShowSoLanMuon, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(18, 18, 18)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 1025, Short.MAX_VALUE)))
+                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 1125, Short.MAX_VALUE)))
                 .addContainerGap())
             .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(cardPhieuMuonLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(splitMain, javax.swing.GroupLayout.DEFAULT_SIZE, 1222, Short.MAX_VALUE)
+                    .addComponent(splitMain, javax.swing.GroupLayout.DEFAULT_SIZE, 1322, Short.MAX_VALUE)
                     .addContainerGap()))
             .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, cardPhieuMuonLayout.createSequentialGroup()
-                    .addContainerGap(396, Short.MAX_VALUE)
+                    .addContainerGap(421, Short.MAX_VALUE)
                     .addComponent(panelSearch1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(396, Short.MAX_VALUE)))
+                    .addContainerGap(421, Short.MAX_VALUE)))
         );
         cardPhieuMuonLayout.setVerticalGroup(
             cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, cardPhieuMuonLayout.createSequentialGroup()
                 .addContainerGap(559, Short.MAX_VALUE)
                 .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addGroup(cardPhieuMuonLayout.createSequentialGroup()
-                            .addComponent(lblSoLanMuon)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(lblSoSachDaMuon)
-                                .addComponent(lblShowSoSachDaMuon))
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(lblSoSachDangMuon)
-                                .addComponent(lblShowSoSachDangMuon)))
-                        .addGroup(cardPhieuMuonLayout.createSequentialGroup()
-                            .addComponent(lblShowSoLanMuon)
-                            .addGap(39, 39, 39)))
+                    .addGroup(cardPhieuMuonLayout.createSequentialGroup()
+                        .addComponent(lblSoLanMuon)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(lblSoSachDaMuon)
+                            .addComponent(lblShowSoSachDaMuon))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(lblSoSachDangMuon)
+                            .addComponent(lblShowSoSachDangMuon)))
+                    .addComponent(lblShowSoLanMuon)
                     .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(71, 71, 71))
             .addGroup(cardPhieuMuonLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1461,6 +1468,10 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
     private void btnPrvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrvActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnPrvActionPerformed
+
+    private void btnClearSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearSearchActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnClearSearchActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
