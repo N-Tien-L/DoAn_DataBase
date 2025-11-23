@@ -6,15 +6,20 @@ package com.mycompany.quanlythuvien.view.panel;
 
 import com.mycompany.quanlythuvien.view.dialog.BanDocFormDialog;
 import com.mycompany.quanlythuvien.controller.BanDocController;
+import com.mycompany.quanlythuvien.dao.BanDocDAO;
 import com.mycompany.quanlythuvien.model.BanDoc;
 import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.swing.*;
@@ -43,104 +48,212 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     private JComboBox<Integer> pageSizeCombo;
     private JSpinner gotoPageSpinner;
     private JPopupMenu tablePopup;
-    private JButton btnClearSearch;
-    private boolean tableSelectionEnabled = true; // để tắt selection khi rỗng
+    private DocumentListener searchDocListener;
 
+//    private JButton btnClearSearch;
+    private boolean tableSelectionEnabled = true; // để tắt selection khi rỗng
+    private void updateDetailLabelsForId(int idBD) {
+        // disable labels tạm để UI thấy đang load (option)
+        lblShowSoLanMuon.setText("...");
+        lblShowSoPhieuPhat.setText("...");
+        lblShowSoSachDaMuon.setText("...");
+        lblShowSoSachDangMuon.setText("...");
+        lblShowTongSoTienPhatChuaDong.setText("...");
+        lblShowTongSoTienPhatDaDong.setText("...");
+
+        new SwingWorker<Void, Void>() {
+            int soLanMuon = 0;
+            int soPhieuPhat = 0;
+            int soSachDaMuon = 0;
+            int soSachDangMuon = 0;
+            int soTienPhatChuaDong = 0;
+            int soTienPhatDaDong = 0;
+
+            @Override
+            protected Void doInBackground() throws Exception {
+                try {
+                    BanDocDAO tmp = new BanDocDAO();
+                    soLanMuon = tmp.getSoLanMuonCuaBanDoc(idBD);
+                    soSachDangMuon = tmp.getSoSachDangMuonCuaBanDoc(idBD);
+                    soSachDaMuon = tmp.getSoSachDaMuonCuaBanDoc(idBD);
+                    soPhieuPhat = tmp.getSoPhieuPhatBanDoc(idBD);
+                    soTienPhatChuaDong = tmp.getSoTienPhatChuaDongBanDoc(idBD);
+                    soTienPhatDaDong = tmp.getSoTienPhatDaDongBanDoc(idBD);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    // nếu lỗi, để các biến = 0 (đã default)
+                }
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                // an toàn cập nhật UI trên EDT
+                NumberFormat nf = NumberFormat.getInstance(new Locale("vi","VN"));
+                try {
+                    lblShowSoLanMuon.setText(String.valueOf(soLanMuon));
+                    lblShowSoPhieuPhat.setText(String.valueOf(soPhieuPhat));
+                    lblShowSoSachDaMuon.setText(String.valueOf(soSachDaMuon));
+                    lblShowSoSachDangMuon.setText(String.valueOf(soSachDangMuon));
+                    // format tiền: 1.000.000
+                    lblShowTongSoTienPhatChuaDong.setText(nf.format(soTienPhatChuaDong));
+                    lblShowTongSoTienPhatDaDong.setText(nf.format(soTienPhatDaDong));
+                } catch (Exception ex) {
+                    // fallback: đặt text an toàn
+                    lblShowSoLanMuon.setText("-");
+                    lblShowSoPhieuPhat.setText("-");
+                    lblShowSoSachDaMuon.setText("-");
+                    lblShowSoSachDangMuon.setText("-");
+                    lblShowTongSoTienPhatChuaDong.setText("-");
+                    lblShowTongSoTienPhatDaDong.setText("-");
+                }
+            }
+        }.execute();
+    }
     // ------------------ THÊM VÀO: phương thức khởi tạo UI bổ sung ------------------
     private void initUIEnhancements() {
-        // --- tooltips + icons (nếu bạn có icon resource, load ở đây) ---
-        btnAdd.setToolTipText("Thêm (Ctrl+N)");
-        btnEdit.setToolTipText("Sửa (Ctrl+E)");
-        btnDelete.setToolTipText("Xóa (Delete)");
-        btnView.setToolTipText("Xem chi tiết (Double click)");
-        txtSearch.setToolTipText("Nhập để tìm kiếm. Nhấn Enter để lọc ngay hoặc gõ để lọc tự động.");
+        // --- tooltips (giữ nguyên) ---
+        if (btnAdd != null) btnAdd.setToolTipText("Thêm (Ctrl+N)");
+        if (btnEdit != null) btnEdit.setToolTipText("Sửa (Ctrl+E)");
+        if (btnDelete != null) btnDelete.setToolTipText("Xóa (Delete)");
+        if (btnView != null) btnView.setToolTipText("Xem chi tiết (Double click)");
+        if (txtSearch != null) txtSearch.setToolTipText("Nhập để tìm kiếm. Nhấn Enter để lọc ngay hoặc gõ để lọc tự động.");
 
-        // --- clear search button (nhỏ, nằm cạnh txtSearch) ---
-        btnClearSearch = new JButton("X");
-        btnClearSearch.setMargin(new java.awt.Insets(2,6,2,6));
-        btnClearSearch.setFocusable(false);
-        btnClearSearch.setToolTipText("Xóa tìm kiếm");
-        // add vào toolbar bên cạnh txtSearch (jToolBar1 là accessible)
-        jToolBar1.add(btnClearSearch, jToolBar1.getComponentIndex(txtSearch) + 1);
+        // --- đảm bảo btnClearSearch: tạo nếu chưa có, reuse nếu đã có ---
+        if (btnClearSearch == null) {
+            btnClearSearch = new JButton("X");
+            btnClearSearch.setMargin(new java.awt.Insets(2,6,2,6));
+            btnClearSearch.setFocusable(false);
+            btnClearSearch.setToolTipText("Xóa tìm kiếm");
+            // cố gắng thêm vào panelSearch nếu tồn tại, nếu không thì toolbar
+            try {
+                if (panelSearch != null) {
+                    panelSearch.add(btnClearSearch);
+                } else {
+                    int idx = jToolBar1.getComponentIndex(txtSearch);
+                    if (idx >= 0) jToolBar1.add(btnClearSearch, idx + 1);
+                    else jToolBar1.add(btnClearSearch);
+                }
+            } catch (Exception ex) {
+                // fallback: add to toolbar
+                try { jToolBar1.add(btnClearSearch); } catch (Exception ignored) {}
+            }
+        } else {
+            btnClearSearch.setToolTipText("Xóa tìm kiếm");
+            btnClearSearch.setFocusable(false);
+        }
+        // đảm bảo không thêm listener nhiều lần: remove tất cả action listeners trước khi add mới
+        for (ActionListener al : btnClearSearch.getActionListeners()) {
+            btnClearSearch.removeActionListener(al);
+        }
         btnClearSearch.addActionListener(e -> {
-            txtSearch.setText("");
-            txtSearchActionPerformed(null);
-            txtSearch.requestFocusInWindow();
+            if (txtSearch != null) {
+                txtSearch.setText("");
+                txtSearchActionPerformed(null);
+                txtSearch.requestFocusInWindow();
+            }
         });
 
         // --- debounce tìm kiếm bằng Swing Timer (300ms) ---
-        searchTimer = new Timer(300, e -> {
-            // thực sự chạy tìm
-            txtSearchActionPerformed(null);
-            searchTimer.stop();
-        });
-        searchTimer.setRepeats(false);
+        if (searchTimer == null) {
+            searchTimer = new Timer(300, e -> {
+                txtSearchActionPerformed(null);
+                searchTimer.stop();
+            });
+            searchTimer.setRepeats(false);
+        }
 
-        txtSearch.getDocument().addDocumentListener(new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent e) { docChanged(); }
-            @Override public void removeUpdate(DocumentEvent e) { docChanged(); }
-            @Override public void changedUpdate(DocumentEvent e) { docChanged(); }
-            private void docChanged() {
-                // nếu rỗng thì cho phép clear và hiển thị tất cả
-                String txt = txtSearch.getText().trim();
-                if (txt.isEmpty()) {
-                    // show all immediately
-                    searchTimer.stop();
-                    showList(new ArrayList<>(safeGetDsBanDoc()));
-                    txtSearchPrv = "";
-                } else {
-                    // restart debounce timer
-                    searchTimer.restart();
-                }
+        // --- DocumentListener: tạo 1 listener duy nhất và add nếu chưa add ---
+        if (txtSearch != null) {
+            if (searchDocListener == null) {
+                searchDocListener = new DocumentListener() {
+                    @Override public void insertUpdate(DocumentEvent e) { docChanged(); }
+                    @Override public void removeUpdate(DocumentEvent e) { docChanged(); }
+                    @Override public void changedUpdate(DocumentEvent e) { docChanged(); }
+
+                    private void docChanged() {
+                        try {
+                            String txt = txtSearch.getText().trim();
+                            if (txt.isEmpty()) {
+                                if (searchTimer != null) searchTimer.stop();
+                                showList(new ArrayList<>(safeGetDsBanDoc()));
+                                txtSearchPrv = "";
+                            } else {
+                                if (searchTimer != null) searchTimer.restart();
+                            }
+                        } catch (Exception ex) {
+                            // defensive: nếu có lỗi truy xuất văn bản thì ignore
+                        }
+                    }
+                };
+                txtSearch.getDocument().addDocumentListener(searchDocListener);
             }
-        });
+        }
 
         // --- page size selector & goto page spinner (ở panelPagination) ---
-        Integer[] sizes = new Integer[]{10, 20, 32, 50, 100};
-        pageSizeCombo = new JComboBox<>(sizes);
-        pageSizeCombo.setSelectedItem(pageSize);
-        pageSizeCombo.setToolTipText("Số bản ghi mỗi trang");
-        pageSizeCombo.addActionListener(e -> {
-            Integer s = (Integer) pageSizeCombo.getSelectedItem();
-            if (s != null && s > 0) {
-                pageSize = s;
-                // reset page về 1 để tránh trang vượt
-                currentPage = 1;
-                initPagination();
+        if (pageSizeCombo == null) {
+            Integer[] sizes = new Integer[]{10, 20, 32, 50, 100};
+            pageSizeCombo = new JComboBox<>(sizes);
+            pageSizeCombo.setSelectedItem(pageSize);
+            pageSizeCombo.setToolTipText("Số bản ghi mỗi trang");
+            pageSizeCombo.addActionListener(e -> {
+                Integer s = (Integer) pageSizeCombo.getSelectedItem();
+                if (s != null && s > 0) {
+                    pageSize = s;
+                    currentPage = 1;
+                    initPagination();
+                }
+            });
+            // thêm vào panelPagination nếu chưa có
+            boolean already = false;
+            for (java.awt.Component c : panelPagination.getComponents()) {
+                if (c == pageSizeCombo) { already = true; break; }
             }
-        });
-        // thêm vào panelPagination (thêm trước lblPageInfo)
-        panelPagination.add(new JLabel(" / trang: "));
-        panelPagination.add(pageSizeCombo);
+            if (!already) {
+                panelPagination.add(new JLabel(" / trang: "));
+                panelPagination.add(pageSizeCombo);
+            }
+        }
 
         // spinner để nhảy trang nhanh
-        gotoPageSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Math.max(1, totalPages), 1));
-        gotoPageSpinner.setPreferredSize(new Dimension(60, gotoPageSpinner.getPreferredSize().height));
-        gotoPageSpinner.setToolTipText("Chuyển tới trang");
-        gotoPageSpinner.addChangeListener(e -> {
-            int p = (Integer) gotoPageSpinner.getValue();
-            if (p >= 1 && p <= totalPages) {
-                currentPage = p;
-                loadPage(currentPage);
+        if (gotoPageSpinner == null) {
+            gotoPageSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Math.max(1, totalPages), 1));
+            gotoPageSpinner.setPreferredSize(new Dimension(60, gotoPageSpinner.getPreferredSize().height));
+            gotoPageSpinner.setToolTipText("Chuyển tới trang");
+            gotoPageSpinner.addChangeListener(e -> {
+                int p = (Integer) gotoPageSpinner.getValue();
+                if (p >= 1 && p <= totalPages) {
+                    currentPage = p;
+                    loadPage(currentPage);
+                }
+            });
+            boolean got = false;
+            for (java.awt.Component c : panelPagination.getComponents()) {
+                if (c == gotoPageSpinner) { got = true; break; }
             }
-        });
-        panelPagination.add(new JLabel(" | Chuyển tới: "));
-        panelPagination.add(gotoPageSpinner);
+            if (!got) {
+                panelPagination.add(new JLabel(" | Chuyển tới: "));
+                panelPagination.add(gotoPageSpinner);
+            }
+        }
 
         // --- context menu cho table (right click) ---
-        tablePopup = new JPopupMenu();
-        JMenuItem miView = new JMenuItem("Xem chi tiết");
-        JMenuItem miEdit = new JMenuItem("Sửa");
-        JMenuItem miDelete = new JMenuItem("Xóa");
+        if (tablePopup == null) {
+            tablePopup = new JPopupMenu();
+            JMenuItem miView = new JMenuItem("Xem chi tiết");
+            JMenuItem miEdit = new JMenuItem("Sửa");
+            JMenuItem miDelete = new JMenuItem("Xóa");
 
-        miView.addActionListener(e -> btnViewActionPerformed(null));
-        miEdit.addActionListener(e -> btnEditActionPerformed(null));
-        miDelete.addActionListener(e -> btnDeleteActionPerformed(null));
+            miView.addActionListener(e -> btnViewActionPerformed(null));
+            miEdit.addActionListener(e -> btnEditActionPerformed(null));
+            miDelete.addActionListener(e -> btnDeleteActionPerformed(null));
 
-        tablePopup.add(miView);
-        tablePopup.add(miEdit);
-        tablePopup.add(miDelete);
+            tablePopup.add(miView);
+            tablePopup.add(miEdit);
+            tablePopup.add(miDelete);
+        }
 
+        // attach popup listener (an toàn: có thể add nhiều nhưng hành vi giống nhau)
         tblUsers.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) { maybeShowPopup(e); }
@@ -152,10 +265,21 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                     if (row >= 0) {
                         tblUsers.setRowSelectionInterval(row, row);
                     }
-                    tablePopup.show(e.getComponent(), e.getX(), e.getY());
+                    if (tablePopup != null) tablePopup.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
         });
+    tblUsers.getSelectionModel().addListSelectionListener(evt -> {
+        if (!evt.getValueIsAdjusting()) {
+            int viewRow = tblUsers.getSelectedRow();
+            if (viewRow >= 0) {
+                int modelRow = tblUsers.convertRowIndexToModel(viewRow);
+                int idBD = Integer.parseInt(tblUsers.getModel().getValueAt(modelRow, 0).toString());
+                updateDetailLabelsForId(idBD);
+            }
+        }
+    });
+
 
         // --- key bindings (phím tắt) ---
         InputMap im = this.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
@@ -167,22 +291,140 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "delete");
         am.put("delete", new AbstractAction(){ @Override public void actionPerformed(ActionEvent e) { btnDeleteActionPerformed(null); } });
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), "focusSearch");
-        am.put("focusSearch", new AbstractAction(){ @Override public void actionPerformed(ActionEvent e) { txtSearch.requestFocusInWindow(); txtSearch.selectAll(); } });
+        am.put("focusSearch", new AbstractAction(){ @Override public void actionPerformed(ActionEvent e) { if (txtSearch!=null){ txtSearch.requestFocusInWindow(); txtSearch.selectAll(); } } });
+
+        // --- uniform toolbar buttons style ---
+        java.util.List<JButton> tbBtns = Arrays.asList(btnAdd, btnEdit, btnDelete, btnView);
+        for (JButton b : tbBtns) {
+            if (b == null) continue;
+            b.setFocusPainted(false);
+            b.setBorder(BorderFactory.createEmptyBorder(6,8,6,8));
+            b.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+            b.setContentAreaFilled(false);
+            b.setOpaque(false);
+            b.setHorizontalAlignment(SwingConstants.CENTER);
+            b.setVerticalAlignment(SwingConstants.CENTER);
+            if ("Xem chi tiết".equals(b.getText())) {
+                b.setText("Xem");
+            }
+        }
+
+        // btnClearSearch cosmetic
+        if (btnClearSearch != null) {
+            btnClearSearch.setFocusPainted(false);
+            btnClearSearch.setBorder(BorderFactory.createEmptyBorder(2,6,2,6));
+            btnClearSearch.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+            btnClearSearch.setContentAreaFilled(false);
+            btnClearSearch.setOpaque(false);
+        }
 
         // --- nicer table behavior: column widths, selection mode already set ---
         tblUsers.setFillsViewportHeight(true);
-        tblUsers.getColumnModel().getColumn(0).setPreferredWidth(60); // ID
-        tblUsers.getColumnModel().getColumn(1).setPreferredWidth(180); // name
-        tblUsers.getColumnModel().getColumn(2).setPreferredWidth(180); // email
-        // ensure row height is comfortable
+        try {
+            tblUsers.getColumnModel().getColumn(0).setPreferredWidth(60); // ID
+            tblUsers.getColumnModel().getColumn(1).setPreferredWidth(180); // name
+            tblUsers.getColumnModel().getColumn(2).setPreferredWidth(180); // email
+        } catch (Exception ex) {
+            // ignore if columns not ready yet
+        }
         tblUsers.setRowHeight(28);
+        tblUsers.setIntercellSpacing(new Dimension(8, 6));
+        tblUsers.setShowGrid(false);
+        tblUsers.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+        tblUsers.getTableHeader().setReorderingAllowed(false);
+        tblUsers.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tblUsers.setSelectionBackground(new java.awt.Color(51,153,255));
+        tblUsers.setSelectionForeground(java.awt.Color.white);
 
-        // double-click already wired to btnViewActionPerformed; keep it
+        // --- accessibility names ---
+        if (btnAdd != null) btnAdd.getAccessibleContext().setAccessibleName("Thêm bạn đọc");
+        if (btnEdit != null) btnEdit.getAccessibleContext().setAccessibleName("Sửa bạn đọc");
+        if (btnDelete != null) btnDelete.getAccessibleContext().setAccessibleName("Xóa bạn đọc");
+        if (txtSearch != null) txtSearch.getAccessibleContext().setAccessibleDescription("Nhập từ khóa tìm kiếm");
+        if (searchByCombo != null) searchByCombo.getAccessibleContext().setAccessibleName("Tìm theo");
 
-        // --- khi cập nhật paging thì đồng bộ goto spinner ---
-        // override loadPage to cập nhật gotoPageSpinner and enable/disable các nút
-        // (mình sẽ cập nhật loadPage phía dưới; nếu không muốn sửa loadPage, gọi updatePagingControls() từ cuối loadPage)
+        // --- ensure goto spinner sync now if exists ---
+        if (gotoPageSpinner != null) {
+            gotoPageSpinner.setModel(new SpinnerNumberModel(currentPage, 1, Math.max(1, totalPages), 1));
+        }
+        
+        
+    // --- Fix truncated toolbar text / choose text-mode or icon-mode ---
+    // Paste this at the end of initUIEnhancements()
+
+    // Set this flag: false = keep text (wider buttons), true = use icons (icon-only)
+        boolean usingIcons = false;
+
+        tbBtns = new ArrayList<>();
+        if (btnAdd instanceof JButton) tbBtns.add((JButton) btnAdd);
+        if (btnEdit instanceof JButton) tbBtns.add((JButton) btnEdit);
+        if (btnDelete instanceof JButton) tbBtns.add((JButton) btnDelete);
+        if (btnView instanceof JButton) tbBtns.add((JButton) btnView);
+
+        if (!usingIcons) {
+            // Text mode: make buttons wide enough to show short labels
+            Dimension textBtnSize = new Dimension(88, 36); // enough for short Viet labels
+            for (JButton b : tbBtns) {
+                if (b == null) continue;
+                b.setPreferredSize(textBtnSize);
+                b.setMinimumSize(textBtnSize);
+                b.setMaximumSize(textBtnSize);
+                b.setHorizontalTextPosition(SwingConstants.CENTER);
+                b.setVerticalTextPosition(SwingConstants.BOTTOM);
+                b.setMargin(new Insets(2,6,2,6));
+                // shorten overly long phrases to simple words
+                String txt = b.getText();
+                if (txt != null) {
+                    if (txt.contains("Thêm")) b.setText("Thêm");
+                    else if (txt.contains("Sửa")) b.setText("Sửa");
+                    else if (txt.contains("Xóa")) b.setText("Xóa");
+                    else if (txt.contains("Xem")) b.setText("Xem");
+                }
+            }
+        } else {
+            // Icon mode: try to load icons from resources and hide text.
+            // Put your icons in resources (e.g. /icons/add.png). If load fails, fallback to short text.
+            try {
+                if (btnAdd != null)  btnAdd.setIcon(new ImageIcon(getClass().getResource("/icons/add.png")));
+                if (btnEdit != null) btnEdit.setIcon(new ImageIcon(getClass().getResource("/icons/edit.png")));
+                if (btnDelete != null) btnDelete.setIcon(new ImageIcon(getClass().getResource("/icons/delete.png")));
+                if (btnView != null)   btnView.setIcon(new ImageIcon(getClass().getResource("/icons/view.png")));
+                // hide text and set compact size
+                Dimension icoSize = new Dimension(40, 40);
+                for (JButton b : tbBtns) {
+                    if (b == null) continue;
+                    b.setText("");
+                    b.setPreferredSize(icoSize);
+                    b.setMinimumSize(icoSize);
+                    b.setMaximumSize(icoSize);
+                    b.setHorizontalTextPosition(SwingConstants.CENTER);
+                    b.setVerticalTextPosition(SwingConstants.BOTTOM);
+                    b.setContentAreaFilled(false);
+                }
+            } catch (Exception ex) {
+                // fallback to text-mode if icons not found
+                Dimension textBtnSize = new Dimension(88, 36);
+                for (JButton b : tbBtns) {
+                    if (b == null) continue;
+                    b.setPreferredSize(textBtnSize);
+                    b.setText((b.getText() == null || b.getText().isEmpty()) ? "?" : b.getText());
+                }
+            }
+        }
+
+        // small cosmetic tune for clear button (so nó aligns with text-mode)
+        if (btnClearSearch != null) {
+            btnClearSearch.setPreferredSize(new Dimension(30, 26));
+            btnClearSearch.setMinimumSize(new Dimension(30, 26));
+            btnClearSearch.setMaximumSize(new Dimension(30, 26));
+        }
+
+        // force UI refresh
+        jToolBar1.revalidate();
+        jToolBar1.repaint();
+
     }
+
     private void recalcTotalPages() {
         totalPages = (totalRecords + pageSize - 1) / pageSize;
         if (totalPages == 0) totalPages = 1;
@@ -358,8 +600,10 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         btnEdit = new javax.swing.JButton();
         btnDelete = new javax.swing.JButton();
         btnView = new javax.swing.JButton();
+        panelSearch = new javax.swing.JPanel();
         Search = new javax.swing.JLabel();
         txtSearch = new javax.swing.JTextField();
+        btnClearSearch = new javax.swing.JButton();
         searchByCombo = new javax.swing.JComboBox<>();
         scrollPaneUsers = new javax.swing.JScrollPane();
         tblUsers = new javax.swing.JTable();
@@ -367,12 +611,28 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         btnPrv = new javax.swing.JButton();
         lblPageInfo = new javax.swing.JLabel();
         btnNxt = new javax.swing.JButton();
+        lblSoSachDangMuon = new javax.swing.JLabel();
+        lblSoSachDaMuon = new javax.swing.JLabel();
+        lblSoLanMuon = new javax.swing.JLabel();
+        lblShowSoLanMuon = new javax.swing.JLabel();
+        lblShowSoSachDaMuon = new javax.swing.JLabel();
+        lblShowSoSachDangMuon = new javax.swing.JLabel();
+        lblTongSoTienPhatChuaDong = new javax.swing.JLabel();
+        lblTongSoTienPhatDaDong = new javax.swing.JLabel();
+        lblSoPhieuPhat = new javax.swing.JLabel();
+        lblShowSoPhieuPhat = new javax.swing.JLabel();
+        lblShowTongSoTienPhatChuaDong = new javax.swing.JLabel();
+        lblShowTongSoTienPhatDaDong = new javax.swing.JLabel();
 
         jToolBar1.setRollover(true);
+        jToolBar1.setBorderPainted(false);
 
         btnAdd.setText("Thêm");
+        btnAdd.setBorderPainted(false);
+        btnAdd.setContentAreaFilled(false);
         btnAdd.setFocusable(false);
         btnAdd.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnAdd.setPreferredSize(new java.awt.Dimension(40, 40));
         btnAdd.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         btnAdd.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -382,8 +642,11 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         jToolBar1.add(btnAdd);
 
         btnEdit.setText("Sửa");
+        btnEdit.setBorderPainted(false);
+        btnEdit.setContentAreaFilled(false);
         btnEdit.setFocusable(false);
         btnEdit.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnEdit.setPreferredSize(new java.awt.Dimension(40, 40));
         btnEdit.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         btnEdit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -393,8 +656,11 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         jToolBar1.add(btnEdit);
 
         btnDelete.setText("Xóa");
+        btnDelete.setBorderPainted(false);
+        btnDelete.setContentAreaFilled(false);
         btnDelete.setFocusable(false);
         btnDelete.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnDelete.setPreferredSize(new java.awt.Dimension(40, 40));
         btnDelete.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         btnDelete.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -404,6 +670,10 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         jToolBar1.add(btnDelete);
 
         btnView.setText("Xem chi tiết");
+        btnView.setBorderPainted(false);
+        btnView.setContentAreaFilled(false);
+        btnView.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnView.setPreferredSize(new java.awt.Dimension(40, 40));
         btnView.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnViewActionPerformed(evt);
@@ -411,23 +681,43 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         });
         jToolBar1.add(btnView);
 
-        Search.setText("Tìm kiếm");
-        jToolBar1.add(Search);
+        panelSearch.setToolTipText("");
+        panelSearch.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        panelSearch.setOpaque(false);
+        panelSearch.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 5, 10));
 
+        Search.setText("Tìm kiếm:");
+        panelSearch.add(Search);
+
+        txtSearch.setToolTipText("");
+        txtSearch.setActionCommand("<Not Set>");
+        txtSearch.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
+        txtSearch.setPreferredSize(new java.awt.Dimension(200, 26));
         txtSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtSearchActionPerformed(evt);
             }
         });
-        jToolBar1.add(txtSearch);
+        panelSearch.add(txtSearch);
+
+        btnClearSearch.setText("X");
+        btnClearSearch.setBorderPainted(false);
+        btnClearSearch.setContentAreaFilled(false);
+        btnClearSearch.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        btnClearSearch.setPreferredSize(new java.awt.Dimension(26, 26));
+        btnClearSearch.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        panelSearch.add(btnClearSearch);
 
         searchByCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ID", "Họ Tên", "Email", "SĐT", "Địa Chỉ" }));
+        searchByCombo.setMinimumSize(new java.awt.Dimension(120, 26));
         searchByCombo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 searchByComboActionPerformed(evt);
             }
         });
-        jToolBar1.add(searchByCombo);
+        panelSearch.add(searchByCombo);
+
+        jToolBar1.add(panelSearch);
 
         tblUsers.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -473,6 +763,18 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         });
         panelPagination.add(btnNxt);
 
+        lblSoSachDangMuon.setText("Số Sách Đang Mượn:");
+
+        lblSoSachDaMuon.setText("Số Sách Đã Mượn:");
+
+        lblSoLanMuon.setText("Số lần mượn:");
+
+        lblTongSoTienPhatChuaDong.setText("Tổng Số Tiền Phạt Chưa Đóng:");
+
+        lblTongSoTienPhatDaDong.setText("Tổng Số Tiền Phạt Đã Đóng:");
+
+        lblSoPhieuPhat.setText("Số Phiếu Phạt:");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -480,16 +782,73 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             .addComponent(jToolBar1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(scrollPaneUsers, javax.swing.GroupLayout.DEFAULT_SIZE, 620, Short.MAX_VALUE)
             .addComponent(panelPagination, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblSoLanMuon)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblShowSoLanMuon, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblSoSachDaMuon)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblShowSoSachDaMuon, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblSoSachDangMuon)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblShowSoSachDangMuon, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblTongSoTienPhatDaDong)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblShowTongSoTienPhatDaDong))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblTongSoTienPhatChuaDong)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblShowTongSoTienPhatChuaDong))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblSoPhieuPhat)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblShowSoPhieuPhat, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(scrollPaneUsers, javax.swing.GroupLayout.DEFAULT_SIZE, 336, Short.MAX_VALUE)
-                .addGap(12, 12, 12)
-                .addComponent(panelPagination, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(scrollPaneUsers, javax.swing.GroupLayout.PREFERRED_SIZE, 455, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(panelPagination, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(lblSoPhieuPhat)
+                            .addComponent(lblShowSoPhieuPhat))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(lblTongSoTienPhatChuaDong)
+                            .addComponent(lblShowTongSoTienPhatChuaDong))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(lblTongSoTienPhatDaDong)
+                            .addComponent(lblShowTongSoTienPhatDaDong)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(lblSoLanMuon)
+                            .addComponent(lblShowSoLanMuon))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(lblSoSachDaMuon)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(lblSoSachDangMuon)
+                                    .addComponent(lblShowSoSachDangMuon)))
+                            .addComponent(lblShowSoSachDaMuon))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -737,6 +1096,7 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel Search;
     private javax.swing.JButton btnAdd;
+    private javax.swing.JButton btnClearSearch;
     private javax.swing.JButton btnDelete;
     private javax.swing.JButton btnEdit;
     private javax.swing.JButton btnNxt;
@@ -744,7 +1104,20 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     private javax.swing.JButton btnView;
     private javax.swing.JToolBar jToolBar1;
     private javax.swing.JLabel lblPageInfo;
+    private javax.swing.JLabel lblShowSoLanMuon;
+    private javax.swing.JLabel lblShowSoPhieuPhat;
+    private javax.swing.JLabel lblShowSoSachDaMuon;
+    private javax.swing.JLabel lblShowSoSachDangMuon;
+    private javax.swing.JLabel lblShowTongSoTienPhatChuaDong;
+    private javax.swing.JLabel lblShowTongSoTienPhatDaDong;
+    private javax.swing.JLabel lblSoLanMuon;
+    private javax.swing.JLabel lblSoPhieuPhat;
+    private javax.swing.JLabel lblSoSachDaMuon;
+    private javax.swing.JLabel lblSoSachDangMuon;
+    private javax.swing.JLabel lblTongSoTienPhatChuaDong;
+    private javax.swing.JLabel lblTongSoTienPhatDaDong;
     private javax.swing.JPanel panelPagination;
+    private javax.swing.JPanel panelSearch;
     private javax.swing.JScrollPane scrollPaneUsers;
     private javax.swing.JComboBox<String> searchByCombo;
     private javax.swing.JTable tblUsers;
