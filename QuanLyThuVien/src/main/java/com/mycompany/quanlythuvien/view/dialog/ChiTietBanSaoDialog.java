@@ -245,6 +245,7 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
                     isbn,
                     soThuTu,
                     tinhTrang,
+                    true, // lendable - sẽ được tính lại bởi trigger
                     null,
                     viTri,
                     null,

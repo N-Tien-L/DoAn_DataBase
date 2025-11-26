@@ -492,6 +492,11 @@ public class QuanLyPhieuMuonPanel extends JPanel {
                 if (bs == null) {
                     JOptionPane.showMessageDialog(dlg, "Bản sao không tồn tại trong kho"); return;
                 }
+                // check lendable status
+                if (!bs.isLendable()) {
+                    JOptionPane.showMessageDialog(dlg, "Bản sao không thể mượn (đang được mượn hoặc tình trạng quá xấu)", "Không thể mượn", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 // check duplication in queue
                 for (int i=0;i<queueModel.size();i++) if (queueModel.get(i) == m) { JOptionPane.showMessageDialog(dlg, "Bản sao hiện tại đang trong hàng chờ"); return; }
                 // check borrowed
@@ -751,6 +756,7 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         // Bộ lọc
         c.gridx=0; c.gridy=0; topPanel.add(new JLabel("Trạng thái trả:"), c);
         JComboBox<String> cbReturned = new JComboBox<>(new String[]{"Tất cả","Đã trả","Chưa trả"});
+        cbReturned.setSelectedItem("Chưa trả"); // Mặc định hiển thị sách chưa trả
         c.gridx=1; topPanel.add(cbReturned, c);
 
         c.gridx=2; topPanel.add(new JLabel("Trạng thái trễ hạn:"), c);
@@ -781,9 +787,76 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         };
         JTable tbl = new JTable(model);
         
-        // Thêm ComboBox cho cột TinhTrangKhiTra
-        JComboBox<String> cbTinhTrang = new JComboBox<>(new String[]{"", "Tốt", "Cũ hơn", "Hỏng"});
-        tbl.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(cbTinhTrang));
+        // Custom cell editor cho cột TinhTrangKhiTra dựa vào tình trạng hiện tại
+        tbl.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(new JComboBox<>()) {
+            private JComboBox<String> comboBox;
+            
+            @Override
+            public java.awt.Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+                String tinhTrangHienTai = (String) table.getValueAt(row, 1);
+                
+                // Tạo combobox mới với các options phù hợp
+                comboBox = new JComboBox<>();
+                comboBox.addItem("");
+                
+                // Logic: nếu Tốt → có thể chọn (Tốt, Cũ, Rất Cũ, Hỏng)
+                //        nếu Cũ → có thể chọn (Cũ, Rất Cũ, Hỏng)
+                //        nếu Rất Cũ → có thể chọn (Rất Cũ, Hỏng)
+                //        nếu Hỏng → chỉ có Hỏng
+                if ("Tốt".equals(tinhTrangHienTai)) {
+                    comboBox.addItem("Tốt");
+                    comboBox.addItem("Cũ");
+                    comboBox.addItem("Rất Cũ");
+                    comboBox.addItem("Hỏng");
+                } else if ("Cũ".equals(tinhTrangHienTai)) {
+                    comboBox.addItem("Cũ");
+                    comboBox.addItem("Rất Cũ");
+                    comboBox.addItem("Hỏng");
+                } else if ("Rất Cũ".equals(tinhTrangHienTai)) {
+                    comboBox.addItem("Rất Cũ");
+                    comboBox.addItem("Hỏng");
+                } else if ("Hỏng".equals(tinhTrangHienTai)) {
+                    comboBox.addItem("Hỏng");
+                } else {
+                    // Default: cho phép tất cả
+                    comboBox.addItem("Tốt");
+                    comboBox.addItem("Cũ");
+                    comboBox.addItem("Rất Cũ");
+                    comboBox.addItem("Hỏng");
+                }
+                
+                // Set giá trị hiện tại
+                if (value != null && !value.toString().isEmpty()) {
+                    comboBox.setSelectedItem(value);
+                } else {
+                    comboBox.setSelectedIndex(0); // Chọn rỗng
+                }
+                
+                // Đảm bảo editor component được set đúng
+                this.editorComponent = comboBox;
+                this.delegate = new EditorDelegate() {
+                    @Override
+                    public void setValue(Object value) {
+                        comboBox.setSelectedItem(value);
+                    }
+                    
+                    @Override
+                    public Object getCellEditorValue() {
+                        return comboBox.getSelectedItem();
+                    }
+                };
+                
+                return comboBox;
+            }
+            
+            @Override
+            public Object getCellEditorValue() {
+                if (comboBox != null) {
+                    return comboBox.getSelectedItem();
+                }
+                return "";
+            }
+        });
         
         JScrollPane scrollPane = new JScrollPane(tbl);
         content.add(scrollPane, BorderLayout.CENTER);
@@ -839,8 +912,18 @@ public class QuanLyPhieuMuonPanel extends JPanel {
                         com.mycompany.quanlythuvien.model.PageResult<ChiTietPhieuMuon> res = get();
                         model.setRowCount(0);
                         for (ChiTietPhieuMuon c: res.getData()) {
-                            String tinhTrangHienTai = c.getTinhTrangKhiTra() == null ? "Chưa trả" : c.getTinhTrangKhiTra();
-                            String tinhTrangKhiTra = ""; // Để trống, người dùng sẽ chọn
+                            // Lấy tình trạng hiện tại từ BANSAO table
+                            String tinhTrangHienTai = "Tốt"; // Default
+                            try {
+                                BanSao bs = bsController.findById(c.getMaBanSao());
+                                if (bs != null) {
+                                    tinhTrangHienTai = bs.getTinhTrang();
+                                }
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                            
+                            String tinhTrangKhiTra = c.getTinhTrangKhiTra() == null ? "" : c.getTinhTrangKhiTra(); // Để trống nếu chưa trả, hoặc hiển thị giá trị đã lưu
                             String emailNguoiNhan = c.getEmailNguoiNhan() == null ? "" : c.getEmailNguoiNhan();
                             String ngayTra = c.getNgayTraThucTe() == null ? "" : c.getNgayTraThucTe().format(dtf);
                             model.addRow(new Object[]{c.getMaBanSao(), tinhTrangHienTai, tinhTrangKhiTra, emailNguoiNhan, ngayTra});
@@ -866,7 +949,13 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         // Nút Trả sách
         btnSave.addActionListener(ae -> {
             try {
+                // Dừng cell editing để commit giá trị vào model
+                if (tbl.isEditing()) {
+                    tbl.getCellEditor().stopCellEditing();
+                }
+                
                 String emailNguoiNhan = ((String)cbEmailNguoiNhan.getSelectedItem());
+                System.out.println("Debug: EmailNguoiNhan before trim='" + emailNguoiNhan + "'");
                 if (emailNguoiNhan != null) emailNguoiNhan = emailNguoiNhan.trim();
                 
                 // Nếu có nhập email người nhận thì kiểm tra
@@ -885,24 +974,19 @@ public class QuanLyPhieuMuonPanel extends JPanel {
                 
                 for (int i = 0; i < model.getRowCount(); i++) {
                     int maBanSao = (int) model.getValueAt(i, 0);
-                    String tinhTrangMoi = (String) model.getValueAt(i, 2);
+                    String tinhTrangKhiTra = (String) model.getValueAt(i, 2);
+                    System.out.println("Debug: MaBanSao=" + maBanSao + ", TinhTrangKhiTra=" + tinhTrangKhiTra);
                     
-                    // Chỉ cập nhật nếu TinhTrangKhiTra không trống
-                    if (tinhTrangMoi != null && !tinhTrangMoi.isBlank()) {
-                        // Lấy tình trạng hiện tại để so sánh
-                        String tinhTrangCu = (String) model.getValueAt(i, 1);
-                        
-                        // Chỉ tính là update nếu có thay đổi thực sự
-                        if (!tinhTrangMoi.equals(tinhTrangCu)) {
-                            ChiTietPhieuMuon ct = new ChiTietPhieuMuon();
-                            ct.setIdPM(pm.getIdPM());
-                            ct.setMaBanSao(maBanSao);
-                            ct.setNgayTraThucTe(LocalDate.now());
-                            ct.setTinhTrangKhiTra(tinhTrangMoi);
-                            ct.setEmailNguoiNhan(emailNguoiNhan);
-                            toUpdate.add(ct);
-                            updateCount++;
-                        }
+                    // Chỉ cập nhật nếu TinhTrangKhiTra không trống (người dùng đã chọn)
+                    if (tinhTrangKhiTra != null && !tinhTrangKhiTra.trim().isEmpty()) {
+                        ChiTietPhieuMuon ct = new ChiTietPhieuMuon();
+                        ct.setIdPM(pm.getIdPM());
+                        ct.setMaBanSao(maBanSao);
+                        ct.setNgayTraThucTe(LocalDate.now());
+                        ct.setTinhTrangKhiTra(tinhTrangKhiTra);
+                        ct.setEmailNguoiNhan(emailNguoiNhan);
+                        toUpdate.add(ct);
+                        updateCount++;
                     }
                 }
                 
@@ -911,11 +995,19 @@ public class QuanLyPhieuMuonPanel extends JPanel {
                     JOptionPane.showMessageDialog(dlg, "Phải có ít nhất 1 bản sao được cập nhật", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
+
+                if (emailNguoiNhan == null || emailNguoiNhan.isBlank()) {
+                    // Nếu không nhập email người nhận, đảm bảo không có bản sao nào được cập nhật
+                    if (updateCount > 0) {
+                        JOptionPane.showMessageDialog(dlg, "Phải nhập Email Người nhận khi trả sách", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                }
                 
                 // Cập nhật vào database
                 if (!toUpdate.isEmpty()) {
                     for (ChiTietPhieuMuon ct : toUpdate) {
-                        boolean ok = ctController.markReturned(ct.getIdPM(), ct.getMaBanSao(), ct.getNgayTraThucTe(), ct.getTinhTrangKhiTra());
+                        boolean ok = ctController.markReturned(ct.getIdPM(), ct.getMaBanSao(), ct.getNgayTraThucTe(), ct.getTinhTrangKhiTra(), ct.getEmailNguoiNhan());
                         if (!ok) {
                             JOptionPane.showMessageDialog(dlg, "Lỗi khi cập nhật bản sao " + ct.getMaBanSao(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                             return;
