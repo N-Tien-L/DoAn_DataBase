@@ -1,11 +1,15 @@
 package com.mycompany.quanlythuvien.dao;
 
+import com.mycompany.quanlythuvien.exceptions.BanDocException;
 import com.mycompany.quanlythuvien.model.BanDoc;
 import com.mycompany.quanlythuvien.util.DBConnector;
 
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BanDocDAO {
     private static final String SQL_ADD =
@@ -79,6 +83,51 @@ public class BanDocDAO {
         "WHERE pm.IdBD = ? " +
         "ORDER BY p.NgayGhiNhan DESC";
 
+    public Boolean deleteDAO(BanDoc cur) throws Exception {
+        if (cur == null) return false;
+
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_DELETE)) {
+
+            ps.setInt(1, cur.getIdBD());
+            int affected = ps.executeUpdate();
+            return affected > 0;
+
+        } catch (SQLException ex) {
+            // phân tích lỗi ràng buộc (thường là FK khi xóa)
+            Map<String, String> violations = parseConstraintExceptionOnDelete(ex);
+            if (!violations.isEmpty()) {
+                throw new BanDocException(violations);
+            }
+            // không phải ràng buộc, ném lại để caller xử lý
+            throw ex;
+        }
+    }
+
+    public Boolean updateDAO(BanDoc cur) throws Exception {
+        if (cur == null) return false;
+
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_UPDATE)) {
+
+            ps.setString(1, cur.getHoTen());
+            ps.setString(2, cur.getEmail());
+            ps.setString(3, cur.getDiaChi());
+            ps.setString(4, cur.getSdt());
+            ps.setInt(5, cur.getIdBD());
+
+            int affected = ps.executeUpdate();
+            return affected > 0;
+
+        } catch (SQLException ex) {
+            Map<String, String> violations = parseConstraintException(ex);
+            if (!violations.isEmpty()) {
+                throw new BanDocException(violations);
+            }
+            throw ex;
+        }
+    }
+
     public Boolean addDAO(BanDoc cur) throws Exception {
         if (cur == null) return false;
 
@@ -102,11 +151,15 @@ public class BanDocDAO {
                 }
             }
 
+            return true;
+
         } catch (SQLException ex) {
-            ex.printStackTrace();
-            return false;
+            Map<String, String> violations = parseConstraintException(ex);
+            if (!violations.isEmpty()) {
+                throw new BanDocException(violations);
+            }
+            throw ex;
         }
-        return true;
     }
 
     public Boolean readDAO(ArrayList<BanDoc> dsBanDoc) throws Exception {
@@ -128,47 +181,6 @@ public class BanDocDAO {
             }
 
             return true;
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            return false;
-        }
-    }
-
-    public Boolean deleteDAO(BanDoc cur) throws Exception {
-        if (cur == null) return false;
-
-        try (Connection conn = DBConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SQL_DELETE)) {
-
-            ps.setInt(1, cur.getIdBD());
-
-            int affected = ps.executeUpdate();
-            if (affected == 0) {
-                return false;
-            }
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            return false;
-        }
-        return true;
-    }
-
-    public Boolean updateDAO(BanDoc cur) throws Exception {
-        if (cur == null) return false;
-
-        try (Connection conn = DBConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(SQL_UPDATE)) {
-
-            ps.setString(1, cur.getHoTen());
-            ps.setString(2, cur.getEmail());
-            ps.setString(3, cur.getDiaChi());
-            ps.setString(4, cur.getSdt());
-            ps.setInt(5, cur.getIdBD());
-
-            int affected = ps.executeUpdate();
-            return affected > 0;
 
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -447,4 +459,48 @@ public class BanDocDAO {
         }
         return ans;
     }
+    private Map<String,String> parseConstraintException(SQLException ex) {
+        Map<String,String> map = new HashMap<>();
+        String msg = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
+
+        // NOT NULL HoTen
+        if (msg.contains("cannot insert the value null") && msg.contains("hoten")) {
+            map.put("HoTen", "Họ Tên không được để trống.");
+        }
+        // Unique Email
+        if (msg.contains("email") && (msg.contains("unique") || msg.contains("uq") || msg.contains("duplicate"))) {
+            map.put("Email", "Email đã tồn tại (phải là duy nhất).");
+        } else if (msg.contains("email") && msg.contains("varchar") && msg.contains("too long")) {
+            map.put("Email", "Email vượt quá độ dài tối đa.");
+        }
+        // Unique SDT
+        if (msg.contains("sdt") && (msg.contains("unique") || msg.contains("uq") || msg.contains("duplicate"))) {
+            map.put("SDT", "Số điện thoại đã tồn tại (phải là duy nhất).");
+        }
+        // FK CreatedBy
+        if (msg.contains("fk_bandoc_createdby") || (msg.contains("createdby") && msg.contains("reference"))) {
+            map.put("CreatedBy", "Người tạo (CreatedBy) không tồn tại trong bảng TAIKHOAN.");
+        }
+
+        // nếu SQLState chỉ rõ integrity constraint
+        String sqlState = ex.getSQLState();
+        if ((sqlState != null && sqlState.startsWith("23")) && map.isEmpty()) {
+            // generic integrity error, thêm message tổng quát
+            map.put("database", "Ràng buộc dữ liệu vi phạm: " + ex.getMessage());
+        }
+
+        return map;
+    }
+
+    private Map<String,String> parseConstraintExceptionOnDelete(SQLException ex) {
+        Map<String,String> map = new HashMap<>();
+        String msg = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
+        // Thường là foreign key reference khi xóa
+        if (msg.contains("reference") || msg.contains("conflicted with the reference constraint") || msg.contains("foreign key")) {
+            map.put("delete", "Không thể xóa bạn đọc này vì có tham chiếu (ví dụ: phiếu mượn/phiếu phạt). Hãy xóa/tách các bản ghi liên quan trước.");
+        }
+        if (!map.isEmpty()) return map;
+        return parseConstraintException(ex);
+    }
 }
+

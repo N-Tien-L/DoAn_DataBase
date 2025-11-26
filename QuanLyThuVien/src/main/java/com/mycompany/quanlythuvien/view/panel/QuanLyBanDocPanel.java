@@ -33,6 +33,32 @@ import javax.swing.event.DocumentListener;
  * @author DMX MSI
  */
 public class QuanLyBanDocPanel extends javax.swing.JPanel {
+    private void showConstraintViolationsDialog(String title, Map<String, String> violations) {
+        if (violations == null || violations.isEmpty()) {
+            JOptionPane.showMessageDialog(this, title + "\n(Chi tiết lỗi không có)", title, JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String[] colNames = new String[] {"Trường", "Lỗi"};
+        Object[][] rows = new Object[violations.size()][2];
+        int r = 0;
+        for (Map.Entry<String,String> e : violations.entrySet()) {
+            rows[r][0] = e.getKey();
+            rows[r][1] = e.getValue();
+            r++;
+        }
+
+        JTable jt = new JTable(rows, colNames) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+        jt.setFillsViewportHeight(true);
+        jt.setRowHeight(24);
+
+        JScrollPane sp = new JScrollPane(jt);
+        sp.setPreferredSize(new Dimension(480, Math.min(violations.size()*28 + 40, 360)));
+
+        JOptionPane.showMessageDialog(this, sp, title, JOptionPane.ERROR_MESSAGE);
+    }
 
     /**
      * Creates new form QuanLyBanDocPanel
@@ -864,10 +890,13 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 // thành công -> refresh
                 showList(new ArrayList<>(safeGetDsBanDoc()));
                 JOptionPane.showMessageDialog(this, "Thêm bạn đọc thành công.");
+            } catch (com.mycompany.quanlythuvien.exceptions.BanDocException dce) {
+                // hiển thị bảng lỗi cho người dùng
+                showConstraintViolationsDialog("Lỗi khi thêm bạn đọc", dce.getViolations());
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Lỗi khi thêm bạn đọc: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-}
+            }
 
         }
     }//GEN-LAST:event_btnAddActionPerformed
@@ -908,13 +937,15 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             if (tmp.equals(ntmp)) return;
             try {
                 cur.update(ntmp);
+                showList(new ArrayList<>(safeGetDsBanDoc()));;
+                JOptionPane.showMessageDialog(this, "Sửa bạn đọc thành công.");
+            } catch (com.mycompany.quanlythuvien.exceptions.BanDocException bde) {
+                showConstraintViolationsDialog("Lỗi khi cập nhật bạn đọc", bde.getViolations());
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Lỗi khi cập nhật: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
-            // refresh danh sách (giữ paging)
-            showList(new ArrayList<>(safeGetDsBanDoc()));;
-            JOptionPane.showMessageDialog(this, "Sửa bạn đọc thành công.");
+
         }
     }//GEN-LAST:event_btnEditActionPerformed
 
@@ -965,6 +996,9 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 tmp.setIdBD(id);
                 boolean deleted = cur.delete(tmp); // recommended: implement deleteById in controller
                 if (!deleted) anyFailed = true;
+            } catch (com.mycompany.quanlythuvien.exceptions.BanDocException bde) {
+                anyFailed = true;
+                showConstraintViolationsDialog("Lỗi khi xóa ID=" + id, bde.getViolations());
             } catch (Exception ex) {
                 anyFailed = true;
             }
