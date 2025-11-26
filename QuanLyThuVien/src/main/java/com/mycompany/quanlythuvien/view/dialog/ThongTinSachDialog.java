@@ -48,6 +48,7 @@ public class ThongTinSachDialog extends javax.swing.JDialog {
         this.isEditMode = isEditMode;
         this.isViewMode = isViewMode;
         this.currentUser = currentUser;
+        txtSoLuongTon.setDisabledTextColor(Color.BLACK);
         txtCreatedAt.setEnabled(false);
         txtCreatedAt.setDisabledTextColor(Color.BLACK);
 

@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  *
- * @author Tien
+ * @author Thanh
  */
 public class SachController {
     private final SachDAO sachDAO = new SachDAO();
@@ -36,10 +36,6 @@ public class SachController {
         }
     }
     
-    public int countTotal(){
-        return sachDAO.countTotal();
-    }
-    
     // Thêm sách
     public void insert(Sach sach, String createdBy) throws Exception {
         validateAndSetDefault(sach);
@@ -55,7 +51,6 @@ public class SachController {
         sachDAO.update(sach);
     }
     
-    //chưa xong vì còn ràng buộc ct phiếu mượn
     public boolean delete(String isbn) {
         try {
             if (isbn == null || isbn.isBlank()) return false;
@@ -118,7 +113,7 @@ public class SachController {
     }
     
     private void validateAndSetDefault(Sach s) throws Exception {
-    if (s == null) throw new Exception("Dữ liệu sách không hợp lệ!");
+        if (s == null) throw new Exception("Dữ liệu sách không hợp lệ!");
 
         // BẮT BUỘC PHẢI CÓ
         if (s.getISBN() == null || s.getISBN().isBlank())
@@ -165,10 +160,6 @@ public class SachController {
         }
     }
     
-    public int getTotalTacGia() {
-        return tacGiaController.getTotalTacGia();
-    }
-    
     public List<NhaXuatBan> getAllNXB(int pageSize) {
         try {
             int firstPageCursor = 0;
@@ -177,9 +168,6 @@ public class SachController {
             e.printStackTrace();
             return new ArrayList<>();
         }
-    }
-    public int getTotalNXB() {
-        return nxbController.getTotalNXB();
     }
     
     public List<TheLoai> getAllTheLoai(int pageSize) {
@@ -190,10 +178,6 @@ public class SachController {
             e.printStackTrace();
             return new ArrayList<>();
         }
-    }
-    
-    public int getTotalTheLoai() {
-        return theLoaiController.getTotalTheLoai();
     }
 
     public List<TacGia> getAllTacGiaNoPaging() {

@@ -3,7 +3,6 @@ package com.mycompany.quanlythuvien.controller;
 import com.mycompany.quanlythuvien.dao.TheLoaiDAO;
 import com.mycompany.quanlythuvien.model.TheLoai;
 import java.util.List;
-import java.util.Optional;
 
 /**
  *
@@ -23,16 +22,6 @@ public class TheLoaiController {
     public List<TheLoai> getAllTheLoai(int lastMaTLCursor, int pageSize) {
         if (pageSize < 1 || pageSize > 100) pageSize = 10;
         return theLoaiDAO.getAll(lastMaTLCursor, pageSize);
-    }
-    public int getTotalTheLoai() {
-        return theLoaiDAO.getTotalTL();
-    }
-    
-    public int getTotalPages(int pageSize) {
-        int total = getTotalTheLoai();
-        if (total <= 0) return 0;
-        if (pageSize <= 0) pageSize = 10;
-        return (int) Math.ceil((double) total / pageSize);
     }
     
     public boolean addTheLoai(TheLoai tl) throws Exception {
@@ -62,13 +51,8 @@ public class TheLoaiController {
     
     public List<TheLoai> searchTheLoai(String keyword, String column, Integer lastMaTheLoaiCursor, int pageSize) {
         if (pageSize < 1 || pageSize > 100) {
-            pageSize = 20;
+            pageSize = 10;
         }
         return theLoaiDAO.search(keyword, column, lastMaTheLoaiCursor, pageSize);
-    }
-    
-    public Optional<TheLoai> getTheLoaiById(int id) {
-        if (id <= 0) return Optional.empty();
-        return theLoaiDAO.getById(id);
     }
 }

@@ -1190,13 +1190,6 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
             loadDataToTable(list);
 
-            // UI update
-//            int total = sachController.countTotal();
-//            int currentPageNum = cursorHistory.size() + 1;
-
-//            lblTotal.setText("Tổng: " + total + " sách");
-//            lblPageInfo.setText("Trang " + currentPageNum + "/" + ((total + pageSize - 1) / pageSize));
-
             btnSachTruoc.setEnabled(!cursorHistory.isEmpty());
             btnSachSau.setEnabled(hasNextPage);
 
@@ -1275,10 +1268,6 @@ public class QuanLySachPanel extends javax.swing.JPanel {
             // Update cursor
             if (!list.isEmpty()) lastTacGiaCursor = list.get(list.size() - 1).getMaTacGia();
 
-            // Update labels
-//            lblTotalRecords.setText("Tổng: " + tacGiaController.getTotalTacGia() + " tác giả");
-//            lblPageInfo.setText("Trang " + (cursorHistoryTG.size() + 1) + "/" + tacGiaController.getTotalPages(pageSizeTG));
-
             // Enable/disable buttons
             btnTGTruoc.setEnabled(!cursorHistoryTG.isEmpty());
             btnTGSau.setEnabled(hasNextPageTG);
@@ -1343,12 +1332,6 @@ public class QuanLySachPanel extends javax.swing.JPanel {
             }
             
             loadDataToTableNXB(list);
-            
-            // Update label tổng số và trang
-//            int total = nxbController.getTotalNXB();
-//            int currentPageNum = cursorHistoryNXB.size() + 1;
-//            lblTotalNXB.setText("Tổng: " + total + " NXB");
-//            lblPageInfoNXB.setText("Trang " + currentPageNum + "/" + (int)Math.ceil((double) total / pageSizeNXB));
 
             btnNXBTruoc.setEnabled(!cursorHistoryNXB.isEmpty());
             btnNXBSau.setEnabled(hasNextPageNXB);

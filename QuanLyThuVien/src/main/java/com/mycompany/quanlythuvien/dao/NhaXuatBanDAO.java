@@ -8,11 +8,10 @@ import java.sql.ResultSet;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  *
- * @author Tien
+ * @author Thanh
  */
 public class NhaXuatBanDAO {
     public NhaXuatBan mapRow(ResultSet rs) throws Exception {
@@ -26,8 +25,8 @@ public class NhaXuatBanDAO {
         List<NhaXuatBan> list = new ArrayList<>();
         String sql = "SELECT * FROM NHAXUATBAN ORDER BY TenNXB ASC";
         try (Connection con = DBConnector.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapRow(rs));
             }
@@ -64,18 +63,6 @@ public class NhaXuatBanDAO {
             e.printStackTrace();
         }
         return list;
-    }
-    
-    public int getTotalNXB() {
-        try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) AS Total FROM NHAXUATBAN");
-            ResultSet rs = ps.executeQuery()) 
-        {
-            if (rs.next()) return rs.getInt("Total");
-        } catch (Exception e) {
-            e.printStackTrace();
-        } 
-        return 0;
     }
     
     //Them NXB
@@ -125,22 +112,6 @@ public class NhaXuatBanDAO {
             e.printStackTrace();
             throw e;
         }
-    }
-    
-    //Tim NXB theo ma
-    public Optional<NhaXuatBan> getById(int maNXB) {
-        String sql = "SELECT * FROM NHAXUATBAN WHERE MaNXB=?";
-        try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) 
-        {
-            ps.setInt(1, maNXB);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return Optional.of(mapRow(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return Optional.empty();
     }
     
     public List<NhaXuatBan> search(String keyword, String column, Integer lastMaNXB, int pageSize) {

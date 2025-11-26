@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  *
- * @author Bố
+ * @author Thanh
  */
 public class SachDAO {
     private static final String SQL_GET_FIRST_PAGE = """
@@ -42,22 +42,26 @@ public class SachDAO {
         // SoLuongTon được quản lý tự động bởi trigger TRG_BANSAO_Update_SoLuongTon
         String sql = "INSERT INTO SACH (ISBN, TenSach, MaTacGia, MaTheLoai, NamXuatBan, DinhDang, MoTa, MaNXB, GiaBia, SoTrang, CreatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 
+        // Mở kết nối CSDL bằng DBConnector (sử dụng try-with-resources để tự đóng kết nối sau khi dùng)
         try (Connection con = DBConnector.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, s.getISBN());
-            ps.setString(2, s.getTenSach());
-            ps.setObject(3, s.getMaTacGia(), java.sql.Types.INTEGER);
-            ps.setObject(4, s.getMaTheLoai(), java.sql.Types.INTEGER);
-            ps.setObject(5, s.getNamXuatBan(), java.sql.Types.INTEGER);
-            ps.setString(6, s.getDinhDang());
-            ps.setString(7, s.getMoTa());
-            ps.setObject(8, s.getMaNXB(), java.sql.Types.INTEGER);
-            ps.setBigDecimal(9, s.getGiaBia());
-            ps.setObject(10, s.getSoTrang(), java.sql.Types.INTEGER);
-            ps.setString(11, createdBy);
+
+            //Gán giá trị vào các tham số của câu lệnh INSERT
+            ps.setString(1, s.getISBN()); //Chuỗi, không null
+            ps.setString(2, s.getTenSach()); //Chuỗi, không null
+            ps.setObject(3, s.getMaTacGia(), java.sql.Types.INTEGER); //Có thể null
+            ps.setObject(4, s.getMaTheLoai(), java.sql.Types.INTEGER); //Có thể null
+            ps.setObject(5, s.getNamXuatBan(), java.sql.Types.INTEGER); //Có thể null
+            ps.setString(6, s.getDinhDang()); //Chuỗi, định dạng sách
+            ps.setString(7, s.getMoTa()); //Chuỗi, mô tả sách
+            ps.setObject(8, s.getMaNXB(), java.sql.Types.INTEGER); //Có thể null
+            ps.setBigDecimal(9, s.getGiaBia()); //Số thực chính xác, giá bìa
+            ps.setObject(10, s.getSoTrang(), java.sql.Types.INTEGER); //Có thể null
+            ps.setString(11, createdBy); //Email người tạo
+
+            //Thực thi câu lệnh INSERT, trả về true nếu thêm thành công
             return ps.executeUpdate() > 0;
         } catch (SQLIntegrityConstraintViolationException ex) {
-            //trung isbn
             throw new Exception("ISBN đã tồn tại trong hệ thống!");
         }
     }
@@ -204,20 +208,6 @@ public class SachDAO {
             e.printStackTrace();
         }
         return list;
-    }
-    
-    public int countTotal() {
-        try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(SQL_COUNT_TOTAL);
-            ResultSet rs = ps.executeQuery())
-        {
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
     }
     
     // Helper: Format từ khóa cho Full-Text Search

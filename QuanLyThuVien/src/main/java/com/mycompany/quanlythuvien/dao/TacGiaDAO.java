@@ -13,11 +13,10 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  *
- * @author ASUS
+ * @author Thanh
  */
 public class TacGiaDAO {
     public TacGia mapRow(ResultSet rs) throws SQLException {
@@ -33,8 +32,8 @@ public class TacGiaDAO {
         List<TacGia> list = new ArrayList<>();
         String sql = "SELECT * FROM TACGIA ORDER BY TenTacGia ASC";
         try (Connection con = DBConnector.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapRow(rs));
             }
@@ -69,21 +68,6 @@ public class TacGiaDAO {
             e.printStackTrace();
         }
         return list;
-    }
-    
-    public int getTotalTacGia(){
-        String sql = "SELECT COUNT(*) AS Total FROM TACGIA";
-        try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery())
-        {
-            if (rs.next()) {
-                return rs.getInt("Total");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
     }
     
     public boolean insert(TacGia tg) throws Exception{
@@ -139,78 +123,62 @@ public class TacGiaDAO {
         }
     }
     
-        public List<TacGia> search(String keyword, String column, Integer lastMaTacGia, int pageSize) {
-            List<TacGia> list = new ArrayList<>();
-            String likePattern = "%" + (keyword == null ? "" : keyword.trim()) + "%";
-            String trimmedKeyword = keyword == null ? "" : keyword.trim(); // Dùng cho trường hợp MaTacGia
-            
-            String sql;
-            switch (column) {
-                case "MaTacGia":
-                    sql = "SELECT TOP (?) * FROM TACGIA WHERE MaTacGia = ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
-                    break;
-                case "TenTacGia":
-                    sql = "SELECT TOP (?) * FROM TACGIA WHERE TenTacGia LIKE ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
-                    break;
-                case "Website":
-                    sql = "SELECT TOP (?) * FROM TACGIA WHERE Website LIKE ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
-                    break;
-                case "GhiChu":
-                    sql = "SELECT TOP (?) * FROM TACGIA WHERE GhiChu LIKE ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
-                    break;
-                default:
-                    return list;
-            }
-            
-            try (Connection con = DBConnector.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)) 
-            {
-                int idx = 1;
-                ps.setInt(idx++, pageSize);
-                if ("MaTacGia".equals(column)) {
-                    try {
-                        int id = Integer.parseInt(trimmedKeyword);
-                        ps.setInt(idx++, id);
-                    } catch (NumberFormatException e) {
-                        ps.setInt(idx++, -1);
-                    }
-                } else {
-                    ps.setString(idx++, likePattern);
-                }
-                
-                if (lastMaTacGia == null) {
-                    ps.setNull(idx++, java.sql.Types.INTEGER);
-                    ps.setNull(idx++, java.sql.Types.INTEGER);
-                } else {
-                    ps.setInt(idx++, lastMaTacGia);
-                    ps.setInt(idx++, lastMaTacGia);
-                }
-                
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        list.add(mapRow(rs));
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return list;
+    public List<TacGia> search(String keyword, String column, Integer lastMaTacGia, int pageSize) {
+        List<TacGia> list = new ArrayList<>();
+        String likePattern = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+        String trimmedKeyword = keyword == null ? "" : keyword.trim(); // Dùng cho trường hợp MaTacGia
+        
+        String sql;
+        switch (column) {
+            case "MaTacGia":
+                sql = "SELECT TOP (?) * FROM TACGIA WHERE MaTacGia = ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
+                break;
+            case "TenTacGia":
+                sql = "SELECT TOP (?) * FROM TACGIA WHERE TenTacGia LIKE ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
+                break;
+            case "Website":
+                sql = "SELECT TOP (?) * FROM TACGIA WHERE Website LIKE ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
+                break;
+            case "GhiChu":
+                sql = "SELECT TOP (?) * FROM TACGIA WHERE GhiChu LIKE ? AND (? IS NULL OR MaTacGia > ?) ORDER BY MaTacGia ASC";
+                break;
+            default:
+                return list;
         }
-    
-    public Optional<TacGia> getById(int id) {
-        String sql = "SELECT * FROM TACGIA WHERE MaTacGia=?";
         
         try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql))
+            PreparedStatement ps = con.prepareStatement(sql)) 
         {
-            ps.setInt(1, id);
+            int idx = 1;
+            ps.setInt(idx++, pageSize);
+            if ("MaTacGia".equals(column)) {
+                try {
+                    int id = Integer.parseInt(trimmedKeyword);
+                    ps.setInt(idx++, id);
+                } catch (NumberFormatException e) {
+                    ps.setInt(idx++, -1);
+                }
+            } else {
+                ps.setString(idx++, likePattern);
+            }
+            
+            if (lastMaTacGia == null) {
+                ps.setNull(idx++, java.sql.Types.INTEGER);
+                ps.setNull(idx++, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(idx++, lastMaTacGia);
+                ps.setInt(idx++, lastMaTacGia);
+            }
+            
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return Optional.of(mapRow(rs));
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return Optional.empty();
+
+        return list;
     }
 }

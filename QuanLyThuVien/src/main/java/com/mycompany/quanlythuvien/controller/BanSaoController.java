@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  *
- * @author Tien
+ * @author Thanh
  */
 public class BanSaoController {
     private BanSaoDAO banSaoDAO = new BanSaoDAO();
@@ -18,13 +18,6 @@ public class BanSaoController {
         if (isbn == null || isbn.isBlank()) return new ArrayList<>();
         if (pageSize < 1 || pageSize > 100) pageSize = 10;
         return banSaoDAO.getPage(isbn, pageSize, lastMaBanSao);
-    }
-    
-    // Lấy tổng số trang theo ISBN
-    public int getTotalPages(String isbn, int pageSize) {
-        if (isbn == null || isbn.isBlank()) return 0;
-        if (pageSize < 1 || pageSize > 100) pageSize = 10;
-        return banSaoDAO.getTotalPages(isbn, pageSize);
     }
     
     // Lấy tất cả bản sao theo ISBN
@@ -52,7 +45,7 @@ public class BanSaoController {
     
     // Thêm bản sao mới
     public void insert(BanSao bansao, String createdBy) throws Exception {
-        validateAndSetDefault(bansao);
+        validate(bansao);
         bansao.setNgayNhapKho(null);
         bansao.setCreatedAt(null);
         banSaoDAO.insert(bansao, createdBy);
@@ -60,7 +53,7 @@ public class BanSaoController {
     
     // Cập nhật bản sao
     public void update(BanSao bansao) throws Exception {
-        validateAndSetDefault(bansao);
+        validate(bansao);
         if (bansao.getMaBanSao() <= 0) {
             throw new Exception("Bản sao chưa tồn tại, không thể cập nhật!");
         }
@@ -123,7 +116,7 @@ public class BanSaoController {
     }
     
     // Validate dữ liệu bản sao
-    private void validateAndSetDefault(BanSao b) throws Exception {
+    private void validate(BanSao b) throws Exception {
         if (b == null) throw new Exception("Dữ liệu bản sao không hợp lệ!");
 
         if (b.getISBN() == null || b.getISBN().isBlank())

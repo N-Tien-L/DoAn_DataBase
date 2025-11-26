@@ -8,11 +8,10 @@ import java.sql.ResultSet;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  *
- * @author Tien
+ * @author Thanh
  */
 public class TheLoaiDAO {
     public TheLoai mapRow(ResultSet rs) throws Exception {
@@ -26,8 +25,8 @@ public class TheLoaiDAO {
         List<TheLoai> list = new ArrayList<>();
         String sql = "SELECT * FROM THELOAI ORDER BY TenTheLoai ASC";
         try (Connection con = DBConnector.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapRow(rs));
             }
@@ -63,18 +62,6 @@ public class TheLoaiDAO {
             e.printStackTrace();
         }
         return list;
-    }
-    
-    public int getTotalTL(){
-        try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) AS Total FROM THELOAI");
-            ResultSet rs = ps.executeQuery())
-        {
-            if (rs.next()) return rs.getInt("Total");
-        } catch (Exception e) {
-            e.printStackTrace();
-        } 
-        return 0;
     }
     
     //Them the loai moi
@@ -124,22 +111,6 @@ public class TheLoaiDAO {
             e.printStackTrace();
             throw e;
         }
-    }
-    
-    //Tim the loai theo ma
-    public Optional<TheLoai> getById(int maTheLoai) {
-        String sql = "SELECT * FROM THELOAI WHERE MaTheLoai=?";
-        try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)) 
-        {
-            ps.setInt(1, maTheLoai);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return Optional.of(mapRow(rs));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return Optional.empty();
     }
     
     public List<TheLoai> search(String keyword, String column, Integer lastMaTheLoai, int pageSize) {

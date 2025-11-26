@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  *
- * @author Tien
+ * @author Thanh
  */
 public class BanSaoDAO {    
     public List<BanSao> getPage(String isbn, int pageSize, Integer lastMaBanSao) {
@@ -56,30 +56,36 @@ public class BanSaoDAO {
         
         return list;
     }
-    //tổng số bản sao theo ISBN
-    public int getTotalCount(String isbn) {
-        String sql = "SELECT COUNT(*) FROM BANSAO WHERE ISBN = ?";
+
+    public List<BanSao> getAllByISBN(String isbn) {
+        List<BanSao> list = new ArrayList<>();
+        if (isbn == null || isbn.isBlank()) return list;
+
+        String sql = "SELECT * FROM BANSAO WHERE ISBN = ? ORDER BY MaBanSao ASC";
         try (Connection con = DBConnector.getConnection();
-            PreparedStatement ps = con.prepareStatement(sql))
-        {
+            PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, isbn);
+
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
+                while (rs.next()) {
+                    BanSao b = new BanSao(
+                            rs.getInt("MaBanSao"),
+                            rs.getString("ISBN"),
+                            rs.getInt("SoThuTuTrongKho"),
+                            rs.getString("TinhTrang"),
+                            rs.getDate("NgayNhapKho") != null ? rs.getDate("NgayNhapKho").toLocalDate() : null,
+                            rs.getString("ViTriLuuTru"),
+                            rs.getTimestamp("CreatedAt"),
+                            rs.getString("CreatedBy")
+                    );
+                    list.add(b);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return 0;
-    }
-    
-    //tổng số trang theo ISBN
-    public int getTotalPages(String isbn, int pageSize) {
-        int total = getTotalCount(isbn);
-        if (total <= 0) return 0;
-        return (int) Math.ceil((double) total / pageSize);
-    }
-    public List<BanSao> getAllByISBN(String isbn) {
-        return getPage(isbn, Integer.MAX_VALUE, null);
+
+        return list;
     }
     public boolean insert(BanSao b, String createdBy) throws Exception {
         String sql = """

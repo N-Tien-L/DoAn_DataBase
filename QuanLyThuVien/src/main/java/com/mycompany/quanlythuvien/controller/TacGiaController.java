@@ -9,7 +9,6 @@ import com.mycompany.quanlythuvien.model.TacGia;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-import java.util.Optional;
 
 /**
  *
@@ -28,9 +27,6 @@ public class TacGiaController {
 
     public List<TacGia> getAllTacGia(int lastMaTacGiaCursor, int pageSize) {
         return dao.getAll(lastMaTacGiaCursor, pageSize);
-    }
-    public int getTotalTacGia() {
-        return dao.getTotalTacGia();
     }
     
     public boolean insertTacGia(TacGia tg) throws Exception {
@@ -93,14 +89,9 @@ public class TacGiaController {
     
     public List<TacGia> searchTacGia(String keyword, String column, Integer lastMaTacGiaCursor, int pageSize) {
         if (pageSize < 1 || pageSize > 100) {
-            pageSize = 20;
+            pageSize = 10;
         }
         
         return dao.search(keyword, column, lastMaTacGiaCursor, pageSize);
-    }
-    
-    public Optional<TacGia> getTacGiaById(int maTG){
-        if (maTG <= 0) return Optional.empty();
-        return dao.getById(maTG);
     }
 }

@@ -3,7 +3,6 @@ package com.mycompany.quanlythuvien.controller;
 import com.mycompany.quanlythuvien.dao.NhaXuatBanDAO;
 import com.mycompany.quanlythuvien.model.NhaXuatBan;
 import java.util.List;
-import java.util.Optional;
 
 /**
  *
@@ -21,11 +20,8 @@ public class NhaXuatBanController {
     }
 
     public List<NhaXuatBan> getAllNXB(int lastMaNXBCursor, int pageSize){
-        if (pageSize < 1 || pageSize > 100) pageSize = 20;
+        if (pageSize < 1 || pageSize > 100) pageSize = 10;
         return nxbDAO.getAll(lastMaNXBCursor, pageSize);
-    }
-    public int getTotalNXB() {
-        return nxbDAO.getTotalNXB();
     }
     
     public boolean addNXB(NhaXuatBan nxb) throws Exception {
@@ -55,14 +51,9 @@ public class NhaXuatBanController {
     
     public List<NhaXuatBan> searchNXB(String keyword, String column, Integer lastMaNXBCursor, int pageSize) {
         if (pageSize < 1 || pageSize > 100) {
-            pageSize = 20;
+            pageSize = 10;
         }
         
         return nxbDAO.search(keyword, column, lastMaNXBCursor, pageSize);
-    }
-    
-    public Optional<NhaXuatBan> getNXBById(int id) {
-        if (id <= 0) return Optional.empty();
-        return nxbDAO.getById(id);
     }
 }
