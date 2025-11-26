@@ -4,6 +4,7 @@
  */
 package com.mycompany.quanlythuvien.view.panel;
 
+import com.mycompany.quanlythuvien.dao.BanDocDAO;
 import com.mycompany.quanlythuvien.model.BanDoc;
 import com.mycompany.quanlythuvien.dao.ChiTietPhieuMuonDAO;
 import com.mycompany.quanlythuvien.dao.SachDAO;
@@ -277,7 +278,7 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         new javax.swing.SwingWorker<ArrayList<Object>, Void>() {
             @Override
             protected ArrayList<Object> doInBackground() throws Exception {
-                ChiTietPhieuMuonDAO qr = new ChiTietPhieuMuonDAO();
+                BanDocDAO qr = new BanDocDAO();
                 return qr.getAllPhieuMuonBanDoc(cur);
             }
 
@@ -371,7 +372,7 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         new javax.swing.SwingWorker<ArrayList<Object>, Void>() {
             @Override
             protected ArrayList<Object> doInBackground() throws Exception {
-                ChiTietPhieuMuonDAO qr = new ChiTietPhieuMuonDAO();
+                BanDocDAO qr = new BanDocDAO();
                 return qr.getAllPhieuPhatBanDoc(cur);
             }
 
@@ -466,7 +467,7 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         if (maBanSao == null || maBanSao <= 0) return null;
         if (bookInfoCache.containsKey(maBanSao)) return bookInfoCache.get(maBanSao);
         try {
-            SachDAO tmp = new SachDAO();
+            BanDocDAO tmp = new BanDocDAO();
             ArrayList<Object> info = tmp.getSomeInfoSachByMaBanSao(maBanSao);
             if (info != null) bookInfoCache.put(maBanSao, info);
             return info;
@@ -714,7 +715,7 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
 
                     ArrayList<Object> info = null;
                     if(!bookInfoCacheIdPhat.containsKey(idPhat)) {
-                        SachDAO tmp = new SachDAO();
+                        BanDocDAO tmp = new BanDocDAO();
                         int maBanSao = tmp.getMaBanSaoByIdPhat(idPhat);
                         if (maBanSao > 0) {
                             info = getBookInfoByMaBanSaoSafe(maBanSao);
@@ -764,7 +765,7 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
 
                         ArrayList<Object> info = null;
                         if(!bookInfoCacheIdPhat.containsKey(idPhat)) {
-                            SachDAO tmp = new SachDAO();
+                            BanDocDAO tmp = new BanDocDAO();
                             int maBanSao = tmp.getMaBanSaoByIdPhat(idPhat);
                             if (maBanSao > 0) {
                                 info = getBookInfoByMaBanSaoSafe(maBanSao);
@@ -832,6 +833,32 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                 }
             }
         });
+        
+        tblPhieuMuon.setRowHeight(26);
+        tblPhieuMuon.setIntercellSpacing(new Dimension(6,6));
+        tblPhieuMuon.setGridColor(new Color(230,230,230));
+        tblPhieuMuon.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (isSelected) { setBackground(new Color(51, 153, 255)); setForeground(Color.white); }
+                else { setBackground(row % 2 == 0 ? Color.white : new Color(248, 249, 250)); setForeground(Color.darkGray); }
+                return this;
+            }
+        });
+
+        // header style
+        tblPhieuMuon.getTableHeader().setFont(tblPhieuMuon.getTableHeader().getFont().deriveFont(Font.BOLD));
+        ((DefaultTableCellRenderer) tblPhieuMuon.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+
+        // center ID column
+        if (tblPhieuMuon.getColumnModel().getColumnCount() > 0) {
+            DefaultTableCellRenderer center = new DefaultTableCellRenderer();
+            center.setHorizontalAlignment(SwingConstants.CENTER);
+            tblPhieuMuon.getColumnModel().getColumn(0).setCellRenderer(center);
+        }
+        
         // alternating rows + selection color
         tblPhieuPhat.setRowHeight(26);
         tblPhieuPhat.setIntercellSpacing(new Dimension(6,6));
@@ -857,6 +884,7 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
             center.setHorizontalAlignment(SwingConstants.CENTER);
             tblPhieuPhat.getColumnModel().getColumn(0).setCellRenderer(center);
         }
+        
         
         
     }

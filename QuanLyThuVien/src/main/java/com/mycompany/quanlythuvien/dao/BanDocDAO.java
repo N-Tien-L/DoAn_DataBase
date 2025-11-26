@@ -1,19 +1,83 @@
 package com.mycompany.quanlythuvien.dao;
+
 import com.mycompany.quanlythuvien.model.BanDoc;
 import com.mycompany.quanlythuvien.util.DBConnector;
+
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-
-
-/**
- *
- * @author Tien
- */
 public class BanDocDAO {
     private static final String SQL_ADD =
         "INSERT INTO BANDOC (HoTen, Email, DiaChi, SDT) VALUES (?, ?, ?, ?)";
+
+    private static final String SQL_READ =
+        "SELECT * FROM BANDOC";
+
+    private static final String SQL_DELETE =
+        "DELETE FROM BANDOC WHERE IdBD = ?";
+
+    private static final String SQL_UPDATE =
+        "UPDATE BANDOC SET HoTen = ?, Email = ?, DiaChi = ?, SDT = ? WHERE IdBD = ?";
+
+    private static final String SQL_GET_BY_ID =
+        "SELECT * FROM BANDOC WHERE IdBD = ?";
+
+    private static final String SQL_SOLAN_MUON =
+        "SELECT DISTINCT count(*) FROM PHIEUMUON WHERE IdBD = ?";
+
+    private static final String SQL_SOSACH_DANG_MUON =
+        "SELECT DISTINCT count(*) FROM PHIEUMUON pm, CT_PM ctpm WHERE pm.IdBD = ? AND pm.IdPM = ctpm.IdPM AND ctpm.NgayTraThucTe IS NULL";
+
+    private static final String SQL_SOSACH_DA_MUON =
+        "SELECT DISTINCT count(*) FROM PHIEUMUON pm, CT_PM ctpm WHERE pm.IdBD = ? AND pm.IdPM = ctpm.IdPM";
+
+    private static final String SQL_SOPHIEU_PHAT =
+        "SELECT count(*) FROM PHIEUMUON pm, PHAT p WHERE pm.IdBD = ? AND pm.IdPM = p.IdPM";
+
+    private static final String SQL_SOTIEN_PHAT_CHUA_DONG =
+        "SELECT COALESCE(SUM(p.SoTien), 0) FROM PHIEUMUON pm JOIN PHAT p ON pm.IdPM = p.IdPM WHERE pm.IdBD = ? AND p.TrangThai = 'Chua dong'";
+
+    private static final String SQL_SOTIEN_PHAT_DA_DONG =
+        "SELECT COALESCE(SUM(p.SoTien), 0) FROM PHIEUMUON pm JOIN PHAT p ON pm.IdPM = p.IdPM WHERE pm.IdBD = ? AND p.TrangThai = 'Da dong'";
+
+    private static final String SQL_SOME_INFO_SACH_BY_MABANSAO =
+        "SELECT bs.ISBN, s.TenSach, tg.TenTacGia, tl.TenTheLoai, s.NamXuatBan, nxb.TenNXB " +
+        "FROM BANSAO bs " +
+        "JOIN SACH s ON bs.ISBN = s.ISBN " +
+        "JOIN TACGIA tg ON s.MaTacGia = tg.MaTacGia " +
+        "JOIN THELOAI tl ON s.MaTheLoai = tl.MaTheLoai " +
+        "JOIN NHAXUATBAN nxb ON s.MaNXB = nxb.MaNXB " +
+        "WHERE bs.MaBanSao = ?";
+
+    private static final String SQL_SOME_INFO_SACH_BY_IDPHAT =
+        "SELECT s.ISBN, s.TenSach, tg.TenTacGia, tl.TenTheLoai, s.NamXuatBan, nxb.TenNXB " +
+        "FROM PHAT p " +
+        "JOIN BANSAO bs ON bs.MaBanSao = p.MaBanSao " +
+        "JOIN SACH s ON bs.ISBN = s.ISBN " +
+        "JOIN TACGIA tg ON s.MaTacGia = tg.MaTacGia " +
+        "JOIN THELOAI tl ON s.MaTheLoai = tl.MaTheLoai " +
+        "JOIN NHAXUATBAN nxb ON s.MaNXB = nxb.MaNXB " +
+        "WHERE p.IdPhat = ?";
+
+    private static final String SQL_GET_MABANSAO_BY_IDPHAT =
+        "SELECT p.MaBanSao FROM PHAT p WHERE p.IdPhat = ?";
+
+    private static final String SQL_GET_ALL_PHIEUMUON_BANDOC =
+        "SELECT pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, pm.HanTra, " +
+        "ct.MaBanSao, ct.NgayTraThucTe, ct.TinhTrangKhiTra, ct.EmailNguoiNhan " +
+        "FROM PHIEUMUON pm " +
+        "JOIN CT_PM ct ON pm.IdPM = ct.IdPM " +
+        "WHERE pm.IdBD = ? " +
+        "ORDER BY pm.NgayMuon DESC";
+
+    private static final String SQL_GET_ALL_PHIEUPHAT_BANDOC =
+        "SELECT p.IdPhat, pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, " +
+        "p.LoaiPhat, p.SoTien, p.NgayGhiNhan, p.TrangThai " +
+        "FROM PHIEUMUON pm " +
+        "JOIN PHAT p ON pm.IdPM = p.IdPM " +
+        "WHERE pm.IdBD = ? " +
+        "ORDER BY p.NgayGhiNhan DESC";
 
     public Boolean addDAO(BanDoc cur) throws Exception {
         if (cur == null) return false;
@@ -34,10 +98,9 @@ public class BanDocDAO {
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
                     int generatedId = keys.getInt(1);
-                    cur.setIdBD(generatedId); 
+                    cur.setIdBD(generatedId);
                 }
             }
-
 
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -45,10 +108,6 @@ public class BanDocDAO {
         }
         return true;
     }
-    
-
-    private static final String SQL_READ =
-        "SELECT * FROM BANDOC";
 
     public Boolean readDAO(ArrayList<BanDoc> dsBanDoc) throws Exception {
         if (dsBanDoc == null) return false;
@@ -59,11 +118,11 @@ public class BanDocDAO {
 
             while (rs.next()) {
                 BanDoc bd = new BanDoc();
-                bd.setIdBD(rs.getInt("idbd"));
-                bd.setHoTen(rs.getString("hoten"));
-                bd.setEmail(rs.getString("email"));
-                bd.setDiaChi(rs.getString("diachi"));
-                bd.setSdt(rs.getString("sdt"));
+                bd.setIdBD(rs.getInt("IdBD"));
+                bd.setHoTen(rs.getString("HoTen"));
+                bd.setEmail(rs.getString("Email"));
+                bd.setDiaChi(rs.getString("DiaChi"));
+                bd.setSdt(rs.getString("SDT"));
 
                 dsBanDoc.add(bd);
             }
@@ -75,17 +134,14 @@ public class BanDocDAO {
             return false;
         }
     }
-    private static final String SQL_DELETE =
-        "DELETE FROM BANDOC \n" +
-"WHERE IdBD = ?";
+
     public Boolean deleteDAO(BanDoc cur) throws Exception {
         if (cur == null) return false;
 
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement ps = conn.prepareStatement(SQL_DELETE)) {
 
-            ps.setString(1, Integer.toString(cur.getIdBD()));
-
+            ps.setInt(1, cur.getIdBD());
 
             int affected = ps.executeUpdate();
             if (affected == 0) {
@@ -98,8 +154,6 @@ public class BanDocDAO {
         }
         return true;
     }
-    private static final String SQL_UPDATE =
-        "UPDATE BANDOC SET HoTen = ?, Email = ?, DiaChi = ?, SDT = ? WHERE IdBD = ?";
 
     public Boolean updateDAO(BanDoc cur) throws Exception {
         if (cur == null) return false;
@@ -111,11 +165,9 @@ public class BanDocDAO {
             ps.setString(2, cur.getEmail());
             ps.setString(3, cur.getDiaChi());
             ps.setString(4, cur.getSdt());
-            ps.setInt(5, cur.getIdBD());  
-            System.out.println(cur.getHoTen());
+            ps.setInt(5, cur.getIdBD());
 
             int affected = ps.executeUpdate();
-
             return affected > 0;
 
         } catch (SQLException ex) {
@@ -124,22 +176,19 @@ public class BanDocDAO {
         }
     }
 
-    
-    private static final String SQL_GET_BY_ID =
-        "SELECT * FROM BANDOC WHERE IdBD = ?";
     public BanDoc getBanDocById(int id) throws Exception {
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement ps = conn.prepareStatement(SQL_GET_BY_ID)) {
 
-            ps.setString(1, Integer.toString(id)); 
+            ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     BanDoc bd = new BanDoc();
-                    bd.setIdBD(rs.getInt("idbd"));
-                    bd.setHoTen(rs.getString("hoten"));
-                    bd.setEmail(rs.getString("email"));
-                    bd.setDiaChi(rs.getString("diachi"));
-                    bd.setSdt(rs.getString("sdt"));
+                    bd.setIdBD(rs.getInt("IdBD"));
+                    bd.setHoTen(rs.getString("HoTen"));
+                    bd.setEmail(rs.getString("Email"));
+                    bd.setDiaChi(rs.getString("DiaChi"));
+                    bd.setSdt(rs.getString("SDT"));
                     return bd;
                 }
             }
@@ -148,15 +197,14 @@ public class BanDocDAO {
         }
         return null;
     }
-    
+
     public int getSoLanMuonCuaBanDoc(int IdBD) throws Exception {
-        String sql = "SELECT count(*) FROM PHIEUMUON WHERE IdBD = ?";
         int soPhieu = 0;
         try (Connection conn = DBConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(SQL_SOLAN_MUON)) {
 
-            ps.setInt(1, IdBD); 
-            
+            ps.setInt(1, IdBD);
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     soPhieu = rs.getInt(1);
@@ -167,14 +215,14 @@ public class BanDocDAO {
         }
         return soPhieu;
     }
+
     public int getSoSachDangMuonCuaBanDoc(int IdBD) throws Exception {
-        String sql = "SELECT count(*) FROM PHIEUMUON pm, CT_PM ctpm WHERE pm.IdBD = ? AND pm.IdPM = ctpm.IdPM AND ctpm.NgayTraThucTe IS NULL";
         int ans = 0;
         try (Connection conn = DBConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(SQL_SOSACH_DANG_MUON)) {
 
-            ps.setInt(1, IdBD); 
-            
+            ps.setInt(1, IdBD);
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     ans = rs.getInt(1);
@@ -185,14 +233,14 @@ public class BanDocDAO {
         }
         return ans;
     }
+
     public int getSoSachDaMuonCuaBanDoc(int IdBD) throws Exception {
-        String sql = "SELECT count(*) FROM PHIEUMUON pm, CT_PM ctpm WHERE pm.IdBD = ? AND pm.IdPM = ctpm.IdPM";
         int ans = 0;
         try (Connection conn = DBConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(SQL_SOSACH_DA_MUON)) {
 
-            ps.setInt(1, IdBD); 
-            
+            ps.setInt(1, IdBD);
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     ans = rs.getInt(1);
@@ -203,14 +251,14 @@ public class BanDocDAO {
         }
         return ans;
     }
+
     public int getSoPhieuPhatBanDoc(int IdBD) throws Exception {
-        String sql = "SELECT count(*) FROM PHIEUMUON pm, PHAT p WHERE pm.IdBD = ? AND pm.IdPM = p.IdPM";
         int ans = 0;
         try (Connection conn = DBConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(SQL_SOPHIEU_PHAT)) {
 
-            ps.setInt(1, IdBD); 
-            
+            ps.setInt(1, IdBD);
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     ans = rs.getInt(1);
@@ -221,21 +269,17 @@ public class BanDocDAO {
         }
         return ans;
     }
+
     public int getSoTienPhatChuaDongBanDoc(int IdBD) throws Exception {
-        String sql = "SELECT COALESCE(SUM(p.SoTien), 0)\n" 
-                + "FROM PHIEUMUON pm\n" 
-                + "JOIN PHAT p ON pm.IdPM = p.IdPM\n" 
-                + "WHERE pm.IdBD = ?\n" 
-                + "  AND p.TrangThai = 'Chua dong';";
         int ans = 0;
         try (Connection conn = DBConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(SQL_SOTIEN_PHAT_CHUA_DONG)) {
 
-            ps.setInt(1, IdBD); 
-            
+            ps.setInt(1, IdBD);
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    ans = rs.getInt(1);
+                    ans = (int) Math.round(rs.getDouble(1));
                 }
             }
         } catch (SQLException ex) {
@@ -243,21 +287,17 @@ public class BanDocDAO {
         }
         return ans;
     }
+
     public int getSoTienPhatDaDongBanDoc(int IdBD) throws Exception {
-        String sql = "SELECT COALESCE(SUM(p.SoTien), 0)\n" 
-                + "FROM PHIEUMUON pm\n" 
-                + "JOIN PHAT p ON pm.IdPM = p.IdPM\n" 
-                + "WHERE pm.IdBD = ?\n" 
-                + "  AND p.TrangThai = 'Da dong';";
         int ans = 0;
         try (Connection conn = DBConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(SQL_SOTIEN_PHAT_DA_DONG)) {
 
-            ps.setInt(1, IdBD); 
-            
+            ps.setInt(1, IdBD);
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    ans = rs.getInt(1);
+                    ans = (int) Math.round(rs.getDouble(1));
                 }
             }
         } catch (SQLException ex) {
@@ -266,4 +306,145 @@ public class BanDocDAO {
         return ans;
     }
 
+    public ArrayList<Object> getSomeInfoSachByMaBanSao(int maBanSao) {
+        ArrayList<Object> ans = new ArrayList<>();
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_SOME_INFO_SACH_BY_MABANSAO)) {
+
+            ps.setInt(1, maBanSao);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ans.add(rs.getString("ISBN"));
+                    ans.add(rs.getString("TenSach"));
+                    ans.add(rs.getString("TenTacGia"));
+                    ans.add(rs.getString("TenTheLoai"));
+                    ans.add(rs.getString("TenNXB"));
+                    ans.add(rs.getInt("NamXuatBan"));
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    public ArrayList<Object> getSomeInfoSachByIdPhat(int IdPhat) {
+        ArrayList<Object> ans = new ArrayList<>();
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_SOME_INFO_SACH_BY_IDPHAT)) {
+
+            ps.setInt(1, IdPhat);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ans.add(rs.getString("ISBN"));
+                    ans.add(rs.getString("TenSach"));
+                    ans.add(rs.getString("TenTacGia"));
+                    ans.add(rs.getString("TenTheLoai"));
+                    ans.add(rs.getString("TenNXB"));
+                    ans.add(rs.getInt("NamXuatBan"));
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    public int getMaBanSaoByIdPhat(int IdPhat) {
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_GET_MABANSAO_BY_IDPHAT)) {
+
+            ps.setInt(1, IdPhat);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("MaBanSao");
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return Integer.MIN_VALUE;
+    }
+
+    public ArrayList<Object> getAllPhieuMuonBanDoc(BanDoc x) throws Exception {
+        ArrayList<Object> ans = new ArrayList<>();
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(SQL_GET_ALL_PHIEUMUON_BANDOC)) {
+
+            ps.setInt(1, x.getIdBD());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int idPM = rs.getInt("IdPM");
+                    String EmailNguoiLap = rs.getString("EmailNguoiLap");
+
+                    Date sqlNgayMuon = rs.getDate("NgayMuon");
+                    LocalDate ngayMuon = sqlNgayMuon != null ? sqlNgayMuon.toLocalDate() : null;
+
+                    Date sqlHanTra = rs.getDate("HanTra");
+                    LocalDate HanTra = sqlHanTra != null ? sqlHanTra.toLocalDate() : null;
+
+                    int maBanSao = rs.getInt("MaBanSao");
+
+                    Date sqlNgayTra = rs.getDate("NgayTraThucTe");
+                    LocalDate ngayTraThucTe = sqlNgayTra != null ? sqlNgayTra.toLocalDate() : null;
+
+                    String tinhTrang = rs.getString("TinhTrangKhiTra");
+
+                    String emailNguoiNhan = rs.getString("EmailNguoiNhan");
+
+                    ans.add(idPM);
+                    ans.add(EmailNguoiLap);
+                    ans.add(ngayMuon);
+                    ans.add(HanTra);
+                    ans.add(maBanSao);
+                    ans.add(ngayTraThucTe);
+                    ans.add(tinhTrang);
+                    ans.add(emailNguoiNhan);
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    public ArrayList<Object> getAllPhieuPhatBanDoc(BanDoc x) throws Exception {
+        ArrayList<Object> ans = new ArrayList<>();
+        try (Connection con = DBConnector.getConnection();
+             PreparedStatement ps = con.prepareStatement(SQL_GET_ALL_PHIEUPHAT_BANDOC)) {
+
+            ps.setInt(1, x.getIdBD());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int idPhat = rs.getInt("IdPhat");
+                    int idPM = rs.getInt("IdPM");
+                    String emailNguoiLap = rs.getString("EmailNguoiLap");
+
+                    Date sqlNgayMuon = rs.getDate("NgayMuon");
+                    LocalDate ngayMuon = sqlNgayMuon != null ? sqlNgayMuon.toLocalDate() : null;
+
+                    String loaiPhat = rs.getString("LoaiPhat");
+                    double soTien = rs.getDouble("SoTien");
+
+                    Date sqlNgayGhi = rs.getDate("NgayGhiNhan");
+                    LocalDate ngayGhiNhan = sqlNgayGhi != null ? sqlNgayGhi.toLocalDate() : null;
+
+                    String trangThai = rs.getString("TrangThai");
+
+                    ans.add(idPhat);
+                    ans.add(idPM);
+                    ans.add(emailNguoiLap);
+                    ans.add(ngayMuon);
+                    ans.add(loaiPhat);
+                    ans.add(soTien);
+                    ans.add(ngayGhiNhan);
+                    ans.add(trangThai);
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
 }
