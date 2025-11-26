@@ -210,6 +210,35 @@ public class BanDocDAO {
         return null;
     }
 
+
+    public BanDoc findByEmail(String email) throws Exception {
+        if (email == null || email.trim().isEmpty()) {
+            return null;
+        }
+        
+        String sql = "SELECT * FROM BANDOC WHERE Email = ?";
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    BanDoc bd = new BanDoc();
+                    bd.setIdBD(rs.getInt("IdBD"));
+                    bd.setHoTen(rs.getString("HoTen"));
+                    bd.setEmail(rs.getString("Email"));
+                    bd.setDiaChi(rs.getString("DiaChi"));
+                    bd.setSdt(rs.getString("SDT"));
+                    return bd;
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            throw ex;
+        }
+        return null;
+    }
+
     public int getSoLanMuonCuaBanDoc(int IdBD) throws Exception {
         int soPhieu = 0;
         try (Connection conn = DBConnector.getConnection();

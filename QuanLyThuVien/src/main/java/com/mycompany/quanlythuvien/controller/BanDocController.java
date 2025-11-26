@@ -49,4 +49,8 @@ public class BanDocController {
         }
         return false;
     }
+    
+    public BanDoc findByEmail(String email) throws Exception {
+        return dao.findByEmail(email);
+    }
 }

@@ -10,6 +10,7 @@ import com.mycompany.quanlythuvien.model.BanSao;
 import com.mycompany.quanlythuvien.model.PageResult;
 import com.mycompany.quanlythuvien.model.PhieuMuon;
 import com.mycompany.quanlythuvien.model.ChiTietPhieuMuon;
+import com.mycompany.quanlythuvien.model.TaiKhoan;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -81,13 +82,21 @@ public class QuanLyPhieuMuonPanel extends JPanel {
     public QuanLyPhieuMuonPanel() {
         setLayout(new BorderLayout(8,8));
 
-        // formatters
+        // formatters - set to COMMIT to prevent auto-correction
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+        sdf.setLenient(false); // Strict parsing
         DateFormatter dateFormatter = new DateFormatter(sdf);
+        dateFormatter.setAllowsInvalid(true); // Allow invalid input temporarily
+        dateFormatter.setOverwriteMode(false);
         DefaultFormatterFactory dff = new DefaultFormatterFactory(dateFormatter);
 
-        tfFromDate = new JFormattedTextField(dff); tfFromDate.setColumns(10);
-        tfToDate = new JFormattedTextField(dff); tfToDate.setColumns(10);
+        tfFromDate = new JFormattedTextField(dff); 
+        tfFromDate.setColumns(10);
+        tfFromDate.setFocusLostBehavior(JFormattedTextField.COMMIT); // Don't auto-correct on focus lost
+        
+        tfToDate = new JFormattedTextField(dff); 
+        tfToDate.setColumns(10);
+        tfToDate.setFocusLostBehavior(JFormattedTextField.COMMIT); // Don't auto-correct on focus lost
 
         // Top: search controls
         JPanel top = new JPanel(new GridBagLayout());
@@ -300,16 +309,62 @@ public class QuanLyPhieuMuonPanel extends JPanel {
     private void doSearch(int page) {
         // validate dates
         LocalDate from = null, to = null;
+        
+        // Validate format dd-MM-yyyy using regex
+        String dateRegex = "^\\d{2}-\\d{2}-\\d{4}$";
+        
         try {
             String sf = tfFromDate.getText().trim();
-            if (!sf.isEmpty()) from = LocalDate.parse(sf, dtf);
             String st = tfToDate.getText().trim();
-            if (!st.isEmpty()) to = LocalDate.parse(st, dtf);
+            
+            // Kiểm tra format "Từ ngày"
+            if (!sf.isEmpty()) {
+                if (!sf.matches(dateRegex)) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Từ ngày không đúng định dạng dd-MM-yyyy\nVí dụ: 26-11-2025", 
+                        "Lỗi định dạng", 
+                        JOptionPane.ERROR_MESSAGE);
+                    tfFromDate.requestFocus(); // Focus vào ô bị lỗi
+                    return;
+                }
+                from = LocalDate.parse(sf, dtf);
+            }
+            
+            // Kiểm tra format "Đến ngày"
+            if (!st.isEmpty()) {
+                if (!st.matches(dateRegex)) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Đến ngày không đúng định dạng dd-MM-yyyy\nVí dụ: 10-12-2025", 
+                        "Lỗi định dạng", 
+                        JOptionPane.ERROR_MESSAGE);
+                    tfToDate.requestFocus(); // Focus vào ô bị lỗi
+                    return;
+                }
+                to = LocalDate.parse(st, dtf);
+            }
+            
+            // Nếu một ô trống thì gán bằng giá trị của ô còn lại
+            if (from != null && to == null) {
+                to = from; // Chỉ tìm kiếm ngày "from"
+            } else if (from == null && to != null) {
+                from = to; // Chỉ tìm kiếm ngày "to"
+            }
+            
+            // Kiểm tra khoảng thời gian hợp lệ
             if (from != null && to != null && from.isAfter(to)) {
-                JOptionPane.showMessageDialog(this, "Từ ngày phải nhỏ hơn hoặc bằng Đến ngày");
+                JOptionPane.showMessageDialog(this, 
+                    "Từ ngày phải nhỏ hơn hoặc bằng Đến ngày", 
+                    "Lỗi khoảng thời gian", 
+                    JOptionPane.WARNING_MESSAGE);
                 return;
             }
-        } catch (DateTimeParseException ex) { JOptionPane.showMessageDialog(this, "Sai định dạng ngày (dd-MM-yyyy)"); return; }
+        } catch (DateTimeParseException ex) { 
+            JOptionPane.showMessageDialog(this, 
+                "Ngày tháng không hợp lệ!\nVui lòng nhập đúng định dạng dd-MM-yyyy\nVí dụ: 26-11-2025", 
+                "Lỗi", 
+                JOptionPane.ERROR_MESSAGE); 
+            return; 
+        }
 
         String emailBD = ((String)cbEmailBanDoc.getSelectedItem());
         String emailLap = ((String)cbEmailNguoiLap.getSelectedItem());
@@ -379,23 +434,32 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         // Bạn đọc
         c.gridx=0; c.gridy=0; p.add(new JLabel("Bạn đọc (Email):"), c);
         JComboBox<String> cbBD = new JComboBox<>();
+        cbBD.setEditable(true); // Cho phép nhập email trực tiếp
         try { BanDocDAO bdao = new BanDocDAO(); java.util.ArrayList<BanDoc> list = new java.util.ArrayList<>(); bdao.readDAO(list); cbBD.addItem(""); for (BanDoc b: list) cbBD.addItem(b.getEmail()); } catch(Exception ex){ }
         c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; c.weightx=1; p.add(cbBD, c);
 
-        // Email Người lập (gợi ý)
+        // Email Người lập - ComboBox cho phép nhập và xổ xuống
         c.gridx=0; c.gridy=1; c.fill = GridBagConstraints.NONE; c.weightx=0; p.add(new JLabel("Email Người lập:"), c);
-        JTextField tfEmail = new JTextField(25);
-        c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfEmail, c);
-        // autocompletion disabled for tfEmail due to performance issues
+        JComboBox<String> cbEmailNguoiLap = new JComboBox<>();
+        cbEmailNguoiLap.setEditable(true); // Cho phép nhập email trực tiếp
+        try { 
+            TaiKhoanDAO tkDao = new TaiKhoanDAO(); 
+            List<TaiKhoan> listTK = tkDao.getAllAccountsSimple(); 
+            cbEmailNguoiLap.addItem(""); 
+            for (TaiKhoan tk: listTK) cbEmailNguoiLap.addItem(tk.getEmail()); 
+        } catch(Exception ex){ }
+        c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(cbEmailNguoiLap, c);
 
-        // Ngày mượn
+        // Ngày mượn - Mặc định now()
         c.gridx=0; c.gridy=2; c.fill = GridBagConstraints.NONE; p.add(new JLabel("Ngày mượn (dd-MM-yyyy):"), c);
-        JFormattedTextField tfN = new JFormattedTextField(new DefaultFormatterFactory(new DateFormatter(new SimpleDateFormat("dd-MM-yyyy")))); tfN.setColumns(10); tfN.setText(dtf.format(LocalDate.now()));
+        JTextField tfN = new JTextField(10);
+        tfN.setText(dtf.format(LocalDate.now()));
         c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfN, c);
 
-        // Hạn trả
+        // Hạn trả - Mặc định 1 tuần sau (7 ngày)
         c.gridx=0; c.gridy=3; c.fill = GridBagConstraints.NONE; p.add(new JLabel("Hạn trả (dd-MM-yyyy):"), c);
-        JFormattedTextField tfH = new JFormattedTextField(new DefaultFormatterFactory(new DateFormatter(new SimpleDateFormat("dd-MM-yyyy")))); tfH.setColumns(10); tfH.setText(dtf.format(LocalDate.now().plusDays(14)));
+        JTextField tfH = new JTextField(10);
+        tfH.setText(dtf.format(LocalDate.now().plusWeeks(1)));
         c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfH, c);
 
         // Separator
@@ -457,13 +521,65 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         // Save -> commit: create PhieuMuon and details
         btnSave.addActionListener(ae -> {
             try {
-                String sel = (String)cbBD.getSelectedItem(); if (sel==null || sel.isBlank()) { JOptionPane.showMessageDialog(dlg, "Vui lòng chọn bạn đọc"); return; }
-                int idBD = Integer.parseInt(sel.split(" ")[0]);
-                String email = tfEmail.getText().trim(); if (email.isBlank()) { JOptionPane.showMessageDialog(dlg, "Email người lập không được để trống"); return; }
-                LocalDate nm = LocalDate.parse(tfN.getText().trim(), dtf);
-                LocalDate ht = LocalDate.parse(tfH.getText().trim(), dtf);
-                if (ht.isBefore(nm)) { JOptionPane.showMessageDialog(dlg, "Hạn trả phải lớn hơn hoặc bằng Ngày Mượn"); return; }
-                if (queueModel.isEmpty()) { JOptionPane.showMessageDialog(dlg, "Vui lòng thêm ít nhất 1 MaBanSao"); return; }
+                String sel = (String)cbBD.getSelectedItem(); 
+                if (sel==null || sel.isBlank()) { 
+                    JOptionPane.showMessageDialog(dlg, "Vui lòng nhập email bạn đọc"); 
+                    return; 
+                }
+                
+                // Kiểm tra email bạn đọc có tồn tại không
+                BanDocDAO bdDao = new BanDocDAO();
+                BanDoc banDoc = bdDao.findByEmail(sel.trim());
+                if (banDoc == null) {
+                    JOptionPane.showMessageDialog(dlg, "Email bạn đọc '" + sel + "' không tồn tại trong hệ thống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                int idBD = banDoc.getIdBD();
+                
+                String email = ((String)cbEmailNguoiLap.getSelectedItem()); 
+                if (email == null) email = "";
+                email = email.trim();
+                if (email.isBlank()) { 
+                    JOptionPane.showMessageDialog(dlg, "Email người lập không được để trống"); 
+                    return; 
+                }
+                
+                // Kiểm tra email người lập có tồn tại không
+                TaiKhoanDAO tkDao = new TaiKhoanDAO();
+                TaiKhoan taiKhoan = tkDao.findByEmail(email);
+                if (taiKhoan == null) {
+                    JOptionPane.showMessageDialog(dlg, "Email người lập '" + email + "' không tồn tại trong hệ thống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Validate format ngày mượn
+                String dateRegex = "^\\d{2}-\\d{2}-\\d{4}$";
+                String ngayMuonStr = tfN.getText().trim();
+                if (!ngayMuonStr.matches(dateRegex)) {
+                    JOptionPane.showMessageDialog(dlg, "Ngày mượn không đúng định dạng dd-MM-yyyy\nVí dụ: 26-11-2025", "Lỗi định dạng", JOptionPane.ERROR_MESSAGE);
+                    tfN.requestFocus();
+                    return;
+                }
+                
+                // Validate format hạn trả
+                String hanTraStr = tfH.getText().trim();
+                if (!hanTraStr.matches(dateRegex)) {
+                    JOptionPane.showMessageDialog(dlg, "Hạn trả không đúng định dạng dd-MM-yyyy\nVí dụ: 03-12-2025", "Lỗi định dạng", JOptionPane.ERROR_MESSAGE);
+                    tfH.requestFocus();
+                    return;
+                }
+                
+                LocalDate nm = LocalDate.parse(ngayMuonStr, dtf);
+                LocalDate ht = LocalDate.parse(hanTraStr, dtf);
+                
+                if (ht.isBefore(nm)) { 
+                    JOptionPane.showMessageDialog(dlg, "Hạn trả phải lớn hơn hoặc bằng Ngày Mượn", "Lỗi", JOptionPane.WARNING_MESSAGE); 
+                    return; 
+                }
+                if (queueModel.isEmpty()) { 
+                    JOptionPane.showMessageDialog(dlg, "Vui lòng thêm ít nhất 1 MaBanSao"); 
+                    return; 
+                }
 
                 PhieuMuon pm = new PhieuMuon(); pm.setIdBD(idBD); pm.setEmailNguoiLap(email); pm.setNgayMuon(nm); pm.setHanTra(ht);
                 List<ChiTietPhieuMuon> details = new ArrayList<>();
@@ -488,70 +604,341 @@ public class QuanLyPhieuMuonPanel extends JPanel {
     // live textfield autocomplete removed due to performance concerns
 
     private void openEditDialog() {
-        int r = table.getSelectedRow(); if (r<0 || isNoDataRow(r)) { JOptionPane.showMessageDialog(this, "Vui lòng chọn 1 phiếu để sửa"); return; }
-        Object idObj = table.getValueAt(r,0); if (idObj==null) return; int idPM; try { idPM = Integer.parseInt(idObj.toString()); } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Id không hợp lệ"); return; }
-        PhieuMuon pm = pmController.findById(idPM); if (pm==null) { JOptionPane.showMessageDialog(this, "Không tìm thấy phiếu"); return; }
+        int r = table.getSelectedRow(); 
+        if (r<0 || isNoDataRow(r)) { 
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn 1 phiếu để sửa"); 
+            return; 
+        }
+        Object idObj = table.getValueAt(r,0); 
+        if (idObj==null) return; 
+        int idPM; 
+        try { 
+            idPM = Integer.parseInt(idObj.toString()); 
+        } catch (Exception ex) { 
+            JOptionPane.showMessageDialog(this, "Id không hợp lệ"); 
+            return; 
+        }
+        PhieuMuon pm = pmController.findById(idPM); 
+        if (pm==null) { 
+            JOptionPane.showMessageDialog(this, "Không tìm thấy phiếu"); 
+            return; 
+        }
 
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this), "Cập nhật Phiếu Mượn #"+idPM, Dialog.ModalityType.APPLICATION_MODAL);
-        dlg.setSize(560,420); dlg.setLocationRelativeTo(this);
-        JPanel p = new JPanel(new GridBagLayout()); GridBagConstraints c = new GridBagConstraints(); c.insets = new Insets(6,6,6,6); c.anchor = GridBagConstraints.WEST;
+        dlg.setSize(560,300); 
+        dlg.setLocationRelativeTo(this);
+        JPanel p = new JPanel(new GridBagLayout()); 
+        GridBagConstraints c = new GridBagConstraints(); 
+        c.insets = new Insets(6,6,6,6); 
+        c.anchor = GridBagConstraints.WEST;
 
-        // Top: allow editing EmailNguoiLap and HanTra
+        // Email Người lập - ComboBox xổ xuống
         c.gridx=0; c.gridy=0; p.add(new JLabel("Email Người lập:"), c);
-        JTextField tfEmail = new JTextField(pm.getEmailNguoiLap(),25); c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfEmail, c);
-        // autocompletion disabled for tfEmail in edit dialog (was causing lag)
+        JComboBox<String> cbEmailNguoiLap = new JComboBox<>();
+        cbEmailNguoiLap.setEditable(true);
+        try { 
+            TaiKhoanDAO tkDao = new TaiKhoanDAO(); 
+            List<TaiKhoan> listTK = tkDao.getAllAccountsSimple(); 
+            cbEmailNguoiLap.addItem(""); 
+            for (TaiKhoan tk: listTK) cbEmailNguoiLap.addItem(tk.getEmail()); 
+        } catch(Exception ex){ }
+        cbEmailNguoiLap.setSelectedItem(pm.getEmailNguoiLap());
+        c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(cbEmailNguoiLap, c);
 
-        c.gridx=0; c.gridy=1; c.fill = GridBagConstraints.NONE; p.add(new JLabel("Ngày mượn (dd-MM-yyyy):"), c);
-        JFormattedTextField tfN = new JFormattedTextField(new DefaultFormatterFactory(new DateFormatter(new SimpleDateFormat("dd-MM-yyyy")))); tfN.setColumns(10); tfN.setText(pm.getNgayMuon()==null? dtf.format(LocalDate.now()): pm.getNgayMuon().format(dtf)); c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfN, c);
+        // Ngày mượn - chỉ hiển thị, không cho phép chỉnh sửa
+        c.gridx=0; c.gridy=1; c.fill = GridBagConstraints.NONE; p.add(new JLabel("Ngày mượn:"), c);
+        JTextField tfN = new JTextField(pm.getNgayMuon()==null? "" : pm.getNgayMuon().format(dtf)); 
+        tfN.setEditable(false);
+        tfN.setBackground(Color.LIGHT_GRAY);
+        tfN.setColumns(10);
+        c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfN, c);
 
-        c.gridx=0; c.gridy=2; p.add(new JLabel("Hạn trả (dd-MM-yyyy):"), c);
-        JFormattedTextField tfH = new JFormattedTextField(new DefaultFormatterFactory(new DateFormatter(new SimpleDateFormat("dd-MM-yyyy")))); tfH.setColumns(10); tfH.setText(pm.getHanTra()==null? dtf.format(LocalDate.now().plusDays(14)): pm.getHanTra().format(dtf)); c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfH, c);
+        // Hạn trả - cho phép chỉnh sửa với validation format
+        c.gridx=0; c.gridy=2; c.fill = GridBagConstraints.NONE; p.add(new JLabel("Hạn trả (dd-MM-yyyy):"), c);
+        JTextField tfH = new JTextField(pm.getHanTra()==null? "" : pm.getHanTra().format(dtf)); 
+        tfH.setColumns(10);
+        c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfH, c);
 
-        // separator
-        c.gridx=0; c.gridy=3; c.gridwidth=2; p.add(new JSeparator(), c);
-
-        // Bottom: trả bản sao (MaBanSao nhập thủ công)
-        c.gridwidth=1; c.gridx=0; c.gridy=4; p.add(new JLabel("MaBanSao:"), c);
-        JTextField tfMaBanSao = new JTextField(10); c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfMaBanSao, c);
-        c.gridx=0; c.gridy=5; p.add(new JLabel("TinhTrangKhiTra:"), c);
-        JComboBox<String> cbTinhTrang = new JComboBox<>(new String[]{"Tốt","Cũ hơn","Hỏng"}); c.gridx=1; p.add(cbTinhTrang, c);
-        c.gridx=0; c.gridy=6; p.add(new JLabel("Email Người nhận:"), c);
-        JTextField tfEmailNhan = new JTextField(25); c.gridx=1; p.add(tfEmailNhan, c);
-
-        JPanel btns = new JPanel(new FlowLayout(FlowLayout.LEFT)); JButton btnReturn = new JButton("Trả"); JButton btnCancel = new JButton("Hủy"); btns.add(btnReturn); btns.add(btnCancel);
-        c.gridx=0; c.gridy=7; c.gridwidth=2; p.add(btns, c);
+        // Buttons
+        JPanel btns = new JPanel(new FlowLayout(FlowLayout.CENTER)); 
+        JButton btnUpdate = new JButton("Cập nhật");
+        JButton btnReturnBooks = new JButton("Thực hiện trả sách"); 
+        JButton btnCancel = new JButton("Hủy"); 
+        btns.add(btnUpdate); 
+        btns.add(btnReturnBooks);
+        btns.add(btnCancel);
+        c.gridx=0; c.gridy=3; c.gridwidth=2; p.add(btns, c);
 
         dlg.setContentPane(p);
 
-        btnReturn.addActionListener(ae -> {
+        // Nút Cập nhật - chỉ cập nhật Email người lập và Hạn trả
+        btnUpdate.addActionListener(ae -> {
             try {
-                LocalDate nm = LocalDate.parse(tfN.getText().trim(), dtf);
-                LocalDate ht = LocalDate.parse(tfH.getText().trim(), dtf);
-                if (ht.isBefore(nm)) { JOptionPane.showMessageDialog(dlg, "Hạn trả phải lớn hơn Ngày Mượn"); return; }
-                pm.setEmailNguoiLap(tfEmail.getText().trim()); pm.setNgayMuon(nm); pm.setHanTra(ht);
-
-                // handle return of a MaBanSao if provided
-                String sMa = tfMaBanSao.getText().trim(); if (!sMa.isEmpty()) {
-                    int m = Integer.parseInt(sMa);
-                    // checks like in create
-                    if (!ctController.isMaBanSaoBorrowed(m)) { JOptionPane.showMessageDialog(dlg, "Bản sao hiện tại không đang được mượn"); return; }
-                    String tt = (String) cbTinhTrang.getSelectedItem();
-                    boolean ok = ctController.markReturned(pm.getIdPM(), m, LocalDate.now(), tt);
-                    if (!ok) { JOptionPane.showMessageDialog(dlg, "Trả bản sao thất bại"); return; }
-                    // set extra fields
-                    // dao should set tinh trang and email nguoi nhan; here we suppose markReturned can be extended; otherwise separate dao call required
+                String email = ((String)cbEmailNguoiLap.getSelectedItem());
+                if (email == null) email = "";
+                email = email.trim();
+                if (email.isBlank()) { 
+                    JOptionPane.showMessageDialog(dlg, "Email người lập không được để trống"); 
+                    return; 
                 }
-
-                // update PM always
+                
+                // Kiểm tra email người lập có tồn tại không
+                TaiKhoanDAO tkDao = new TaiKhoanDAO();
+                TaiKhoan taiKhoan = tkDao.findByEmail(email);
+                if (taiKhoan == null) {
+                    JOptionPane.showMessageDialog(dlg, "Email người lập '" + email + "' không tồn tại trong hệ thống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Validate format hạn trả
+                String dateRegex = "^\\d{2}-\\d{2}-\\d{4}$";
+                String hanTraStr = tfH.getText().trim();
+                if (!hanTraStr.matches(dateRegex)) {
+                    JOptionPane.showMessageDialog(dlg, "Hạn trả không đúng định dạng dd-MM-yyyy\nVí dụ: 03-12-2025", "Lỗi định dạng", JOptionPane.ERROR_MESSAGE);
+                    tfH.requestFocus();
+                    return;
+                }
+                
+                LocalDate ht = LocalDate.parse(hanTraStr, dtf);
+                
+                if (ht.isBefore(pm.getNgayMuon())) { 
+                    JOptionPane.showMessageDialog(dlg, "Hạn trả phải lớn hơn hoặc bằng Ngày Mượn (" + pm.getNgayMuon().format(dtf) + ")", "Lỗi", JOptionPane.WARNING_MESSAGE); 
+                    return; 
+                }
+                
+                pm.setEmailNguoiLap(email); 
+                pm.setHanTra(ht);
                 pmController.update(pm);
+                
                 JOptionPane.showMessageDialog(dlg, "Đã cập nhật phiếu mượn " + pm.getIdPM());
-                dlg.dispose(); doSearch(currentPage);
-            } catch (DateTimeParseException ex) { JOptionPane.showMessageDialog(dlg, "Sai định dạng ngày (dd-MM-yyyy)"); }
-            catch (NumberFormatException ex) { JOptionPane.showMessageDialog(dlg, "Mã phải là số"); }
-            catch (Exception ex) { JOptionPane.showMessageDialog(dlg, "Lỗi: " + ex.getMessage()); }
+                dlg.dispose(); 
+                doSearch(currentPage);
+            } catch (DateTimeParseException ex) { 
+                JOptionPane.showMessageDialog(dlg, "Sai định dạng ngày (dd-MM-yyyy)", "Lỗi", JOptionPane.ERROR_MESSAGE); 
+            }
+            catch (Exception ex) { 
+                JOptionPane.showMessageDialog(dlg, "Lỗi: " + ex.getMessage()); 
+            }
+        });
+
+        // Nút Thực hiện trả sách - mở dialog mới
+        btnReturnBooks.addActionListener(ae -> {
+            openReturnBooksDialog(pm);
+            dlg.dispose();
         });
 
         btnCancel.addActionListener(ae -> dlg.dispose());
+        dlg.setVisible(true);
+    }
+
+    /**
+     * Dialog Thực hiện trả sách - cho phép cập nhật chi tiết phiếu mượn
+     */
+    private void openReturnBooksDialog(PhieuMuon pm) {
+        JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this), "Thực hiện trả sách - Phiếu Mượn #" + pm.getIdPM(), Dialog.ModalityType.APPLICATION_MODAL);
+        dlg.setSize(900, 550);
+        dlg.setLocationRelativeTo(this);
+
+        JPanel content = new JPanel(new BorderLayout(6,6));
+        content.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+
+        // Top: Filters và Email người nhận
+        JPanel topPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4,4,4,4);
+        c.anchor = GridBagConstraints.WEST;
+
+        // Bộ lọc
+        c.gridx=0; c.gridy=0; topPanel.add(new JLabel("Trạng thái trả:"), c);
+        JComboBox<String> cbReturned = new JComboBox<>(new String[]{"Tất cả","Đã trả","Chưa trả"});
+        c.gridx=1; topPanel.add(cbReturned, c);
+
+        c.gridx=2; topPanel.add(new JLabel("Trạng thái trễ hạn:"), c);
+        JComboBox<String> cbOverdue = new JComboBox<>(new String[]{"Tất cả","Trễ hạn","Chưa trễ hạn"});
+        c.gridx=3; topPanel.add(cbOverdue, c);
+
+        // Email người nhận
+        c.gridx=0; c.gridy=1; topPanel.add(new JLabel("Email Người nhận:"), c);
+        JComboBox<String> cbEmailNguoiNhan = new JComboBox<>();
+        cbEmailNguoiNhan.setEditable(true);
+        try { 
+            TaiKhoanDAO tkDao = new TaiKhoanDAO(); 
+            List<TaiKhoan> listTK = tkDao.getAllAccountsSimple(); 
+            cbEmailNguoiNhan.addItem(""); 
+            for (TaiKhoan tk: listTK) cbEmailNguoiNhan.addItem(tk.getEmail()); 
+        } catch(Exception ex){ }
+        c.gridx=1; c.gridwidth=3; c.fill = GridBagConstraints.HORIZONTAL; topPanel.add(cbEmailNguoiNhan, c);
+
+        content.add(topPanel, BorderLayout.NORTH);
+
+        // Center: Bảng chi tiết với TinhTrangKhiTra có thể chỉnh sửa
+        String[] cols = {"MaBanSao","Tình trạng hiện tại","Tình trạng khi trả","Email Người nhận","Ngày trả"};
+        DefaultTableModel model = new DefaultTableModel(cols,0) {
+            @Override 
+            public boolean isCellEditable(int row, int col) { 
+                return col == 2; // Chỉ cho phép chỉnh sửa cột "Tình trạng khi trả"
+            }
+        };
+        JTable tbl = new JTable(model);
+        
+        // Thêm ComboBox cho cột TinhTrangKhiTra
+        JComboBox<String> cbTinhTrang = new JComboBox<>(new String[]{"", "Tốt", "Cũ hơn", "Hỏng"});
+        tbl.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(cbTinhTrang));
+        
+        JScrollPane scrollPane = new JScrollPane(tbl);
+        content.add(scrollPane, BorderLayout.CENTER);
+
+        // Bottom: Pagination và buttons
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        
+        JPanel pag = new JPanel(new FlowLayout(FlowLayout.CENTER)); 
+        JButton bPrev = new JButton("Trước");
+        JButton bNext = new JButton("Tiếp"); 
+        JLabel lbl = new JLabel(); 
+        pag.add(bPrev); 
+        pag.add(lbl); 
+        pag.add(bNext);
+        
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton btnSave = new JButton("Trả sách");
+        JButton btnClose = new JButton("Đóng");
+        btnPanel.add(btnSave);
+        btnPanel.add(btnClose);
+        
+        bottomPanel.add(pag, BorderLayout.NORTH);
+        bottomPanel.add(btnPanel, BorderLayout.SOUTH);
+        content.add(bottomPanel, BorderLayout.SOUTH);
+
+        dlg.setContentPane(content);
+
+        final int[] pageIdx = {1}; 
+        final int[] totalPg = {1}; 
+        final int pageSz = 10;
+
+        // Load data action
+        ActionListener reload = ae -> {
+            SwingWorker<com.mycompany.quanlythuvien.model.PageResult<ChiTietPhieuMuon>,Void> w = new SwingWorker<>() {
+                @Override 
+                protected com.mycompany.quanlythuvien.model.PageResult<ChiTietPhieuMuon> doInBackground() throws Exception {
+                    String returned = (String)cbReturned.getSelectedItem();
+                    if ("Đã trả".equals(returned)) returned = "returned"; 
+                    else if ("Chưa trả".equals(returned)) returned = "unreturned"; 
+                    else returned = null;
+                    
+                    String overdue = (String)cbOverdue.getSelectedItem();
+                    if ("Trễ hạn".equals(overdue)) overdue = "overdue"; 
+                    else if ("Chưa trễ hạn".equals(overdue)) overdue = "notoverdue"; 
+                    else overdue = null;
+                    
+                    return ctController.findByIdPMWithFiltersPaginated(pm.getIdPM(), returned, overdue, pageIdx[0], pageSz);
+                }
+                
+                @Override 
+                protected void done() {
+                    try {
+                        com.mycompany.quanlythuvien.model.PageResult<ChiTietPhieuMuon> res = get();
+                        model.setRowCount(0);
+                        for (ChiTietPhieuMuon c: res.getData()) {
+                            String tinhTrangHienTai = c.getTinhTrangKhiTra() == null ? "Chưa trả" : c.getTinhTrangKhiTra();
+                            String tinhTrangKhiTra = ""; // Để trống, người dùng sẽ chọn
+                            String emailNguoiNhan = c.getEmailNguoiNhan() == null ? "" : c.getEmailNguoiNhan();
+                            String ngayTra = c.getNgayTraThucTe() == null ? "" : c.getNgayTraThucTe().format(dtf);
+                            model.addRow(new Object[]{c.getMaBanSao(), tinhTrangHienTai, tinhTrangKhiTra, emailNguoiNhan, ngayTra});
+                        }
+                        totalPg[0] = res.getTotalPages(); 
+                        lbl.setText("Trang " + pageIdx[0] + " / " + Math.max(1, totalPg[0]) + " (Tổng: " + res.getTotalCount() + ")");
+                        bPrev.setEnabled(pageIdx[0] > 1); 
+                        bNext.setEnabled(pageIdx[0] < totalPg[0]);
+                    } catch (Exception ex) { 
+                        ex.printStackTrace(); 
+                        JOptionPane.showMessageDialog(dlg, "Lỗi load chi tiết: " + ex.getMessage()); 
+                    }
+                }
+            };
+            w.execute();
+        };
+
+        bPrev.addActionListener(e -> { pageIdx[0] = Math.max(1, pageIdx[0]-1); reload.actionPerformed(null); });
+        bNext.addActionListener(e -> { pageIdx[0] = Math.min(totalPg[0], pageIdx[0]+1); reload.actionPerformed(null); });
+        cbReturned.addActionListener(reload); 
+        cbOverdue.addActionListener(reload);
+
+        // Nút Trả sách
+        btnSave.addActionListener(ae -> {
+            try {
+                String emailNguoiNhan = ((String)cbEmailNguoiNhan.getSelectedItem());
+                if (emailNguoiNhan != null) emailNguoiNhan = emailNguoiNhan.trim();
+                
+                // Nếu có nhập email người nhận thì kiểm tra
+                if (emailNguoiNhan != null && !emailNguoiNhan.isBlank()) {
+                    TaiKhoanDAO tkDao = new TaiKhoanDAO();
+                    TaiKhoan taiKhoan = tkDao.findByEmail(emailNguoiNhan);
+                    if (taiKhoan == null) {
+                        JOptionPane.showMessageDialog(dlg, "Email người nhận '" + emailNguoiNhan + "' không tồn tại trong hệ thống!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                }
+                
+                // Thu thập các bản sao cần cập nhật
+                List<ChiTietPhieuMuon> toUpdate = new ArrayList<>();
+                int updateCount = 0;
+                
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    int maBanSao = (int) model.getValueAt(i, 0);
+                    String tinhTrangMoi = (String) model.getValueAt(i, 2);
+                    
+                    // Chỉ cập nhật nếu TinhTrangKhiTra không trống
+                    if (tinhTrangMoi != null && !tinhTrangMoi.isBlank()) {
+                        // Lấy tình trạng hiện tại để so sánh
+                        String tinhTrangCu = (String) model.getValueAt(i, 1);
+                        
+                        // Chỉ tính là update nếu có thay đổi thực sự
+                        if (!tinhTrangMoi.equals(tinhTrangCu)) {
+                            ChiTietPhieuMuon ct = new ChiTietPhieuMuon();
+                            ct.setIdPM(pm.getIdPM());
+                            ct.setMaBanSao(maBanSao);
+                            ct.setNgayTraThucTe(LocalDate.now());
+                            ct.setTinhTrangKhiTra(tinhTrangMoi);
+                            ct.setEmailNguoiNhan(emailNguoiNhan);
+                            toUpdate.add(ct);
+                            updateCount++;
+                        }
+                    }
+                }
+                
+                // Nếu có nhập email người nhận mà không có bản sao nào được cập nhật
+                if (emailNguoiNhan != null && !emailNguoiNhan.isBlank() && updateCount == 0) {
+                    JOptionPane.showMessageDialog(dlg, "Phải có ít nhất 1 bản sao được cập nhật", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                
+                // Cập nhật vào database
+                if (!toUpdate.isEmpty()) {
+                    for (ChiTietPhieuMuon ct : toUpdate) {
+                        boolean ok = ctController.markReturned(ct.getIdPM(), ct.getMaBanSao(), ct.getNgayTraThucTe(), ct.getTinhTrangKhiTra());
+                        if (!ok) {
+                            JOptionPane.showMessageDialog(dlg, "Lỗi khi cập nhật bản sao " + ct.getMaBanSao(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                    }
+                    JOptionPane.showMessageDialog(dlg, "Đã cập nhật " + updateCount + " bản sao");
+                    reload.actionPerformed(null); // Refresh lại bảng
+                } else {
+                    JOptionPane.showMessageDialog(dlg, "Không có bản sao nào được cập nhật");
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dlg, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        });
+
+        btnClose.addActionListener(ae -> {
+            dlg.dispose();
+            doSearch(currentPage); // Refresh lại bảng chính
+        });
+
+        // Initial load
+        reload.actionPerformed(null);
         dlg.setVisible(true);
     }
 
