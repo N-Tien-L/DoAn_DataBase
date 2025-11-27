@@ -28,13 +28,13 @@ public class BanDocDAO {
         "SELECT * FROM BANDOC WHERE IdBD = ?";
 
     private static final String SQL_SOLAN_MUON =
-        "SELECT DISTINCT count(*) FROM PHIEUMUON WHERE IdBD = ?";
+        "SELECT count(*) FROM PHIEUMUON WHERE IdBD = ?";
 
     private static final String SQL_SOSACH_DANG_MUON =
-        "SELECT DISTINCT count(*) FROM PHIEUMUON pm, CT_PM ctpm WHERE pm.IdBD = ? AND pm.IdPM = ctpm.IdPM AND ctpm.NgayTraThucTe IS NULL";
+        "SELECT count(*) FROM PHIEUMUON pm, CT_PM ctpm WHERE pm.IdBD = ? AND pm.IdPM = ctpm.IdPM AND ctpm.NgayTraThucTe IS NULL";
 
     private static final String SQL_SOSACH_DA_MUON =
-        "SELECT DISTINCT count(*) FROM PHIEUMUON pm, CT_PM ctpm WHERE pm.IdBD = ? AND pm.IdPM = ctpm.IdPM";
+        "SELECT count(*) FROM PHIEUMUON pm, CT_PM ctpm WHERE pm.IdBD = ? AND pm.IdPM = ctpm.IdPM";
 
     private static final String SQL_SOPHIEU_PHAT =
         "SELECT count(*) FROM PHIEUMUON pm, PHAT p WHERE pm.IdBD = ? AND pm.IdPM = p.IdPM";

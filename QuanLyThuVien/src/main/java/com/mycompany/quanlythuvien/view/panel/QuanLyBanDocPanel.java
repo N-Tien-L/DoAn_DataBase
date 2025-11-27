@@ -1126,7 +1126,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_btnPrvActionPerformed
 
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel Search;
     private javax.swing.JButton btnAdd;
