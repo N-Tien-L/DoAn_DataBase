@@ -134,6 +134,7 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
         lblTinhTrang.setText("Tình trạng:");
 
         txtTinhTrang.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        txtTinhTrang.setToolTipText("Nhập một trong các giá trị: Tốt, Cũ, Rất Cũ, Hỏng");
 
         lblNgayNhapKho.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblNgayNhapKho.setText("Ngày nhập kho:");
@@ -237,6 +238,17 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
                 JOptionPane.showMessageDialog(this,
                         "Vui lòng nhập đầy đủ Số lượng, Số thứ tự bắt đầu, Tình trạng và Vị trí lưu trữ!",
                         "Thiếu dữ liệu", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            // Validate TinhTrang
+            if (!tinhTrang.equals("Tốt") && !tinhTrang.equals("Cũ") && 
+                !tinhTrang.equals("Rất Cũ") && !tinhTrang.equals("Hỏng")) {
+                JOptionPane.showMessageDialog(this, 
+                    "Tình trạng phải là một trong các giá trị: Tốt, Cũ, Rất Cũ, Hỏng", 
+                    "Lỗi Validation", 
+                    JOptionPane.ERROR_MESSAGE);
+                txtTinhTrang.requestFocus();
                 return;
             }
             

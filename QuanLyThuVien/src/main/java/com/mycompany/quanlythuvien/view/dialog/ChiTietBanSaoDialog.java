@@ -68,7 +68,16 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
         if (bansao != null) {
             txtMaBanSao.setText(String.valueOf(bansao.getMaBanSao()));
             txtSoThuTuTrongKho.setText(String.valueOf(bansao.getSoThuTuTrongKho()));
-            txtTinhTrang.setText(bansao.getTinhTrang());
+            // Validate và set TinhTrang
+            String tinhTrang = bansao.getTinhTrang();
+            if (tinhTrang == null || tinhTrang.trim().isEmpty()) {
+                txtTinhTrang.setText("Tốt"); // Giá trị mặc định
+            } else if (tinhTrang.equals("Tốt") || tinhTrang.equals("Cũ") || 
+                       tinhTrang.equals("Rất Cũ") || tinhTrang.equals("Hỏng")) {
+                txtTinhTrang.setText(tinhTrang);
+            } else {
+                txtTinhTrang.setText("Tốt"); // Fallback nếu giá trị không hợp lệ
+            }
             txtViTriLuuTru.setText(bansao.getViTriLuuTru());
             txtCreatedBy.setText(bansao.getCreatedBy());
 
@@ -88,6 +97,9 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
         } else {
             txtNgayNhapKho.setText(LocalDate.now().format(dateFormat));
             txtNgayNhapKho.setEnabled(false);
+            
+            // Set giá trị mặc định cho TinhTrang khi tạo mới
+            txtTinhTrang.setText("Tốt");
             
             txtCreatedBy.setText(currentUser.getEmail());
             txtCreatedAt.setText("");
@@ -197,6 +209,7 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
         jPanel2.add(lblTinhTrang);
 
         txtTinhTrang.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        txtTinhTrang.setToolTipText("Nhập một trong các giá trị: Tốt, Cũ, Rất Cũ, Hỏng");
         jPanel2.add(txtTinhTrang);
 
         lblNgayNhapKho.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
@@ -236,6 +249,18 @@ public class ChiTietBanSaoDialog extends javax.swing.JDialog {
         // TODO add your handling code here:
         try {
             String tinhTrang = txtTinhTrang.getText().trim();
+            
+            // Validate TinhTrang
+            if (!tinhTrang.equals("Tốt") && !tinhTrang.equals("Cũ") && 
+                !tinhTrang.equals("Rất Cũ") && !tinhTrang.equals("Hỏng")) {
+                JOptionPane.showMessageDialog(this, 
+                    "Tình trạng phải là một trong các giá trị: Tốt, Cũ, Rất Cũ, Hỏng", 
+                    "Lỗi Validation", 
+                    JOptionPane.ERROR_MESSAGE);
+                txtTinhTrang.requestFocus();
+                return;
+            }
+            
             String viTri = txtViTriLuuTru.getText().trim();
             int soThuTu = Integer.parseInt(txtSoThuTuTrongKho.getText().trim());
             String createdBy = (bansao != null) ? bansao.getCreatedBy() : currentUser.getEmail();
