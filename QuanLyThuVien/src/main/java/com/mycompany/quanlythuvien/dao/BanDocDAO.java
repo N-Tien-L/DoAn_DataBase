@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class BanDocDAO {
@@ -82,7 +83,194 @@ public class BanDocDAO {
         "JOIN PHAT p ON pm.IdPM = p.IdPM " +
         "WHERE pm.IdBD = ? " +
         "ORDER BY p.NgayGhiNhan DESC";
+    // PHIEU MUON
+    private static final String SQL_PHIEU_MUON_PAGE_NOSEARCH =
+        "SELECT TOP (%d) pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, pm.HanTra, " +
+        "ct.MaBanSao, ct.NgayTraThucTe, ct.TinhTrangKhiTra, ct.EmailNguoiNhan " +
+        "FROM PHIEUMUON pm LEFT JOIN CT_PM ct ON pm.IdPM = ct.IdPM " +
+        "WHERE pm.IdBD = ? AND (? IS NULL OR pm.IdPM > ?) " +
+        "ORDER BY pm.IdPM ASC";
 
+    private static final String SQL_PHIEU_MUON_PAGE_SEARCH =
+        "SELECT TOP (%d) pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, pm.HanTra, " +
+        "ct.MaBanSao, ct.NgayTraThucTe, ct.TinhTrangKhiTra, ct.EmailNguoiNhan " +
+        "FROM PHIEUMUON pm LEFT JOIN CT_PM ct ON pm.IdPM = ct.IdPM " +
+        "WHERE pm.IdBD = ? AND (pm.EmailNguoiLap LIKE ? OR CAST(pm.IdPM AS VARCHAR(50)) LIKE ? OR CAST(ct.MaBanSao AS VARCHAR(50)) LIKE ?) " +
+        "AND (? IS NULL OR pm.IdPM > ?) " +
+        "ORDER BY pm.IdPM ASC";
+
+    // PHIEU PHAT
+    private static final String SQL_PHIEU_PHAT_PAGE_NOSEARCH =
+        "SELECT TOP (%d) p.IdPhat, pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, " +
+        "p.LoaiPhat, p.SoTien, p.NgayGhiNhan, p.TrangThai " +
+        "FROM PHIEUMUON pm JOIN PHAT p ON pm.IdPM = p.IdPM " +
+        "WHERE pm.IdBD = ? AND (? IS NULL OR p.IdPhat > ?) " +
+        "ORDER BY p.IdPhat ASC";
+
+    private static final String SQL_PHIEU_PHAT_PAGE_SEARCH =
+        "SELECT TOP (%d) p.IdPhat, pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, " +
+        "p.LoaiPhat, p.SoTien, p.NgayGhiNhan, p.TrangThai " +
+        "FROM PHIEUMUON pm JOIN PHAT p ON pm.IdPM = p.IdPM " +
+        "WHERE pm.IdBD = ? AND (CAST(p.IdPhat AS VARCHAR(50)) LIKE ? OR CAST(pm.IdPM AS VARCHAR(50)) LIKE ? OR pm.EmailNguoiLap LIKE ? OR p.LoaiPhat LIKE ?) " +
+        "AND (? IS NULL OR p.IdPhat > ?) " +
+        "ORDER BY p.IdPhat ASC";
+
+    // BAN DOC paging by IdBD
+    private static final String SQL_BANDOC_PAGE_NOSEARCH =
+        "SELECT TOP (%d) IdBD, HoTen, Email, DiaChi, SDT " +
+        "FROM BANDOC " +
+        "WHERE (? IS NULL OR IdBD > ?) " +
+        "ORDER BY IdBD ASC";
+
+    private static final String SQL_BANDOC_PAGE_SEARCH =
+        "SELECT TOP (%d) IdBD, HoTen, Email, DiaChi, SDT " +
+        "FROM BANDOC " +
+        "WHERE (Email LIKE ? OR HoTen LIKE ? OR SDT LIKE ? OR DiaChi LIKE ? OR CAST(IdBD AS VARCHAR(50)) LIKE ?) " +
+        "AND (? IS NULL OR IdBD > ?) " +
+        "ORDER BY IdBD ASC";
+
+
+
+    // ---------------------- Methods ----------------------
+
+    public ArrayList<Object> getPhieuMuonPageByBanDoc(int idBD, int pageSizeRequest, Integer lastIdPM, String searchText) throws Exception {
+        ArrayList<Object> result = new ArrayList<>();
+
+        boolean hasSearch = (searchText != null && !searchText.trim().isEmpty());
+        String sql = hasSearch
+            ? String.format(SQL_PHIEU_MUON_PAGE_SEARCH, pageSizeRequest)
+            : String.format(SQL_PHIEU_MUON_PAGE_NOSEARCH, pageSizeRequest);
+
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int idx = 1;
+            // common first param: IdBD
+            ps.setInt(idx++, idBD);
+
+            if (hasSearch) {
+                String like = "%" + searchText.trim() + "%";
+                ps.setString(idx++, like); // pm.EmailNguoiLap LIKE ?
+                ps.setString(idx++, like); // CAST(pm.IdPM AS VARCHAR(50)) LIKE ?
+                ps.setString(idx++, like); // CAST(ct.MaBanSao AS VARCHAR(50)) LIKE ?
+            }
+
+            // lastId cursor param: (? IS NULL OR pm.IdPM > ?)
+            if (lastIdPM == null) {
+                ps.setNull(idx++, java.sql.Types.INTEGER);
+                ps.setNull(idx++, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(idx++, lastIdPM);
+                ps.setInt(idx++, lastIdPM);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(rs.getInt("IdPM"));
+                    result.add(rs.getString("EmailNguoiLap"));
+                    result.add(rs.getDate("NgayMuon"));
+                    result.add(rs.getDate("HanTra"));
+                    int maBanSao = rs.getInt("MaBanSao");
+                    if (rs.wasNull()) result.add(null); else result.add(maBanSao);
+                    result.add(rs.getDate("NgayTraThucTe"));
+                    result.add(rs.getString("TinhTrangKhiTra"));
+                    result.add(rs.getString("EmailNguoiNhan"));
+                }
+            }
+        }
+        return result;
+    }
+
+    public ArrayList<Object> getPhieuPhatPageByBanDoc(int idBD, int pageSizeRequest, Integer lastIdPhat, String searchText) throws Exception {
+        ArrayList<Object> result = new ArrayList<>();
+
+        boolean hasSearch = (searchText != null && !searchText.trim().isEmpty());
+        String sql = hasSearch
+            ? String.format(SQL_PHIEU_PHAT_PAGE_SEARCH, pageSizeRequest)
+            : String.format(SQL_PHIEU_PHAT_PAGE_NOSEARCH, pageSizeRequest);
+
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int idx = 1;
+            ps.setInt(idx++, idBD);
+
+            if (hasSearch) {
+                String like = "%" + searchText.trim() + "%";
+                ps.setString(idx++, like); // CAST(p.IdPhat AS VARCHAR(50)) LIKE ?
+                ps.setString(idx++, like); // CAST(pm.IdPM AS VARCHAR(50)) LIKE ?
+                ps.setString(idx++, like); // pm.EmailNguoiLap LIKE ?
+                ps.setString(idx++, like); // p.LoaiPhat LIKE ?
+            }
+
+            if (lastIdPhat == null) {
+                ps.setNull(idx++, java.sql.Types.INTEGER);
+                ps.setNull(idx++, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(idx++, lastIdPhat);
+                ps.setInt(idx++, lastIdPhat);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(rs.getInt("IdPhat"));
+                    result.add(rs.getInt("IdPM"));
+                    result.add(rs.getString("EmailNguoiLap"));
+                    result.add(rs.getDate("NgayMuon"));
+                    result.add(rs.getString("LoaiPhat"));
+                    result.add(rs.getDouble("SoTien"));
+                    result.add(rs.getDate("NgayGhiNhan"));
+                    result.add(rs.getString("TrangThai"));
+                }
+            }
+        }
+        return result;
+    }
+
+    public List<BanDoc> getPageById(int pageSizeRequest, String searchText, Integer lastId) throws SQLException, Exception {
+        List<BanDoc> result = new ArrayList<>();
+
+        boolean hasSearch = (searchText != null && !searchText.trim().isEmpty());
+        String sql = hasSearch
+            ? String.format(SQL_BANDOC_PAGE_SEARCH, pageSizeRequest)
+            : String.format(SQL_BANDOC_PAGE_NOSEARCH, pageSizeRequest);
+
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int idx = 1;
+
+            if (hasSearch) {
+                String like = "%" + searchText.trim() + "%";
+                ps.setString(idx++, like); // Email LIKE ?
+                ps.setString(idx++, like); // HoTen LIKE ?
+                ps.setString(idx++, like); // SDT LIKE ?
+                ps.setString(idx++, like); // DiaChi LIKE ?
+                ps.setString(idx++, like); // CAST(IdBD AS VARCHAR(50)) LIKE ?
+            }
+
+            if (lastId == null) {
+                ps.setNull(idx++, java.sql.Types.INTEGER);
+                ps.setNull(idx++, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(idx++, lastId);
+                ps.setInt(idx++, lastId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    BanDoc b = new BanDoc();
+                    b.setIdBD(rs.getInt("IdBD"));
+                    b.setHoTen(rs.getString("HoTen"));
+                    b.setEmail(rs.getString("Email"));
+                    b.setDiaChi(rs.getString("DiaChi"));
+                    b.setSdt(rs.getString("SDT"));
+                    result.add(b);
+                }
+            }
+        }
+        return result;
+    }
     public Boolean deleteDAO(BanDoc cur) throws Exception {
         if (cur == null) return false;
 

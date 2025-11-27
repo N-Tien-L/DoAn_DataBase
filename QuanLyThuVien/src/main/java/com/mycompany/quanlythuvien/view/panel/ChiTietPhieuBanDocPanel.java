@@ -4,6 +4,7 @@
  */
 package com.mycompany.quanlythuvien.view.panel;
 
+import com.mycompany.quanlythuvien.controller.BanDocController;
 import com.mycompany.quanlythuvien.dao.BanDocDAO;
 import com.mycompany.quanlythuvien.model.BanDoc;
 import com.mycompany.quanlythuvien.dao.ChiTietPhieuMuonDAO;
@@ -19,14 +20,11 @@ import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
-/**
- *
- * @author DMX MSI
- */
 public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
     
     private javax.swing.table.TableRowSorter<DefaultTableModel> sorterPhieuMuon;
@@ -48,6 +46,18 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
     private final int DETAIL_WIDTH1 = 340; // width bên phải cho phieu phat (có thể khác)
     private final int ID_PHAT_COL = 0; // cột chứa IdPhat trong tblPhieuPhat (0-based)
 
+    // PHIEU_MUON keyset state
+    private int pageIndexMuon = 0; // 0-based
+    private java.util.List<Integer> pageLastIdsMuon = new ArrayList<>();
+    private boolean hasMoreAfterMuon = false;
+    private ArrayList<Object> pageCacheMuon = new ArrayList<>(); // lưu flattened cho page hiện tại
+
+    // PHAT keyset state
+    private int pageIndexPhat = 0;
+    private java.util.List<Integer> pageLastIdsPhat = new ArrayList<>();
+    private boolean hasMoreAfterPhat = false;
+    private ArrayList<Object> pageCachePhat = new ArrayList<>();
+
     private int currentPagePhat = 1;
     private int pageSizePhat = 20; // rows per page, chỉnh theo ý
     private int totalRowsPhat = 0;
@@ -61,16 +71,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
     // --- lưu cache kết quả để phân trang
     private ArrayList<Object> cachePhieuPhat = null;
     private ArrayList<Object> cachePhieuMuon = null;
-    
-    // PhieuMuon columns (theo renderPagePhieuMuon):
-    // 0: ID Phiếu Mượn
-    // 1: Email Thủ Thư Lập
-    // 2: Ngày Mượn
-    // 3: Hạn Trả
-    // 4: Mã Bản Sao
-    // 5: Ngày Trả
-    // 6: Tình Trạng Khi Trả
-    // 7: Email Thủ Thư Nhận
     private int getColumnIndexForMuon(String by) {
         if (by == null) return 0;
         switch (by.trim()) {
@@ -85,16 +85,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
             default: return 0;
         }
     }
-
-    // PhieuPhat columns (theo renderPagePhieuPhat):
-    // 0: ID Phiếu Phạt
-    // 1: ID Phiếu Mượn
-    // 2: Email Thủ Thư Lập
-    // 3: Ngày Mượn
-    // 4: Loại Phạt
-    // 5: Số Tiền
-    // 6: Ngày Ghi Nhận
-    // 7: Trạng Thái Đóng
     private int getColumnIndexForPhat(String by) {
         if (by == null) return 0;
         switch (by.trim()) {
@@ -200,72 +190,135 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         btnClearSearch1.setFont(new Font("Dialog", Font.BOLD, 12));
         btnClearSearch1.setToolTipText("Clear search");
     }
-    
-    void setThongKePhieuMuonBanDoc(ArrayList<Object> arr) {
-        if (arr == null || arr.isEmpty()) {
-            lblShowSoLanMuon.setText("0");
-            lblShowSoSachDaMuon.setText("0");
-            lblShowSoSachDangMuon.setText("0");
-            return;
-        }
-        int fieldsPerRecord = FIELDS_PER_RECORD;
-        int cntSoSachDangMuon = 0;
-        int cntSoSachDaMuon = arr.size() / fieldsPerRecord;
-        ArrayList<Integer> cntSoLanMuon = new ArrayList<>();
-        for (int i = 0; i + fieldsPerRecord - 1 < arr.size(); i += fieldsPerRecord) {
-            Object idPM = arr.get(i);
-            try {
-                if (idPM != null) cntSoLanMuon.add(Integer.parseInt(idPM.toString()));
-            } catch (NumberFormatException ex) {
-                // bỏ qua nếu không parse được
-            }
-            Object ngayTraThucTe = arr.get(i + 5);
-            if (ngayTraThucTe == null) {
-                ++cntSoSachDangMuon;
-            }
-        }
-        HashSet<Integer> set = new HashSet<>(cntSoLanMuon);
-
-        lblShowSoLanMuon.setText(Integer.toString(set.size()));
-        lblShowSoSachDaMuon.setText(Integer.toString(cntSoSachDaMuon));
-        lblShowSoSachDangMuon.setText(Integer.toString(cntSoSachDangMuon));
+    // --- helper: kiểm tra null/blank
+    private boolean isNullOrBlankObj(Object o) {
+        if (o == null) return true;
+        String s = o.toString();
+        return s == null || s.trim().isEmpty();
     }
 
-    void setThongKePhieuPhatBanDoc(ArrayList<Object> arr) {
-        if (arr == null || arr.isEmpty()) {
-            lblShowSoPhieuPhat.setText("0");
-            lblShowTongSoTienPhatChuaDong.setText("0.0");
-            lblShowTongSoTienPhatDaDong.setText("0.0");
-            return;
+    // --- helper: parse double an toàn từ Object (Number, BigDecimal, String)
+    private double parseDoubleSafe(Object o) {
+        if (o == null) return 0.0;
+        if (o instanceof Number) {
+            return ((Number) o).doubleValue();
         }
-        int fieldsPerRecord = FIELDS_PER_RECORD;
-        int cntSoPhieuPhat = arr.size() / fieldsPerRecord;
-        double totTongTienPhatChuaDong = 0.0;
-        double totTongTienPhatDaDong = 0.0;
-        for (int i = 0; i + fieldsPerRecord - 1 < arr.size(); i += fieldsPerRecord) {
-            Object soTien = arr.get(i + 5);
-            Object trangThai = arr.get(i + 7);
-
-            String sTien = safeToStr(soTien);
-            String sTrangThai = safeToStr(trangThai);
-
-            double val = 0.0;
-            try {
-                if (!sTien.isEmpty()) val = Double.parseDouble(sTien);
-            } catch (NumberFormatException ex) {
-                // bỏ qua / hoặc log
-            }
-
-            if ("Da dong".equalsIgnoreCase(sTrangThai.trim())) {
-                totTongTienPhatDaDong += val;
-            } else {
-                totTongTienPhatChuaDong += val;
-            }
+        String s = o.toString().trim();
+        if (s.isEmpty()) return 0.0;
+        // loại bỏ ký tự không phải số/dấu chấm/dấu trừ (ví dụ currency, thousands separators)
+        // chuyển dấu phẩy thành dấu chấm nếu có (ví dụ "1.234,56" -> "1234.56" => remove '.' then replace ',' -> '.')
+        // Đơn giản: giữ các ký tự 0-9, dot, minus
+        // Nhưng trước tiên thay dấu phẩy bằng dấu chấm nếu có, rồi xóa ký tự không số/dot/minus.
+        s = s.replace('\u00A0', ' '); // non-breaking space
+        // Nếu chuỗi có cả '.' và ',' khả năng '.' là thousands sep và ',' là decimal -> chuẩn hoá:
+        if (s.indexOf('.') >= 0 && s.indexOf(',') >= 0) {
+            s = s.replace(".", ""); // remove dots
+            s = s.replace(',', '.'); // comma -> dot
+        } else {
+            // else thay mọi dấu phẩy thành dấu chấm (nếu người dùng lỡ dùng comma)
+            s = s.replace(',', '.');
         }
-        lblShowSoPhieuPhat.setText(Integer.toString(cntSoPhieuPhat));
-        lblShowTongSoTienPhatChuaDong.setText(String.format("%.2f", totTongTienPhatChuaDong));
-        lblShowTongSoTienPhatDaDong.setText(String.format("%.2f", totTongTienPhatDaDong));
+        // xóa ký tự lạ
+        s = s.replaceAll("[^0-9.\\-]", "");
+        if (s.isEmpty() || s.equals(".") || s.equals("-") || s.equals("-.") ) return 0.0;
+        try {
+            return Double.parseDouble(s);
+        } catch (NumberFormatException ex) {
+            return 0.0;
+        }
     }
+    // Cập nhật thống kê mượn (dùng BanDocDAO)
+    void setThongKePhieuMuonBanDoc(final int idBD) {
+        // hiển thị trạng thái loading
+        lblShowSoLanMuon.setText("...");
+        lblShowSoSachDaMuon.setText("...");
+        lblShowSoSachDangMuon.setText("...");
+
+        new SwingWorker<int[], Void>() {
+            @Override
+            protected int[] doInBackground() {
+                int soLanMuon = 0;
+                int soSachDaMuon = 0;
+                int soSachDangMuon = 0;
+                try {
+                    BanDocDAO dao = new BanDocDAO();
+                    soLanMuon = dao.getSoLanMuonCuaBanDoc(idBD);
+                    soSachDangMuon = dao.getSoSachDangMuonCuaBanDoc(idBD);
+                    soSachDaMuon = dao.getSoSachDaMuonCuaBanDoc(idBD);
+                } catch (Exception ex) {
+                    ex.printStackTrace(); // hoặc log
+                    // giữ 0 khi lỗi
+                }
+                return new int[]{soLanMuon, soSachDaMuon, soSachDangMuon};
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    int[] res = get();
+                    lblShowSoLanMuon.setText(String.valueOf(res[0]));
+                    lblShowSoSachDaMuon.setText(String.valueOf(res[1]));
+                    lblShowSoSachDangMuon.setText(String.valueOf(res[2]));
+                } catch (Exception ex) {
+                    // fallback an toàn
+                    lblShowSoLanMuon.setText("0");
+                    lblShowSoSachDaMuon.setText("0");
+                    lblShowSoSachDangMuon.setText("0");
+                }
+            }
+        }.execute();
+    }
+
+    // Cập nhật thống kê phạt (dùng BanDocDAO)
+    void setThongKePhieuPhatBanDoc(final int idBD) {
+        // hiển thị trạng thái loading
+        lblShowSoPhieuPhat.setText("...");
+        lblShowTongSoTienPhatChuaDong.setText("...");
+        lblShowTongSoTienPhatDaDong.setText("...");
+
+        new SwingWorker<Object, Void>() {
+            @Override
+            protected Object doInBackground() {
+                int soPhieuPhat = 0;
+                double soTienPhatChuaDong = 0.0;
+                double soTienPhatDaDong = 0.0;
+                try {
+                    BanDocDAO dao = new BanDocDAO();
+                    soPhieuPhat = dao.getSoPhieuPhatBanDoc(idBD);
+                    soTienPhatChuaDong = dao.getSoTienPhatChuaDongBanDoc(idBD);
+                    soTienPhatDaDong = dao.getSoTienPhatDaDongBanDoc(idBD);
+                } catch (Exception ex) {
+                    ex.printStackTrace(); // hoặc log
+                }
+                return new Object[]{soPhieuPhat, soTienPhatChuaDong, soTienPhatDaDong};
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    Object[] res = (Object[]) get();
+                    int soPhieuPhat = (res[0] instanceof Number) ? ((Number) res[0]).intValue() : 0;
+                    double chuaDong = (res[1] instanceof Number) ? ((Number) res[1]).doubleValue() : 0.0;
+                    double daDong = (res[2] instanceof Number) ? ((Number) res[2]).doubleValue() : 0.0;
+
+                    java.text.NumberFormat nf = java.text.NumberFormat.getInstance(new java.util.Locale("vi", "VN"));
+                    // hiển thị không có phần thập phân (nếu bạn muốn 2 chữ số thập phân -> setMaximumFractionDigits(2))
+                    nf.setMaximumFractionDigits(0);
+                    nf.setMinimumFractionDigits(0);
+
+                    lblShowSoPhieuPhat.setText(String.valueOf(soPhieuPhat));
+                    lblShowTongSoTienPhatChuaDong.setText(nf.format(chuaDong));
+                    lblShowTongSoTienPhatDaDong.setText(nf.format(daDong));
+                } catch (Exception ex) {
+                    lblShowSoPhieuPhat.setText("0");
+                    lblShowTongSoTienPhatChuaDong.setText("0");
+                    lblShowTongSoTienPhatDaDong.setText("0");
+                }
+            }
+        }.execute();
+    }
+
+
 
     private String safeToStr(Object o) {
         return (o == null) ? "" : o.toString();
@@ -275,32 +328,72 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         lastSelectedModelRow = -1;
         hideDetail();
 
+        // prepare cursor for current page
+        Integer lastId = null;
+        if (pageIndexMuon > 0 && pageLastIdsMuon.size() >= pageIndexMuon) {
+            lastId = pageLastIdsMuon.get(pageIndexMuon - 1);
+        }
+
+        final Integer cursor = lastId;
+        final String searchTextArg = txtSearch1.getText().trim().isEmpty() ? null : txtSearch1.getText().trim();
+
         new javax.swing.SwingWorker<ArrayList<Object>, Void>() {
             @Override
             protected ArrayList<Object> doInBackground() throws Exception {
-                BanDocDAO qr = new BanDocDAO();
-                return qr.getAllPhieuMuonBanDoc(cur);
+                // request pageSizeMuon + 1 records (flattened => +1 * FIELDS_PER_RECORD)
+                BanDocController tmp = new BanDocController();
+                return tmp.getPhieuMuonPageByBanDoc(cur.getIdBD(), pageSizeMuon + 1, cursor, searchTextArg);
             }
 
             @Override
             protected void done() {
                 try {
-                    ArrayList<Object> arr = get(); // từ background
-                    cachePhieuMuon = (arr == null) ? new ArrayList<>() : arr;
-                    if (cachePhieuMuon.size() % FIELDS_PER_RECORD != 0) {
-                        System.err.println("Warning: cachePhieuMuon size not multiple of FIELDS_PER_RECORD");
+                    ArrayList<Object> rows = get();
+                    if (rows == null) rows = new ArrayList<>();
+
+                    // rows is flattened => number of records = rows.size() / FIELDS_PER_RECORD
+                    int totalFields = rows.size();
+                    int recordCount = (FIELDS_PER_RECORD == 0) ? 0 : totalFields / FIELDS_PER_RECORD;
+
+                    hasMoreAfterMuon = recordCount > pageSizeMuon;
+
+                    // number of records to actually show on this page
+                    int showRecords = Math.min(recordCount, pageSizeMuon);
+                    int showFields = showRecords * FIELDS_PER_RECORD;
+
+                    ArrayList<Object> toShow = new ArrayList<>();
+                    if (showFields > 0) {
+                        toShow.addAll(rows.subList(0, Math.min(showFields, rows.size())));
                     }
-                    totalRowsMuon = cachePhieuMuon.size() / FIELDS_PER_RECORD;
-                    totalPagesMuon = Math.max(1, (int) Math.ceil((double) totalRowsMuon / pageSizeMuon));
-                    currentPageMuon = Math.min(Math.max(1, currentPageMuon), totalPagesMuon);
-                    setThongKePhieuMuonBanDoc(cachePhieuMuon);
+
+                    pageCacheMuon = toShow;
+
+                    // cập nhật cursor stack: last Id trên page hiện tại (IdPM nằm ở base index mỗi record)
+                    if (showRecords > 0) {
+                        int lastRecordBase = (showRecords - 1) * FIELDS_PER_RECORD;
+                        Object lastIdObj = toShow.get(lastRecordBase); // IdPM
+                        Integer last = null;
+                        try { last = Integer.parseInt(String.valueOf(lastIdObj)); } catch (Exception ignored) {}
+                        while (pageLastIdsMuon.size() > pageIndexMuon) pageLastIdsMuon.remove(pageLastIdsMuon.size() - 1);
+                        if (last != null) pageLastIdsMuon.add(last);
+                    } else {
+                        while (pageLastIdsMuon.size() > pageIndexMuon) pageLastIdsMuon.remove(pageLastIdsMuon.size() - 1);
+                    }
+
+                    // render the page
                     renderPagePhieuMuon();
+
+                    // update controls
+                    btnPrv.setEnabled(pageIndexMuon > 0);
+                    btnNxt.setEnabled(hasMoreAfterMuon);
+                    lblPageInfo.setText(String.format("Trang %d%s", pageIndexMuon + 1, hasMoreAfterMuon ? " (còn trang sau)" : ""));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
         }.execute();
     }
+
 
     private Object safeGetFromCache(ArrayList<Object> cache, int idx) {
         if (cache == null) return null;
@@ -312,56 +405,39 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         DefaultTableModel model = (DefaultTableModel) tblPhieuMuon.getModel();
         model.setRowCount(0);
 
-        // nếu không có dữ liệu
-        if (cur == null || cachePhieuMuon == null || cachePhieuMuon.isEmpty()) {
+        if (cur == null || pageCacheMuon == null || pageCacheMuon.isEmpty()) {
             lblPageInfo.setText("Trang 0/0");
             btnPrv.setEnabled(false);
             btnNxt.setEnabled(false);
-            // reset selection/detail
             lastSelectedModelRow = -1;
             hideDetail();
             return;
         }
 
-        int startRecord = (currentPageMuon - 1) * pageSizeMuon; // record index (0-based)
         int fields = FIELDS_PER_RECORD;
-        int endRecordExclusive = Math.min(totalRowsMuon, startRecord + pageSizeMuon);
-
-        for (int rec = startRecord; rec < endRecordExclusive; ++rec) {
+        for (int rec = 0; rec < pageCacheMuon.size() / fields; ++rec) {
             int base = rec * fields;
-            if (base + fields - 1 >= cachePhieuMuon.size()) break;
-            Object idPM = safeGetFromCache(cachePhieuMuon, base);
-            Object emailNguoiLap = safeGetFromCache(cachePhieuMuon, base + 1);
-            Object ngayMuon = safeGetFromCache(cachePhieuMuon, base + 2);
-            Object hanTra = safeGetFromCache(cachePhieuMuon, base + 3);
-            Object maBanSao = safeGetFromCache(cachePhieuMuon, base + 4);
-            Object ngayTraThucTe = safeGetFromCache(cachePhieuMuon, base + 5);
-            Object tinhTrang = safeGetFromCache(cachePhieuMuon, base + 6);
-            Object emailNguoiNhan = safeGetFromCache(cachePhieuMuon, base + 7);
-
             model.addRow(new Object[] {
-                safeToStr(idPM),
-                safeToStr(emailNguoiLap),
-                safeToStr(ngayMuon),
-                safeToStr(hanTra),
-                safeToStr(maBanSao),
-                safeToStr(ngayTraThucTe),
-                safeToStr(tinhTrang),
-                safeToStr(emailNguoiNhan)
+                safeToStr(pageCacheMuon.get(base)),
+                safeToStr(pageCacheMuon.get(base + 1)),
+                safeToStr(pageCacheMuon.get(base + 2)),
+                safeToStr(pageCacheMuon.get(base + 3)),
+                safeToStr(pageCacheMuon.get(base + 4)),
+                safeToStr(pageCacheMuon.get(base + 5)),
+                safeToStr(pageCacheMuon.get(base + 6)),
+                safeToStr(pageCacheMuon.get(base + 7))
             });
         }
 
-        // reset selection + hide detail when switching page
         lastSelectedModelRow = -1;
         hideDetail();
 
-        lblPageInfo.setText(String.format("Trang %d/%d (Hiển thị %d-%d / %d)",
-                currentPageMuon, totalPagesMuon,
-                startRecord + 1, Math.min(totalRowsMuon, startRecord + pageSizeMuon),
-                totalRowsMuon));
+        int startRecord = pageIndexMuon * pageSizeMuon + 1;
+        int endRecord = pageIndexMuon * pageSizeMuon + (pageCacheMuon.size() / fields);
+        lblPageInfo.setText(String.format("Trang %d (Hiển thị %d-%d / trang)", pageIndexMuon + 1, startRecord, endRecord));
+        btnPrv.setEnabled(pageIndexMuon > 0);
+        btnNxt.setEnabled(hasMoreAfterMuon);
 
-        btnPrv.setEnabled(currentPageMuon > 1);
-        btnNxt.setEnabled(currentPageMuon < totalPagesMuon);
     }
 
 
@@ -369,27 +445,57 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         lastSelectedModelRow1 = -1;
         hideDetail1();
 
+        Integer lastId = null;
+        if (pageIndexPhat > 0 && pageLastIdsPhat.size() >= pageIndexPhat) {
+            lastId = pageLastIdsPhat.get(pageIndexPhat - 1);
+        }
+        final Integer cursor = lastId;
+        final String searchTextArg = txtSearch.getText().trim().isEmpty() ? null : txtSearch.getText().trim();
+
         new javax.swing.SwingWorker<ArrayList<Object>, Void>() {
             @Override
             protected ArrayList<Object> doInBackground() throws Exception {
-                BanDocDAO qr = new BanDocDAO();
-                return qr.getAllPhieuPhatBanDoc(cur);
+                BanDocController tmp = new BanDocController();
+                return tmp.getPhieuPhatPageByBanDoc(cur.getIdBD(), pageSizePhat + 1, cursor, searchTextArg);
             }
 
             @Override
             protected void done() {
                 try {
-                    ArrayList<Object> arr = get(); // từ background
-                    cachePhieuPhat = (arr == null) ? new ArrayList<>() : arr;
-                    if (cachePhieuPhat.size() % FIELDS_PER_RECORD != 0) {
-                        // *** SỬA: in đúng biến cachePhieuPhat thay vì cachePhieuMuon
-                        System.err.println("Warning: cachePhieuPhat size not multiple of FIELDS_PER_RECORD");
+                    ArrayList<Object> rows = get();
+                    if (rows == null) rows = new ArrayList<>();
+
+                    int totalFields = rows.size();
+                    int recordCount = (FIELDS_PER_RECORD == 0) ? 0 : totalFields / FIELDS_PER_RECORD;
+
+                    hasMoreAfterPhat = recordCount > pageSizePhat;
+
+                    int showRecords = Math.min(recordCount, pageSizePhat);
+                    int showFields = showRecords * FIELDS_PER_RECORD;
+
+                    ArrayList<Object> toShow = new ArrayList<>();
+                    if (showFields > 0) {
+                        toShow.addAll(rows.subList(0, Math.min(showFields, rows.size())));
                     }
-                    totalRowsPhat = cachePhieuPhat.size() / FIELDS_PER_RECORD;
-                    totalPagesPhat = Math.max(1, (int) Math.ceil((double) totalRowsPhat / pageSizePhat));
-                    currentPagePhat = Math.min(Math.max(1, currentPagePhat), totalPagesPhat);
-                    setThongKePhieuPhatBanDoc(cachePhieuPhat);
+
+                    pageCachePhat = toShow;
+
+                    if (showRecords > 0) {
+                        int lastRecordBase = (showRecords - 1) * FIELDS_PER_RECORD;
+                        Object lastIdObj = toShow.get(lastRecordBase);
+                        Integer last = null;
+                        try { last = Integer.parseInt(String.valueOf(lastIdObj)); } catch (Exception ignored) {}
+                        while (pageLastIdsPhat.size() > pageIndexPhat) pageLastIdsPhat.remove(pageLastIdsPhat.size() - 1);
+                        if (last != null) pageLastIdsPhat.add(last);
+                    } else {
+                        while (pageLastIdsPhat.size() > pageIndexPhat) pageLastIdsPhat.remove(pageLastIdsPhat.size() - 1);
+                    }
+
                     renderPagePhieuPhat();
+
+                    btnPrv1.setEnabled(pageIndexPhat > 0);
+                    btnNxt1.setEnabled(hasMoreAfterPhat);
+                    lblPageInfo1.setText(String.format("Trang %d%s", pageIndexPhat + 1, hasMoreAfterPhat ? " (còn trang sau)" : ""));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -397,55 +503,42 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         }.execute();
     }
 
+
     private void renderPagePhieuPhat() {
         DefaultTableModel model = (DefaultTableModel) tblPhieuPhat.getModel();
         model.setRowCount(0);
-        if (cur == null || cachePhieuPhat == null || cachePhieuPhat.isEmpty()) {
+        if (cur == null || pageCachePhat == null || pageCachePhat.isEmpty()) {
             lblPageInfo1.setText("Trang 0/0");
             btnPrv1.setEnabled(false);
             btnNxt1.setEnabled(false);
-            // reset selection/detail
             lastSelectedModelRow1 = -1;
             hideDetail1();
             return;
         }
 
-        int startRecord = (currentPagePhat - 1) * pageSizePhat;
         int fields = FIELDS_PER_RECORD;
-        int endRecordExclusive = Math.min(totalRowsPhat, startRecord + pageSizePhat);
-        for (int rec = startRecord; rec < endRecordExclusive; ++rec) {
+        for (int rec = 0; rec < pageCachePhat.size() / fields; ++rec) {
             int base = rec * fields;
-            if (base + fields - 1 >= cachePhieuPhat.size()) break;
-            Object idPhat = safeGetFromCache(cachePhieuPhat, base);
-            Object idPM = safeGetFromCache(cachePhieuPhat, base + 1);
-            Object emailNguoiLap = safeGetFromCache(cachePhieuPhat, base + 2);
-            Object ngayMuon = safeGetFromCache(cachePhieuPhat, base + 3);
-            Object loaiPhat = safeGetFromCache(cachePhieuPhat, base + 4);
-            Object soTien = safeGetFromCache(cachePhieuPhat, base + 5);
-            Object ngayGhiNhan = safeGetFromCache(cachePhieuPhat, base + 6);
-            Object trangThai = safeGetFromCache(cachePhieuPhat, base + 7);
-
             model.addRow(new Object[] {
-                safeToStr(idPhat),
-                safeToStr(idPM),
-                safeToStr(emailNguoiLap),
-                safeToStr(ngayMuon),
-                safeToStr(loaiPhat),
-                safeToStr(soTien),
-                safeToStr(ngayGhiNhan),
-                safeToStr(trangThai)
+                safeToStr(pageCachePhat.get(base)),
+                safeToStr(pageCachePhat.get(base + 1)),
+                safeToStr(pageCachePhat.get(base + 2)),
+                safeToStr(pageCachePhat.get(base + 3)),
+                safeToStr(pageCachePhat.get(base + 4)),
+                safeToStr(pageCachePhat.get(base + 5)),
+                safeToStr(pageCachePhat.get(base + 6)),
+                safeToStr(pageCachePhat.get(base + 7))
             });
-
         }
+
         lastSelectedModelRow1 = -1;
         hideDetail1();
-        lblPageInfo1.setText(String.format("Trang %d/%d (Hiển thị %d-%d / %d)",
-                currentPagePhat, totalPagesPhat,
-                startRecord + 1, Math.min(totalRowsPhat, startRecord + pageSizePhat),
-                totalRowsPhat));
 
-        btnPrv1.setEnabled(currentPagePhat > 1);
-        btnNxt1.setEnabled(currentPagePhat < totalPagesPhat);
+        int startRecord = pageIndexPhat * pageSizePhat + 1;
+        int endRecord = pageIndexPhat * pageSizePhat + (pageCachePhat.size() / fields);
+        lblPageInfo1.setText(String.format("Trang %d (Hiển thị %d-%d / trang)", pageIndexPhat + 1, startRecord, endRecord));
+        btnPrv1.setEnabled(pageIndexPhat > 0);
+        btnNxt1.setEnabled(hasMoreAfterPhat);
     }
 
     /**
@@ -461,7 +554,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         if (col < 0 || col >= model.getColumnCount()) return null;
         return model.getValueAt(row, col);
     }
-
     // Lấy info sách an toàn từ maBanSao (kiểm tra null / -1)
     private ArrayList<Object> getBookInfoByMaBanSaoSafe(Integer maBanSao) {
         if (maBanSao == null || maBanSao <= 0) return null;
@@ -476,7 +568,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
             return null;
         }
     }
-
     private void showDetail() {
         if (splitMain == null) return;
         // nếu form mới vừa mở và width = 0, postpone để tránh set sai vị trí
@@ -493,7 +584,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
             });
             return;
         }
-
         if (!detailVisible) {
             if (savedDividerLocation == -1) savedDividerLocation = splitMain.getDividerLocation();
             int total = splitMain.getWidth();
@@ -507,7 +597,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         splitMain.revalidate();
         splitMain.repaint();
     }
-
     private void hideDetail() {
         if (splitMain == null) return;
         if (savedDividerLocation != -1) {
@@ -521,11 +610,9 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         splitMain.revalidate();
         splitMain.repaint();
     }
-
     private void populateDetailPanel(ArrayList<Object> info) {
         // info: [ISBN, TenSach, TenTacGia, TenTheLoai, TenNXB, NamXuatBan]
         if (info == null || info.isEmpty()) { clearBookDetail(); return; }
-
         lblDetailISBN.setText(info.size() > 0 && info.get(0) != null ? info.get(0).toString() : "");
         lblDetailTenSach.setText(info.size() > 1 && info.get(1) != null ? info.get(1).toString() : "");
         lblDetailTacGia.setText(info.size() > 2 && info.get(2) != null ? info.get(2).toString() : "");
@@ -533,7 +620,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         lblDetailNXB.setText(info.size() > 4 && info.get(4) != null ? info.get(4).toString() : "");
         lblDetailNamXB.setText(info.size() > 5 && info.get(5) != null ? String.valueOf(info.get(5)) : "");
     }
-
     private void clearBookDetail() {
         lblDetailISBN.setText("");
         lblDetailTenSach.setText("");
@@ -557,7 +643,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
             });
             return;
         }
-
         if (!detailVisible1) {
             if (savedDividerLocation1 == -1) savedDividerLocation1 = splitMain1.getDividerLocation();
             int total = splitMain1.getWidth();
@@ -571,7 +656,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         splitMain1.revalidate();
         splitMain1.repaint();
     }
-
     private void hideDetail1() {
         if (splitMain1 == null) return;
         if (savedDividerLocation1 != -1) {
@@ -584,7 +668,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         splitMain1.revalidate();
         splitMain1.repaint();
     }
-
     private void populateDetailPanel1(ArrayList<Object> info) {
         if (info == null || info.isEmpty()) { clearBookDetail1(); return; }
 
@@ -595,7 +678,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         lblDetailNXB1.setText(info.size() > 4 && info.get(4) != null ? info.get(4).toString() : "");
         lblDetailNamXB1.setText(info.size() > 5 && info.get(5) != null ? String.valueOf(info.get(5)) : "");
     }
-
     private void clearBookDetail1() {
         lblDetailISBN1.setText("");
         lblDetailTenSach1.setText("");
@@ -604,32 +686,24 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         lblDetailNXB1.setText("");
         lblDetailNamXB1.setText("");
     }
-
-
     public ChiTietPhieuBanDocPanel(BanDoc x) throws Exception {
         initComponents(); 
         initTableFilters();
-
         cur = x;
         cardLayout = (CardLayout) pnlCards.getLayout();
         cardLayout.show(pnlCards, "PHIEU_MUON");
         btnPhieuMuon.setSelected(true);
-
         loadPhieuMuon();
         pnlDetailBook.setVisible(false);
         pnlDetailBook1.setVisible(false);
-
         // ---------------------------
         // PHIEU_MUON listeners
         // ---------------------------
         tblPhieuMuon.getSelectionModel().addListSelectionListener(e -> {
             if (e.getValueIsAdjusting()) return;
-
             int viewRow = tblPhieuMuon.getSelectedRow();
             if (viewRow == -1) return;
-
             int modelRow = tblPhieuMuon.convertRowIndexToModel(viewRow);
-
             // toggle: click lại cùng row sẽ ẩn (chỉ khi người dùng dùng keyboard để thay đổi selection)
             if (modelRow == lastSelectedModelRow && detailVisible) {
                 hideDetail();
@@ -637,7 +711,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                 tblPhieuMuon.clearSelection();
                 return;
             }
-
             // nếu chọn hàng mới
             lastSelectedModelRow = modelRow;
             // lấy MaBanSao từ table model (đổi MA_BAN_SAO_COL nếu khác)
@@ -655,7 +728,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
             }
             showDetail();
         });
-
         tblPhieuMuon.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -690,29 +762,23 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                 showDetail();
             }
         });
-
         // ---------------------------
         // PHIEU_PHAT listeners
         // ---------------------------
         tblPhieuPhat.getSelectionModel().addListSelectionListener(e -> {
             if (e.getValueIsAdjusting()) return;
-
             int viewRow = tblPhieuPhat.getSelectedRow();
             if (viewRow == -1) return;
-
             int modelRow = tblPhieuPhat.convertRowIndexToModel(viewRow);
-
             if (modelRow == lastSelectedModelRow1 && detailVisible1) {
                 // nếu selection không thay đổi và hiện rồi thì không tắt ở đây
                 return;
             }
-
             lastSelectedModelRow1 = modelRow;
             Object idPhatObj = safeGet(tblPhieuPhat.getModel(), modelRow, ID_PHAT_COL);
             if (idPhatObj != null) {
                 try {
                     int idPhat = Integer.parseInt(String.valueOf(idPhatObj));
-
                     ArrayList<Object> info = null;
                     if(!bookInfoCacheIdPhat.containsKey(idPhat)) {
                         BanDocDAO tmp = new BanDocDAO();
@@ -739,7 +805,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
             }
             showDetail1();
         });
-
         tblPhieuPhat.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -754,7 +819,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                     tblPhieuPhat.clearSelection();
                     return;
                 }
-
                 // khác -> chọn và show
                 lastSelectedModelRow1 = modelRow;
                 tblPhieuPhat.setRowSelectionInterval(viewRow, viewRow);
@@ -789,51 +853,7 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                 showDetail1();
             }
         });
-        // --- đăng ký phân trang cho PHIEU_MUON
-        btnPrv.addActionListener(evt -> {
-            if (currentPageMuon > 1) {
-                currentPageMuon--;
-                try {
-                    // render từ cache (không gọi DB)
-                    renderPagePhieuMuon();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-        btnNxt.addActionListener(evt -> {
-            if (currentPageMuon < totalPagesMuon) {
-                currentPageMuon++;
-                try {
-                    renderPagePhieuMuon();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-
-        // --- đăng ký phân trang cho PHIEU_PHAT
-        btnPrv1.addActionListener(evt -> {
-            if (currentPagePhat > 1) {
-                currentPagePhat--;
-                try {
-                    renderPagePhieuPhat();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-        btnNxt1.addActionListener(evt -> {
-            if (currentPagePhat < totalPagesPhat) {
-                currentPagePhat++;
-                try {
-                    renderPagePhieuPhat();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-        
+  
         tblPhieuMuon.setRowHeight(26);
         tblPhieuMuon.setIntercellSpacing(new Dimension(6,6));
         tblPhieuMuon.setGridColor(new Color(230,230,230));
@@ -847,7 +867,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                 return this;
             }
         });
-
         // header style
         tblPhieuMuon.getTableHeader().setFont(tblPhieuMuon.getTableHeader().getFont().deriveFont(Font.BOLD));
         ((DefaultTableCellRenderer) tblPhieuMuon.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
@@ -858,7 +877,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
             center.setHorizontalAlignment(SwingConstants.CENTER);
             tblPhieuMuon.getColumnModel().getColumn(0).setCellRenderer(center);
         }
-        
         // alternating rows + selection color
         tblPhieuPhat.setRowHeight(26);
         tblPhieuPhat.setIntercellSpacing(new Dimension(6,6));
@@ -873,7 +891,6 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
                 return this;
             }
         });
-
         // header style
         tblPhieuPhat.getTableHeader().setFont(tblPhieuPhat.getTableHeader().getFont().deriveFont(Font.BOLD));
         ((DefaultTableCellRenderer) tblPhieuPhat.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
@@ -884,11 +901,9 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
             center.setHorizontalAlignment(SwingConstants.CENTER);
             tblPhieuPhat.getColumnModel().getColumn(0).setCellRenderer(center);
         }
-        
-        
-        
+        setThongKePhieuMuonBanDoc(cur.getIdBD());
+        setThongKePhieuPhatBanDoc(cur.getIdBD());
     }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1114,6 +1129,11 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         jPanel1.add(lblPageInfo1);
 
         btnNxt1.setText("Trang sau");
+        btnNxt1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNxt1ActionPerformed(evt);
+            }
+        });
         jPanel1.add(btnNxt1);
 
         panelSearch.setToolTipText("");
@@ -1345,6 +1365,11 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         jPanel2.add(lblPageInfo);
 
         btnNxt.setText("Trang sau");
+        btnNxt.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNxtActionPerformed(evt);
+            }
+        });
         jPanel2.add(btnNxt);
 
         panelSearch1.setToolTipText("");
@@ -1490,17 +1515,40 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btnPhieuPhatActionPerformed
 
     private void btnPrv1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrv1ActionPerformed
-        // TODO add your handling code here:
+        if (pageIndexPhat == 0) return;
+        pageIndexPhat--;
+        try {
+            loadPhieuPhat();
+        } catch (Exception ex) {
+            System.getLogger(ChiTietPhieuBanDocPanel.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
     }//GEN-LAST:event_btnPrv1ActionPerformed
 
     private void btnPrvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrvActionPerformed
-        // TODO add your handling code here:
+        if (pageIndexMuon == 0) return;
+        pageIndexMuon--;
+        loadPhieuMuon();
     }//GEN-LAST:event_btnPrvActionPerformed
 
     private void btnClearSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClearSearchActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnClearSearchActionPerformed
 
+    private void btnNxtActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNxtActionPerformed
+        if (!hasMoreAfterMuon) return;
+        pageIndexMuon++;
+        loadPhieuMuon();
+    }//GEN-LAST:event_btnNxtActionPerformed
+
+    private void btnNxt1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNxt1ActionPerformed
+        if (!hasMoreAfterPhat) return;
+        pageIndexPhat++;
+        try {
+            loadPhieuPhat();
+        } catch (Exception ex) {
+            System.getLogger(ChiTietPhieuBanDocPanel.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
+    }//GEN-LAST:event_btnNxt1ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel Search;

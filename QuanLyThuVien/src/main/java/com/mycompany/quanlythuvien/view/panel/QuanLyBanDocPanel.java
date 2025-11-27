@@ -27,18 +27,12 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.Timer; 
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-
-/**
- *
- * @author DMX MSI
- */
 public class QuanLyBanDocPanel extends javax.swing.JPanel {
     private void showConstraintViolationsDialog(String title, Map<String, String> violations) {
         if (violations == null || violations.isEmpty()) {
             JOptionPane.showMessageDialog(this, title + "\n(Chi tiết lỗi không có)", title, JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         String[] colNames = new String[] {"Trường", "Lỗi"};
         Object[][] rows = new Object[violations.size()][2];
         int r = 0;
@@ -47,7 +41,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             rows[r][1] = e.getValue();
             r++;
         }
-
         JTable jt = new JTable(rows, colNames) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
@@ -59,10 +52,15 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
 
         JOptionPane.showMessageDialog(this, sp, title, JOptionPane.ERROR_MESSAGE);
     }
-
     /**
      * Creates new form QuanLyBanDocPanel
      */
+
+    // cursor-based paging state (theo IdBD)
+    private List<Integer> pageLastIds = new ArrayList<>(); // lưu last Id của mỗi trang (index -> lastId của trang đó)
+    private int pageIndex = 0; // trang hiện tại (0-based)
+    private boolean hasMoreAfterCurrent = false; // có trang tiếp không
+
     BanDocController cur;
     String txtSearchPrv = "";
     private int currentPage = 1;
@@ -75,6 +73,57 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     private JSpinner gotoPageSpinner;
     private JPopupMenu tablePopup;
     private DocumentListener searchDocListener;
+    
+    // Load 1 page từ DB bằng keyset trên IdBD (sử dụng controller cur)
+    private void loadPageFromDbById(String searchText) {
+        try {
+            Integer lastId = null;
+            if (pageIndex > 0 && pageLastIds.size() >= pageIndex) {
+                // cursor dùng lastId của trang trước (pageIndex-1)
+                lastId = pageLastIds.get(pageIndex - 1);
+            }
+            // request pageSize + 1 rows để detect tồn tại trang sau
+            List<BanDoc> rows = cur.getPageById(pageSize + 1, searchText, lastId);
+
+            hasMoreAfterCurrent = rows.size() > pageSize;
+            List<BanDoc> toShow = rows.size() > pageSize ? rows.subList(0, pageSize) : rows;
+
+            // cập nhật displayedList (chỉ page hiện tại)
+            displayedList = new ArrayList<>(toShow);
+            totalRecords = displayedList.size(); // chỉ số bản ghi của page hiện tại
+
+            // cập nhật cursor stack: lưu last id của page hiện tại
+            if (!displayedList.isEmpty()) {
+                BanDoc last = displayedList.get(displayedList.size() - 1);
+                // trim stacks nếu cần để giữ đúng pageIndex
+                while (pageLastIds.size() > pageIndex) {
+                    pageLastIds.remove(pageLastIds.size() - 1);
+                }
+                pageLastIds.add(last.getIdBD());
+            } else {
+                while (pageLastIds.size() > pageIndex) {
+                    pageLastIds.remove(pageLastIds.size() - 1);
+                }
+            }
+
+            // render page lên table (reuse loadPage rendering)
+            currentPage = pageIndex + 1;
+            // loadPage được chỉnh (xem phần 5) để render displayedList trực tiếp
+            loadPage(currentPage);
+
+            // cập nhật controls
+            btnPrv.setEnabled(pageIndex > 0);
+            btnNxt.setEnabled(hasMoreAfterCurrent);
+            lblPageInfo.setText("Trang " + (pageIndex + 1) + (hasMoreAfterCurrent ? " (còn trang sau)" : "") +
+                    " (Hiển thị " + 
+                    (displayedList.isEmpty() ? 0 : (pageIndex * pageSize + 1)) + "-" +
+                    (pageIndex * pageSize + displayedList.size()) + ")");
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi khi load dữ liệu phân trang: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
 //    private JButton btnClearSearch;
     private boolean tableSelectionEnabled = true; // để tắt selection khi rỗng
@@ -86,7 +135,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         lblShowSoSachDangMuon.setText("...");
         lblShowTongSoTienPhatChuaDong.setText("...");
         lblShowTongSoTienPhatDaDong.setText("...");
-
         new SwingWorker<Void, Void>() {
             int soLanMuon = 0;
             int soPhieuPhat = 0;
@@ -94,7 +142,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             int soSachDangMuon = 0;
             int soTienPhatChuaDong = 0;
             int soTienPhatDaDong = 0;
-
             @Override
             protected Void doInBackground() throws Exception {
                 try {
@@ -179,7 +226,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 txtSearch.requestFocusInWindow();
             }
         });
-
         // --- debounce tìm kiếm bằng Swing Timer (300ms) ---
         if (searchTimer == null) {
             searchTimer = new Timer(300, e -> {
@@ -188,7 +234,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             });
             searchTimer.setRepeats(false);
         }
-
         // --- DocumentListener: tạo 1 listener duy nhất và add nếu chưa add ---
         if (txtSearch != null) {
             if (searchDocListener == null) {
@@ -202,7 +247,9 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                             String txt = txtSearch.getText().trim();
                             if (txt.isEmpty()) {
                                 if (searchTimer != null) searchTimer.stop();
-                                showList(new ArrayList<>(safeGetDsBanDoc()));
+                                pageLastIds.clear();
+                                pageIndex = 0;
+                                loadPageFromDbById(txtSearch.getText().trim().isEmpty() ? null : txtSearch.getText().trim());
                                 txtSearchPrv = "";
                             } else {
                                 if (searchTimer != null) searchTimer.restart();
@@ -215,7 +262,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 txtSearch.getDocument().addDocumentListener(searchDocListener);
             }
         }
-
         // --- page size selector & goto page spinner (ở panelPagination) ---
         if (pageSizeCombo == null) {
             Integer[] sizes = new Integer[]{10, 20, 32, 50, 100};
@@ -226,8 +272,12 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 Integer s = (Integer) pageSizeCombo.getSelectedItem();
                 if (s != null && s > 0) {
                     pageSize = s;
-                    currentPage = 1;
-                    initPagination();
+                    // reset cursor and reload first page with current search
+                    pageLastIds.clear();
+                    pageIndex = 0;
+                    hasMoreAfterCurrent = false;
+                    String searchText = txtSearch.getText().trim().isEmpty() ? null : txtSearch.getText().trim();
+                    loadPageFromDbById(searchText);
                 }
             });
             // thêm vào panelPagination nếu chưa có
@@ -243,16 +293,18 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
 
         // spinner để nhảy trang nhanh
         if (gotoPageSpinner == null) {
-            gotoPageSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Math.max(1, totalPages), 1));
+            gotoPageSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 1, 1));
             gotoPageSpinner.setPreferredSize(new Dimension(60, gotoPageSpinner.getPreferredSize().height));
-            gotoPageSpinner.setToolTipText("Chuyển tới trang");
+            gotoPageSpinner.setToolTipText("Chuyển tới trang (không hỗ trợ nhảy trực tiếp trong keyset)");
+            // disable manual jumping
+            for (javax.swing.event.ChangeListener cl : gotoPageSpinner.getChangeListeners()) {
+                gotoPageSpinner.removeChangeListener(cl);
+            }
             gotoPageSpinner.addChangeListener(e -> {
-                int p = (Integer) gotoPageSpinner.getValue();
-                if (p >= 1 && p <= totalPages) {
-                    currentPage = p;
-                    loadPage(currentPage);
-                }
+                // no-op: spinner chỉ hiển thị trang hiện tại
+                SwingUtilities.invokeLater(() -> gotoPageSpinner.setValue(pageIndex + 1));
             });
+            gotoPageSpinner.setEnabled(false); // hoặc true nếu muốn hiển thị nhưng không nhảy
             boolean got = false;
             for (java.awt.Component c : panelPagination.getComponents()) {
                 if (c == gotoPageSpinner) { got = true; break; }
@@ -262,6 +314,7 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 panelPagination.add(gotoPageSpinner);
             }
         }
+
 
         // --- context menu cho table (right click) ---
         if (tablePopup == null) {
@@ -295,18 +348,16 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 }
             }
         });
-    tblUsers.getSelectionModel().addListSelectionListener(evt -> {
-        if (!evt.getValueIsAdjusting()) {
-            int viewRow = tblUsers.getSelectedRow();
-            if (viewRow >= 0) {
-                int modelRow = tblUsers.convertRowIndexToModel(viewRow);
-                int idBD = Integer.parseInt(tblUsers.getModel().getValueAt(modelRow, 0).toString());
-                updateDetailLabelsForId(idBD);
+        tblUsers.getSelectionModel().addListSelectionListener(evt -> {
+            if (!evt.getValueIsAdjusting()) {
+                int viewRow = tblUsers.getSelectedRow();
+                if (viewRow >= 0) {
+                    int modelRow = tblUsers.convertRowIndexToModel(viewRow);
+                    int idBD = Integer.parseInt(tblUsers.getModel().getValueAt(modelRow, 0).toString());
+                    updateDetailLabelsForId(idBD);
+                }
             }
-        }
-    });
-
-
+        });
         // --- key bindings (phím tắt) ---
         InputMap im = this.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         ActionMap am = this.getActionMap();
@@ -318,7 +369,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         am.put("delete", new AbstractAction(){ @Override public void actionPerformed(ActionEvent e) { btnDeleteActionPerformed(null); } });
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), "focusSearch");
         am.put("focusSearch", new AbstractAction(){ @Override public void actionPerformed(ActionEvent e) { if (txtSearch!=null){ txtSearch.requestFocusInWindow(); txtSearch.selectAll(); } } });
-
         // --- uniform toolbar buttons style ---
         java.util.List<JButton> tbBtns = Arrays.asList(btnAdd, btnEdit, btnDelete, btnView);
         for (JButton b : tbBtns) {
@@ -334,7 +384,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 b.setText("Xem");
             }
         }
-
         // btnClearSearch cosmetic
         if (btnClearSearch != null) {
             btnClearSearch.setFocusPainted(false);
@@ -343,7 +392,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             btnClearSearch.setContentAreaFilled(false);
             btnClearSearch.setOpaque(false);
         }
-
         // --- nicer table behavior: column widths, selection mode already set ---
         tblUsers.setFillsViewportHeight(true);
         try {
@@ -361,7 +409,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         tblUsers.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblUsers.setSelectionBackground(new java.awt.Color(51,153,255));
         tblUsers.setSelectionForeground(java.awt.Color.white);
-
         // --- accessibility names ---
         if (btnAdd != null) btnAdd.getAccessibleContext().setAccessibleName("Thêm bạn đọc");
         if (btnEdit != null) btnEdit.getAccessibleContext().setAccessibleName("Sửa bạn đọc");
@@ -373,20 +420,15 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         if (gotoPageSpinner != null) {
             gotoPageSpinner.setModel(new SpinnerNumberModel(currentPage, 1, Math.max(1, totalPages), 1));
         }
-        
-        
     // --- Fix truncated toolbar text / choose text-mode or icon-mode ---
     // Paste this at the end of initUIEnhancements()
-
     // Set this flag: false = keep text (wider buttons), true = use icons (icon-only)
         boolean usingIcons = false;
-
         tbBtns = new ArrayList<>();
         if (btnAdd instanceof JButton) tbBtns.add((JButton) btnAdd);
         if (btnEdit instanceof JButton) tbBtns.add((JButton) btnEdit);
         if (btnDelete instanceof JButton) tbBtns.add((JButton) btnDelete);
         if (btnView instanceof JButton) tbBtns.add((JButton) btnView);
-
         if (!usingIcons) {
             // Text mode: make buttons wide enough to show short labels
             Dimension textBtnSize = new Dimension(88, 36); // enough for short Viet labels
@@ -437,7 +479,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 }
             }
         }
-
         // small cosmetic tune for clear button (so nó aligns with text-mode)
         if (btnClearSearch != null) {
             btnClearSearch.setPreferredSize(new Dimension(30, 26));
@@ -452,33 +493,28 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     }
 
     private void recalcTotalPages() {
-        totalPages = (totalRecords + pageSize - 1) / pageSize;
-        if (totalPages == 0) totalPages = 1;
+    totalPages = pageIndex + 1 + (hasMoreAfterCurrent ? 1 : 0);
+    if (totalPages < 1) totalPages = 1;
     }
     private void initPagination() {
-
-
-        totalRecords = displayedList == null ? 0 : displayedList.size();
         recalcTotalPages();
+        // update goto spinner: disable (không dùng khi keyset)
+        if (gotoPageSpinner != null) {
+            gotoPageSpinner.setEnabled(false);
+            gotoPageSpinner.setModel(new SpinnerNumberModel(pageIndex + 1, 1, Math.max(1, pageIndex + 1), 1));
+        }
+        // render current page (displayedList đã được set bởi loadPageFromDbById)
         loadPage(currentPage);
 
     }
     private void loadPage(int page) {
         if (displayedList == null) displayedList = new ArrayList<>();
-        // clamp page
-        if (page < 1) page = 1;
-        int pages = Math.max(1, (totalRecords + pageSize - 1) / pageSize);
-        if (page > pages) page = pages;
-        currentPage = page; // đồng bộ currentPage
 
-        int start = (page - 1) * pageSize;
-        int end = Math.min(start + pageSize, displayedList.size());
-
+        // render displayedList (chứa đúng page hiện tại)
         DefaultTableModel model = (DefaultTableModel) tblUsers.getModel();
         model.setRowCount(0);
 
-        for (int i = start; i < end; i++) {
-            BanDoc u = displayedList.get(i);
+        for (BanDoc u : displayedList) {
             model.addRow(new Object[]{
                 u.getIdBD(),
                 u.getHoTen() == null ? "" : u.getHoTen(),
@@ -488,23 +524,27 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             });
         }
 
-        int startDisplay = totalRecords == 0 ? 0 : (start + 1);
-        int endDisplay = totalRecords == 0 ? 0 : end;
-        lblPageInfo.setText("Trang " + currentPage + "/" + totalPages+ " (Hiển thị " + startDisplay + "-" + endDisplay + " / " + totalRecords + ")");
-        btnPrv.setEnabled(currentPage > 1);
-        btnNxt.setEnabled(currentPage < totalPages);
+        // cập nhật hiển thị page info: pageIndex, số phần tử hiện có, và thông tin còn trang sau
+        int startDisplay = displayedList.isEmpty() ? 0 : 1;
+        int endDisplay = displayedList.size();
+        lblPageInfo.setText("Trang " + (pageIndex + 1) + (hasMoreAfterCurrent ? " (còn trang sau)" : "") +
+                            " (Hiển thị " + startDisplay + "-" + endDisplay + " / trang)");
+        btnPrv.setEnabled(pageIndex > 0);
+        btnNxt.setEnabled(hasMoreAfterCurrent);
 
         // scroll to top of table
         scrollPaneUsers.getViewport().setViewPosition(new java.awt.Point(0,0));
         if (gotoPageSpinner != null) {
-            gotoPageSpinner.setModel(new SpinnerNumberModel(currentPage, 1, Math.max(1, totalPages), 1));
-            gotoPageSpinner.setValue(currentPage);
+            gotoPageSpinner.setModel(new SpinnerNumberModel(pageIndex + 1, 1, Math.max(1, pageIndex + 1), 1));
+            gotoPageSpinner.setValue(pageIndex + 1);
         }
+
         // tắt selection khi không có bản ghi
-        boolean enabled = totalRecords > 0;
+        boolean enabled = displayedList.size() > 0;
         tblUsers.setRowSelectionAllowed(enabled);
         tblUsers.setEnabled(enabled);
     }
+
 
 
 
@@ -517,14 +557,21 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         tblUsers.setModel(createTableModel());
         tblUsers.setAutoCreateRowSorter(true);
         tblUsers.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
         try {
-            cur.init();
-            showList(new ArrayList<>(safeGetDsBanDoc()));
+//            cur.init();
+            // khởi tạo keyset paging: reset cursor và load trang đầu (no search)
+            pageLastIds.clear();
+            pageIndex = 0;
+            hasMoreAfterCurrent = false;
+            loadPageFromDbById(txtSearch.getText());
         } catch (Exception ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi khi load dữ liệu:\n" + ex.getMessage());
         }
-        initPagination();
+        initPagination(); // vẫn giữ (không bắt buộc)
+
+
         tblUsers.setRowHeight(26);
         tblUsers.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
             @Override
@@ -549,44 +596,7 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 }
             }
         });
-
     }
-    private ArrayList<BanDoc> filterList(String KEYFIELD, String KEYTXT) {
-        ArrayList<BanDoc> newDsBanDoc = new ArrayList<BanDoc>(); 
-        
-        switch(KEYFIELD) {
-            case "Họ Tên":
-                newDsBanDoc = (ArrayList<BanDoc>) cur.getDsBanDoc().stream()
-                            .filter(x -> x.getHoTen() != null && x.getHoTen().toLowerCase().contains(KEYTXT))
-                            .collect(Collectors.toCollection(ArrayList::new));
-                break;
-
-            case "Email":
-                newDsBanDoc = (ArrayList<BanDoc>) cur.getDsBanDoc().stream()
-                            .filter(x -> x.getEmail() != null && x.getEmail().toLowerCase().contains(KEYTXT))
-                            .collect(Collectors.toCollection(ArrayList::new));
-                break;
-
-            case "SĐT":
-                newDsBanDoc = (ArrayList<BanDoc>) cur.getDsBanDoc().stream()
-                            .filter(x -> x.getSdt() != null && x.getSdt().toLowerCase().contains(KEYTXT))
-                            .collect(Collectors.toCollection(ArrayList::new));
-                break;
-
-            case "Địa Chỉ":
-                newDsBanDoc = (ArrayList<BanDoc>) cur.getDsBanDoc().stream()
-                            .filter(x -> x.getDiaChi() != null && x.getDiaChi().toLowerCase().contains(KEYTXT))
-                            .collect(Collectors.toCollection(ArrayList::new));
-                break;
-            case "ID":
-                newDsBanDoc = (ArrayList<BanDoc>) cur.getDsBanDoc().stream()
-                            .filter(x -> Integer.toString(x.getIdBD()).contains(KEYTXT))
-                            .collect(Collectors.toCollection(ArrayList::new));
-                break;
-        }
-        return newDsBanDoc;
-    }
-    
     private DefaultTableModel createTableModel() {
         String[] cols = {"ID", "Họ tên", "Email", "SDT", "Địa chỉ"};
         return new DefaultTableModel(cols, 0) {
@@ -597,21 +607,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             }
         };
     }
-    private void showList(ArrayList<BanDoc> list) {
-        // cập nhật danh sách hiển thị
-        if (list == null) displayedList = new ArrayList<>();
-        else displayedList = new ArrayList<>(list);
-
-        // cập nhật totalRecords và paging
-        totalRecords = displayedList.size();
-        recalcTotalPages();
-        // reset về trang 1 khi thay dữ liệu
-        currentPage = 1;
-        loadPage(currentPage);
-
-    }
-
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -888,7 +883,9 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             try {
                 cur.add(newBd);
                 // thành công -> refresh
-                showList(new ArrayList<>(safeGetDsBanDoc()));
+                pageLastIds.clear();
+                pageIndex = 0;
+                loadPageFromDbById(txtSearch.getText().trim().isEmpty() ? null : txtSearch.getText().trim());
                 JOptionPane.showMessageDialog(this, "Thêm bạn đọc thành công.");
             } catch (com.mycompany.quanlythuvien.exceptions.BanDocException dce) {
                 // hiển thị bảng lỗi cho người dùng
@@ -897,7 +894,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Lỗi khi thêm bạn đọc: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
-
         }
     }//GEN-LAST:event_btnAddActionPerformed
 
@@ -913,19 +909,16 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         }
         int viewRow = selected[0];
         int modelRow = tblUsers.convertRowIndexToModel(viewRow);
-
         Object idObj = tblUsers.getModel().getValueAt(modelRow, 0);
         Object nameObj = tblUsers.getModel().getValueAt(modelRow, 1);
         Object emailObj = tblUsers.getModel().getValueAt(modelRow, 2);
         Object sdtObj = tblUsers.getModel().getValueAt(modelRow, 3);
         Object diaChiObj = tblUsers.getModel().getValueAt(modelRow, 4);
-
         final String id = idObj == null ? "" : idObj.toString();
         final String name = nameObj == null ? "" : nameObj.toString();
         final String email = emailObj == null ? "" : emailObj.toString();
         final String sdt = sdtObj == null ? "" : sdtObj.toString();
         final String diaChi = diaChiObj == null ? "" : diaChiObj.toString();
-
         BanDoc tmp = new BanDoc(Integer.parseInt(id), name, email, diaChi, sdt);
         BanDocFormDialog dlg = new BanDocFormDialog((Frame) SwingUtilities.getWindowAncestor(this), true);
         dlg.setBanDoc(tmp);
@@ -937,7 +930,9 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             if (tmp.equals(ntmp)) return;
             try {
                 cur.update(ntmp);
-                showList(new ArrayList<>(safeGetDsBanDoc()));;
+                pageLastIds.clear();
+                pageIndex = 0;
+                loadPageFromDbById(txtSearch.getText().trim().isEmpty() ? null : txtSearch.getText().trim());
                 JOptionPane.showMessageDialog(this, "Sửa bạn đọc thành công.");
             } catch (com.mycompany.quanlythuvien.exceptions.BanDocException bde) {
                 showConstraintViolationsDialog("Lỗi khi cập nhật bạn đọc", bde.getViolations());
@@ -945,7 +940,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this, "Lỗi khi cập nhật: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
-
         }
     }//GEN-LAST:event_btnEditActionPerformed
 
@@ -955,7 +949,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn ít nhất 1 bạn đọc để xóa.", "Chú ý", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-
         // build summary cho confirm (đếm, liệt kê vài id/name)
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < viewRows.length; ++i) {
@@ -976,7 +969,6 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 JOptionPane.WARNING_MESSAGE
         );
         if (choice != JOptionPane.YES_OPTION) return;
-
         // xóa từng bản ghi (nên xóa theo model ID từ DAO)
         boolean anyFailed = false;
         for (int viewRow : viewRows) {
@@ -1003,10 +995,11 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 anyFailed = true;
             }
         }
-
         // refresh list
         try {
-            showList(new ArrayList<>(safeGetDsBanDoc()));;
+            pageLastIds.clear();
+            pageIndex = 0;
+            loadPageFromDbById(txtSearch.getText().trim().isEmpty() ? null : txtSearch.getText().trim());
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -1019,111 +1012,91 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_btnDeleteActionPerformed
 
     private void txtSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchActionPerformed
-        String fieldSearchCur = searchByCombo.getSelectedItem().toString();
+        // reset cursor stack khi đổi tìm kiếm
+        pageLastIds.clear();
+        pageIndex = 0;
+        hasMoreAfterCurrent = false;
+
         String txtSearchCur = txtSearch.getText().toLowerCase().trim();
-
-        if (txtSearchCur.isEmpty()) {
-            // không lọc -> hiển thị toàn bộ
-            showList(new ArrayList<>(safeGetDsBanDoc()));;
-            txtSearchPrv = "";
-            return;
-        }
-
-        // chỉ lọc khi khác giá trị trước (optional)
-        if (!txtSearchCur.equals(txtSearchPrv)) {
-            ArrayList<BanDoc> filtered = filterList(fieldSearchCur, txtSearchCur);
-            showList(filtered);
-            txtSearchPrv = txtSearchCur;
-        }
+        String searchText = txtSearchCur.isEmpty() ? null : txtSearchCur;
+        // load trang đầu với searchText (server-side)
+        loadPageFromDbById(searchText);
     }//GEN-LAST:event_txtSearchActionPerformed
 
     private void searchByComboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchByComboActionPerformed
+        // Khi thay đổi phương thức tìm kiếm, chúng ta reload server-side
         String txtSearchCur = txtSearch.getText().toLowerCase().trim();
-        if (txtSearchCur.isEmpty()) return; // đang không lọc
-        String fieldSearchCur = searchByCombo.getSelectedItem().toString();
-        ArrayList<BanDoc> filtered = filterList(fieldSearchCur, txtSearchCur);
-        showList(filtered);
+        String searchText = txtSearchCur.isEmpty() ? null : txtSearchCur;
+
+        pageLastIds.clear();
+        pageIndex = 0;
+        hasMoreAfterCurrent = false;
+
+        loadPageFromDbById(searchText);
         
     }//GEN-LAST:event_searchByComboActionPerformed
 
     private void btnViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnViewActionPerformed
-    int[] selected = tblUsers.getSelectedRows();
-    if (selected.length == 0) {
-        JOptionPane.showMessageDialog(this, "Vui lòng chọn 1 bạn đọc để xem chi tiết.", "Chú ý", JOptionPane.INFORMATION_MESSAGE);
-        return;
-    }
-    if (selected.length > 1) {
-        JOptionPane.showMessageDialog(this, "Vui lòng chỉ chọn 1 bạn đọc để xem chi tiết.", "Chú ý", JOptionPane.INFORMATION_MESSAGE);
-        return;
-    }
-
-    int viewRow = selected[0];
-    int modelRow = tblUsers.convertRowIndexToModel(viewRow);
-
-    Object idObj = tblUsers.getModel().getValueAt(modelRow, 0);
-    Object nameObj = tblUsers.getModel().getValueAt(modelRow, 1);
-    Object emailObj = tblUsers.getModel().getValueAt(modelRow, 2);
-    Object sdtObj = tblUsers.getModel().getValueAt(modelRow, 3);
-    Object diaChiObj = tblUsers.getModel().getValueAt(modelRow, 4);
-
-    final String idStr = idObj == null ? "" : idObj.toString();
-    final String name = nameObj == null ? "" : nameObj.toString();
-    final String email = emailObj == null ? "" : emailObj.toString();
-    final String sdt = sdtObj == null ? "" : sdtObj.toString();
-    final String diaChi = diaChiObj == null ? "" : diaChiObj.toString();
-
-    // parse id an toàn
-    int id;
-    try {
-        id = Integer.parseInt(idStr);
-    } catch (NumberFormatException nfe) {
-        JOptionPane.showMessageDialog(this, "ID không hợp lệ: " + idStr, "Lỗi", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
+        int[] selected = tblUsers.getSelectedRows();
+        if (selected.length == 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn 1 bạn đọc để xem chi tiết.", "Chú ý", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        if (selected.length > 1) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chỉ chọn 1 bạn đọc để xem chi tiết.", "Chú ý", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        int viewRow = selected[0];
+        int modelRow = tblUsers.convertRowIndexToModel(viewRow);
+        Object idObj = tblUsers.getModel().getValueAt(modelRow, 0);
+        Object nameObj = tblUsers.getModel().getValueAt(modelRow, 1);
+        Object emailObj = tblUsers.getModel().getValueAt(modelRow, 2);
+        Object sdtObj = tblUsers.getModel().getValueAt(modelRow, 3);
+        Object diaChiObj = tblUsers.getModel().getValueAt(modelRow, 4);
+        final String idStr = idObj == null ? "" : idObj.toString();
+        final String name = nameObj == null ? "" : nameObj.toString();
+        final String email = emailObj == null ? "" : emailObj.toString();
+        final String sdt = sdtObj == null ? "" : sdtObj.toString();
+        final String diaChi = diaChiObj == null ? "" : diaChiObj.toString();
+        // parse id an toàn
+        int id;
+        try {
+            id = Integer.parseInt(idStr);
+        } catch (NumberFormatException nfe) {
+            JOptionPane.showMessageDialog(this, "ID không hợp lệ: " + idStr, "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         BanDoc bd = new BanDoc(id, name, email, diaChi, sdt);
-
         try {
             ChiTietPhieuBanDocPanel chiTietPanel = new ChiTietPhieuBanDocPanel(bd);
-
 //            chiTietPanel.setPreferredSize(new Dimension(1338, 715));
-
             JDialog dialog = new JDialog(
                 SwingUtilities.getWindowAncestor(this),
                 "Chi tiết phiếu - " + name,
                 Dialog.ModalityType.APPLICATION_MODAL
             );
-
             dialog.getContentPane().add(chiTietPanel);
-
             dialog.pack();
-
             dialog.setLocationRelativeTo(this);
-
             dialog.setVisible(true);
-
-
-
         } catch (Exception ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi khi mở chi tiết: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnViewActionPerformed
-    private List<BanDoc> safeGetDsBanDoc() {
-        List<BanDoc> ds = cur.getDsBanDoc();
-        return ds == null ? new ArrayList<>() : ds;
-    }
+
     private void btnNxtActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNxtActionPerformed
-        if (currentPage < totalPages) {
-            currentPage++;
-            loadPage(currentPage);
-        }
+        if (!hasMoreAfterCurrent) return;
+        pageIndex++;
+        String searchText = txtSearch.getText().trim().isEmpty() ? null : txtSearch.getText().trim();
+        loadPageFromDbById(searchText);
     }//GEN-LAST:event_btnNxtActionPerformed
 
     private void btnPrvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrvActionPerformed
-        if (currentPage > 1) {
-            currentPage--;
-            loadPage(currentPage);
-        }
+        if (pageIndex == 0) return;
+        pageIndex--;
+        String searchText = txtSearch.getText().trim().isEmpty() ? null : txtSearch.getText().trim();
+        loadPageFromDbById(searchText);
     }//GEN-LAST:event_btnPrvActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
