@@ -323,4 +323,31 @@ public class TaiKhoanDAO {
             throw new TaiKhoanException("Lỗi lấy danh sách tài khoản: " + e.getMessage(), e);
         }
     }
+    
+
+    public TaiKhoan findByEmail(String email) throws TaiKhoanException {
+        if (email == null || email.trim().isEmpty()) {
+            return null;
+        }
+        
+        String sql = "SELECT Email, HoTen, [Role] FROM TAIKHOAN WHERE Email = ?";
+        
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, email.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    TaiKhoan acc = new TaiKhoan();
+                    acc.setEmail(rs.getString("Email"));
+                    acc.setHoTen(rs.getString("HoTen"));
+                    acc.setRole(rs.getString("Role"));
+                    return acc;
+                }
+            }
+        } catch (Exception e) {
+            throw new TaiKhoanException("Lỗi khi tìm tài khoản: " + e.getMessage(), e);
+        }
+        return null;
+    }
 }

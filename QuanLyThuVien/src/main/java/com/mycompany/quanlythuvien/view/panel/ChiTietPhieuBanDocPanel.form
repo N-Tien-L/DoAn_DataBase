@@ -395,6 +395,9 @@
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Trang sau"/>
                   </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnNxt1ActionPerformed"/>
+                  </Events>
                 </Component>
               </SubComponents>
             </Container>
@@ -806,6 +809,9 @@
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Trang sau"/>
                   </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnNxtActionPerformed"/>
+                  </Events>
                 </Component>
               </SubComponents>
             </Container>

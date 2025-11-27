@@ -42,6 +42,7 @@ public class BanSaoDAO {
                             rs.getString("ISBN"),
                             rs.getInt("SoThuTuTrongKho"),
                             rs.getString("TinhTrang"),
+                            rs.getBoolean("Lendable"),
                             rs.getDate("NgayNhapKho") != null ? rs.getDate("NgayNhapKho").toLocalDate() : null,
                             rs.getString("ViTriLuuTru"),
                             rs.getTimestamp("CreatedAt"),
@@ -164,6 +165,7 @@ public class BanSaoDAO {
                             rs.getString("ISBN"),
                             rs.getInt("SoThuTuTrongKho"),
                             rs.getString("TinhTrang"),
+                            rs.getBoolean("Lendable"),
                             (rs.getDate("NgayNhapKho") != null) ? rs.getDate("NgayNhapKho").toLocalDate() : null,
                             rs.getString("ViTriLuuTru"),
                             rs.getTimestamp("CreatedAt"),
@@ -247,6 +249,7 @@ public class BanSaoDAO {
                                 rs.getString("ISBN"),
                                 rs.getInt("SoThuTuTrongKho"),
                                 rs.getString("TinhTrang"),
+                                rs.getBoolean("Lendable"),
                                 rs.getDate("NgayNhapKho") != null ? rs.getDate("NgayNhapKho").toLocalDate() : null,
                                 rs.getString("ViTriLuuTru"),
                                 rs.getTimestamp("CreatedAt"),
@@ -308,6 +311,7 @@ public class BanSaoDAO {
         b.setISBN(rs.getString("ISBN"));
         b.setSoThuTuTrongKho(rs.getInt("SoThuTuTrongKho"));
         b.setTinhTrang(rs.getString("TinhTrang"));
+        b.setLendable(rs.getBoolean("Lendable"));
         
         if (rs.getDate("NgayNhapKho") != null) { 
             b.setNgayNhapKho(rs.getDate("NgayNhapKho").toLocalDate());

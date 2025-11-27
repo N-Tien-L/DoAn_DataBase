@@ -163,18 +163,21 @@ BEGIN
     DECLARE @isbn_code VARCHAR(20) = '978-' + RIGHT('00000' + CAST(@isbn_idx AS NVARCHAR(10)), 5);
     DECLARE @tinhTrang NVARCHAR(50) = CASE 
         WHEN @bansao % 10 = 0 THEN N'Cũ'
-        WHEN @bansao % 10 = 1 THEN N'Rất cũ'
+        WHEN @bansao % 10 = 1 THEN N'Rất Cũ'
+        WHEN @bansao % 10 = 2 THEN N'Hỏng'
         ELSE N'Tốt'
     END;
     -- CreatedBy luân phiên giữa 3 thủ thư
     DECLARE @thuThuEmailBanSao VARCHAR(50) = 'thuthu' + CAST((((@bansao % 3) % 9) + 1) AS NVARCHAR(2)) + '@thuvien.com';
     
-    INSERT INTO BANSAO (MaBanSao, ISBN, SoThuTuTrongKho, TinhTrang, NgayNhapKho, ViTriLuuTru, CreatedBy)
+    -- Lendable sẽ được tự động tính bởi trigger, nhưng ta có thể set mặc định là 1
+    INSERT INTO BANSAO (MaBanSao, ISBN, SoThuTuTrongKho, TinhTrang, Lendable, NgayNhapKho, ViTriLuuTru, CreatedBy)
     VALUES (
         @bansao,
         @isbn_code,
         ((@bansao - 1) % 7) + 1, -- Đảm bảo SoThuTuTrongKho là duy nhất trong từng ISBN
         @tinhTrang,
+        CASE WHEN @tinhTrang IN (N'Rất Cũ', N'Hỏng') THEN 0 ELSE 1 END,
         DATEADD(DAY, -(@bansao % 1000), GETDATE()),
         'KHO-' + CAST((@bansao % 100) AS NVARCHAR(3)),
         @thuThuEmailBanSao
@@ -249,7 +252,8 @@ BEGIN
         
         SET @tinhTrangTra = CASE 
             WHEN @ctpm % 20 = 0 THEN N'Hỏng'
-            WHEN @ctpm % 20 = 1 THEN N'Cũ hơn'
+            WHEN @ctpm % 20 = 1 THEN N'Rất Cũ'
+            WHEN @ctpm % 20 = 2 THEN N'Cũ'
             ELSE N'Tốt'
         END;
         -- EmailNguoiNhan luân phiên giữa 3 thủ thư

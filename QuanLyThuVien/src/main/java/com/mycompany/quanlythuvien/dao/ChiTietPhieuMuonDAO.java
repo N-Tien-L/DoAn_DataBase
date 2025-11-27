@@ -123,10 +123,10 @@ public class ChiTietPhieuMuonDAO {
     }
 
     // Update ChiTietPhieuMuon
-    public boolean markReturned(int IdPM, int maBanSao, LocalDate ngayTra, String tinhTrang) throws Exception {
+    public boolean markReturned(int IdPM, int maBanSao, LocalDate ngayTra, String tinhTrang, String emailNguoiNhan) throws Exception {
         String sql = """
             UPDATE CT_PM
-            SET NgayTraThucTe=?, TinhTrangKhiTra=?
+            SET NgayTraThucTe=?, TinhTrangKhiTra=?, EmailNguoiNhan=?
             WHERE IdPM=? AND MaBanSao=?
         """;
 
@@ -136,9 +136,9 @@ public class ChiTietPhieuMuonDAO {
             Date sqlNgayTra = ngayTra != null ? Date.valueOf(ngayTra) : null;
             ps.setDate(1, sqlNgayTra);
             ps.setString(2, tinhTrang);
-
-            ps.setInt(3, IdPM);
-            ps.setInt(4, maBanSao);
+            ps.setString(3, emailNguoiNhan);
+            ps.setInt(4, IdPM);
+            ps.setInt(5, maBanSao);
 
             return ps.executeUpdate() > 0;
 

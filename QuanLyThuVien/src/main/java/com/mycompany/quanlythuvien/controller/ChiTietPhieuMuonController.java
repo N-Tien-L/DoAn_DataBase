@@ -48,10 +48,10 @@ public class ChiTietPhieuMuonController {
 		if (!ok) throw new Exception("Tạo chi tiết phiếu mượn thất bại");
 	}
 
-	public boolean markReturned(int idPM, int maBanSao, LocalDate ngayTra, String tinhTrang) {
+	public boolean markReturned(int idPM, int maBanSao, LocalDate ngayTra, String tinhTrang, String emailNguoiNhan) {
 		try {
 			if (idPM <= 0 || maBanSao <= 0 || ngayTra == null) return false;
-			return dao.markReturned(idPM, maBanSao, ngayTra, tinhTrang);
+			return dao.markReturned(idPM, maBanSao, ngayTra, tinhTrang, emailNguoiNhan);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;

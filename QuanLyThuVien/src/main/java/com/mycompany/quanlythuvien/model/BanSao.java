@@ -13,6 +13,7 @@ public class BanSao {
     private String ISBN;
     private int soThuTuTrongKho;
     private String tinhTrang;
+    private boolean lendable;
     private LocalDate ngayNhapKho;
     private String viTriLuuTru;
     private Timestamp createdAt;
@@ -21,11 +22,12 @@ public class BanSao {
     public BanSao() {
     }
 
-    public BanSao(int maBanSao, String ISBN, int soThuTuTrongKho, String tinhTrang, LocalDate ngayNhapKho, String viTriLuuTru, Timestamp createdAt, String createdBy) {
+    public BanSao(int maBanSao, String ISBN, int soThuTuTrongKho, String tinhTrang, boolean lendable, LocalDate ngayNhapKho, String viTriLuuTru, Timestamp createdAt, String createdBy) {
         this.maBanSao = maBanSao;
         this.ISBN = ISBN;
         this.soThuTuTrongKho = soThuTuTrongKho;
         this.tinhTrang = tinhTrang;
+        this.lendable = lendable;
         this.ngayNhapKho = ngayNhapKho;
         this.viTriLuuTru = viTriLuuTru;
         this.createdAt = createdAt;
@@ -94,5 +96,13 @@ public class BanSao {
 
     public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public boolean isLendable() {
+        return lendable;
+    }
+
+    public void setLendable(boolean lendable) {
+        this.lendable = lendable;
     }
 }
