@@ -368,4 +368,39 @@ public class SachSearchPanel extends JPanel {
                     '}';
         }
     }
+    
+    /**
+     * Cập nhật dữ liệu cho các combo box từ danh sách được truyền vào
+     * @param listTL Danh sách thể loại
+     * @param listNXB Danh sách nhà xuất bản
+     * @param listTG Danh sách tác giả
+     */
+    public void updateFilters(List<TheLoai> listTL, List<NhaXuatBan> listNXB, List<TacGia> listTG) {
+        // Load Thể loại
+        cboLocTheLoai.removeAllItems();
+        cboLocTheLoai.addItem("Tất cả");
+        if (listTL != null) {
+            for (TheLoai tl : listTL) {
+                cboLocTheLoai.addItem(tl);
+            }
+        }
+        
+        // Load NXB
+        cboLocNXB.removeAllItems();
+        cboLocNXB.addItem("Tất cả");
+        if (listNXB != null) {
+            for (NhaXuatBan nxb : listNXB) {
+                cboLocNXB.addItem(nxb);
+            }
+        }
+        
+        // Load Tác giả
+        cboLocTacGia.removeAllItems();
+        cboLocTacGia.addItem("Tất cả");
+        if (listTG != null) {
+            for (TacGia tg : listTG) {
+                cboLocTacGia.addItem(tg);
+            }
+        }
+    }
 }
