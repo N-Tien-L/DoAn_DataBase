@@ -1279,6 +1279,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     }
         
     private void resetPaginationTG() {
+        isSearchingTG = false;
+        searchKeywordTG = null;
         currentCursorTG = 0;
         lastTacGiaCursor = 0;
         hasNextPageTG = false;
@@ -1341,6 +1343,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
     }
     
     private void resetPaginationNXB(){
+        isSearchingNXB = false;
+        searchKeywordNXB = null;
         currentCursorNXB = 0;
         lastMaNXBOnPage = 0;
         hasNextPageNXB = false;
@@ -1402,6 +1406,8 @@ public class QuanLySachPanel extends javax.swing.JPanel {
         }
     }
     private void resetPaginationTL() {
+        isSearchingTL = false;
+        searchKeywordTL = null;
         currentCursorTL = 0;
         lastMaTLOnPage = 0;
         hasNextPageTL = false;
@@ -1438,6 +1444,13 @@ public class QuanLySachPanel extends javax.swing.JPanel {
             currentSearchPage = 1;
             loadSearchPage();
         });
+        
+        // Load data for search panel from parent controllers
+        List<TheLoai> listTL = theLoaiController.getAllTheLoaiNoPaging();
+        List<NhaXuatBan> listNXB = nxbController.getAllNXBNoPaging();
+        List<TacGia> listTG = tacGiaController.getAllTacGiaNoPaging();
+        
+        searchPanel.updateFilters(listTL, listNXB, listTG);
     }
     private void initComboBoxTG() {
         cboTieuChiTG.removeAllItems(); 
@@ -1678,6 +1691,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                     JOptionPane.showMessageDialog(this, "Xóa thành công");
                     resetPaginationTG();
                     clearFormTG();
+                    searchPanel.reloadComboBoxData();
                 } else {
                     JOptionPane.showMessageDialog(this, "Xóa thất bại");
                 }
@@ -1715,6 +1729,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                     JOptionPane.showMessageDialog(this, "Xóa thành công");
                     resetPaginationNXB();
                     clearFormNXB();
+                    searchPanel.reloadComboBoxData();
                 } else {
                     JOptionPane.showMessageDialog(this, "Xóa thất bại");
                 }
@@ -1835,6 +1850,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
             }
             resetPaginationTG();
             clearFormTG();
+            searchPanel.reloadComboBoxData();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi: " + e.getMessage());
         }
@@ -2008,6 +2024,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                 JOptionPane.showMessageDialog(this, "Thao tác thành công!");
                 clearFormNXB();
                 resetPaginationNXB();
+                searchPanel.reloadComboBoxData();
             } else {
                 JOptionPane.showMessageDialog(this, "Thao tác thất bại!");
             }
@@ -2086,6 +2103,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                 JOptionPane.showMessageDialog(this, "Thao tác thành công!");
                 clearFormTL();
                 resetPaginationTL();
+                searchPanel.reloadComboBoxData();
             } else {
                 JOptionPane.showMessageDialog(this, "Thao tác thất bại!");
             }
@@ -2113,6 +2131,7 @@ public class QuanLySachPanel extends javax.swing.JPanel {
                     JOptionPane.showMessageDialog(this, "Xóa thành công");
                     resetPaginationTL();
                     clearFormTL();
+                    searchPanel.reloadComboBoxData();
                 } else {
                     JOptionPane.showMessageDialog(this, "Xóa thất bại");
                 }
