@@ -41,9 +41,12 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
         lblTieuDe.setText("Thêm hàng loạt bản sao cho sách: " + this.isbn);
         txtISBN.setText(this.isbn);
         txtISBN.setEditable(false);
+        txtISBN.setDisabledTextColor(Color.BLACK);
+        txtISBN.setFocusable(false);
         
         txtCreatedBy.setText(this.currentUser.getEmail());
         txtCreatedBy.setEditable(false);
+        txtCreatedBy.setDisabledTextColor(Color.BLACK);
         txtTinhTrang.setText("Tốt");
 
     // START: Tự động điền ngày nhập kho từ hệ thống (cho người dùng xem)
@@ -53,6 +56,9 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
         
         txtNgayNhapKho.setEditable(false);
         txtNgayNhapKho.setDisabledTextColor(Color.BLACK);
+        
+        txtCreatedAt.setEditable(false);
+        txtCreatedAt.setDisabledTextColor(Color.BLACK);
     }
     /**
      * This method is called from within the constructor to initialize the form.
@@ -70,7 +76,7 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
         btnHuy = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         txtISBN = new javax.swing.JTextField();
-        jLabel1 = new javax.swing.JLabel();
+        lblISBN = new javax.swing.JLabel();
         lblSoLuong = new javax.swing.JLabel();
         txtSoLuong = new javax.swing.JTextField();
         lblSoThuTu = new javax.swing.JLabel();
@@ -117,8 +123,8 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
         txtISBN.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         txtISBN.setPreferredSize(new java.awt.Dimension(200, 26));
 
-        jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        jLabel1.setText("lblISBN");
+        lblISBN.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        lblISBN.setText("ISBN:");
 
         lblSoLuong.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblSoLuong.setText("Số lượng bản sao cần tạo:");
@@ -134,7 +140,6 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
         lblTinhTrang.setText("Tình trạng:");
 
         txtTinhTrang.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        txtTinhTrang.setToolTipText("Nhập một trong các giá trị: Tốt, Cũ, Rất Cũ, Hỏng");
 
         lblNgayNhapKho.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblNgayNhapKho.setText("Ngày nhập kho:");
@@ -170,7 +175,7 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
                     .addComponent(lblViTri)
                     .addComponent(lblCreatedBy)
                     .addComponent(lblCreatedAt)
-                    .addComponent(jLabel1))
+                    .addComponent(lblISBN))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(txtCreatedBy, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -188,7 +193,7 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGap(11, 11, 11)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
+                    .addComponent(lblISBN)
                     .addComponent(txtISBN, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -328,12 +333,12 @@ public class ThemHangLoatBanSaoDialog extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnHuy;
     private javax.swing.JButton btnTao;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JLabel lblCreatedAt;
     private javax.swing.JLabel lblCreatedBy;
+    private javax.swing.JLabel lblISBN;
     private javax.swing.JLabel lblNgayNhapKho;
     private javax.swing.JLabel lblSoLuong;
     private javax.swing.JLabel lblSoThuTu;
