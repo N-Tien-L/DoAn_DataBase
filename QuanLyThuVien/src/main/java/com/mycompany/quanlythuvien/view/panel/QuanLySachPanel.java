@@ -517,15 +517,31 @@ public class QuanLySachPanel extends javax.swing.JPanel {
 
         jLabel7.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jLabel7.setText("Mã tác giả:");
+        jLabel7.setPreferredSize(new java.awt.Dimension(200, 33));
+        jLabel7.setMinimumSize(new java.awt.Dimension(200, 33));
+        jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jLabel7.setVerticalAlignment(javax.swing.SwingConstants.CENTER);
 
         jLabel6.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jLabel6.setText("Ghi chú:");
+        jLabel6.setPreferredSize(new java.awt.Dimension(200, 33));
+        jLabel6.setMinimumSize(new java.awt.Dimension(200, 33));
+        jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jLabel6.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jLabel1.setText("Tên tác giả:");
+        jLabel1.setPreferredSize(new java.awt.Dimension(200, 33));
+        jLabel1.setMinimumSize(new java.awt.Dimension(200, 33));
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jLabel1.setVerticalAlignment(javax.swing.SwingConstants.CENTER);
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         jLabel2.setText("Website:");
+        jLabel2.setPreferredSize(new java.awt.Dimension(200, 33));
+        jLabel2.setMinimumSize(new java.awt.Dimension(200, 33));
+        jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jLabel2.setVerticalAlignment(javax.swing.SwingConstants.CENTER);
 
         lblMaTacGiaTG.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblMaTacGiaTG.setPreferredSize(new java.awt.Dimension(200, 33));

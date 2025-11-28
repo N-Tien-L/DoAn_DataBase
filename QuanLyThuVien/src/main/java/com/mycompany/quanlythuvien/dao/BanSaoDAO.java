@@ -74,6 +74,7 @@ public class BanSaoDAO {
                             rs.getString("ISBN"),
                             rs.getInt("SoThuTuTrongKho"),
                             rs.getString("TinhTrang"),
+                            rs.getBoolean("Lendable"),
                             rs.getDate("NgayNhapKho") != null ? rs.getDate("NgayNhapKho").toLocalDate() : null,
                             rs.getString("ViTriLuuTru"),
                             rs.getTimestamp("CreatedAt"),
