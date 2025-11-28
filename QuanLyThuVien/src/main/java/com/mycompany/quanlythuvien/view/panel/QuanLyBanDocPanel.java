@@ -27,7 +27,11 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.Timer; 
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.UIDefaults;
+
 public class QuanLyBanDocPanel extends javax.swing.JPanel {
+    private float uiScale = 1.3f;
     private void showConstraintViolationsDialog(String title, Map<String, String> violations) {
         if (violations == null || violations.isEmpty()) {
             JOptionPane.showMessageDialog(this, title + "\n(Chi tiết lỗi không có)", title, JOptionPane.ERROR_MESSAGE);
@@ -55,7 +59,26 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     /**
      * Creates new form QuanLyBanDocPanel
      */
-
+    private void applyGlobalUIScale(float scale) {
+        if (scale <= 0f || Math.abs(scale - 1.0f) < 0.001f) return;
+        UIDefaults defaults = UIManager.getDefaults();
+        Enumeration<Object> keys = defaults.keys();
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Object val = defaults.get(key);
+            if (val instanceof FontUIResource) {
+                FontUIResource f = (FontUIResource) val;
+                int newSize = Math.max(11, Math.round(f.getSize() * scale));
+                FontUIResource nf = new FontUIResource(f.getName(), f.getStyle(), newSize);
+                UIManager.put(key, nf);
+            }
+        }
+        // ensure some defaults reflect new fonts
+        UIManager.put("Button.font", UIManager.get("Button.font"));
+        UIManager.put("Label.font", UIManager.get("Label.font"));
+        UIManager.put("TextField.font", UIManager.get("TextField.font"));
+        UIManager.put("Table.font", UIManager.get("Table.font"));
+    }
     // cursor-based paging state (theo IdBD)
     private List<Integer> pageLastIds = new ArrayList<>(); // lưu last Id của mỗi trang (index -> lastId của trang đó)
     private int pageIndex = 0; // trang hiện tại (0-based)
@@ -83,7 +106,19 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 lastId = pageLastIds.get(pageIndex - 1);
             }
             // request pageSize + 1 rows để detect tồn tại trang sau
-            List<BanDoc> rows = cur.getPageById(pageSize + 1, searchText, lastId);
+            String searchBy = null;
+            if (searchByCombo != null) {
+                Object sel = searchByCombo.getSelectedItem();
+                String selText = sel == null ? null : sel.toString();
+                String key = normalizeKey(selText); // e.g. "Họ Tên" -> "HOTEN", "Địa Chỉ" -> "DIACHI"
+                // map thêm trường hợp hiển thị khác (nếu cần)
+                if ("HOTENT".equals(key)) key = "HOTEN"; // defensive (nếu có lỗi ký tự)
+                // final canonical searchBy value passed to controller/DAO
+                searchBy = key;
+            }
+
+            // request pageSize + 1 rows để detect tồn tại trang sau
+            List<BanDoc> rows = cur.getPageById(pageSize + 1, searchBy, searchText, lastId);
 
             hasMoreAfterCurrent = rows.size() > pageSize;
             List<BanDoc> toShow = rows.size() > pageSize ? rows.subList(0, pageSize) : rows;
@@ -185,6 +220,7 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
     }
     // ------------------ THÊM VÀO: phương thức khởi tạo UI bổ sung ------------------
     private void initUIEnhancements() {
+        float sc = uiScale;
         // --- tooltips (giữ nguyên) ---
         if (btnAdd != null) btnAdd.setToolTipText("Thêm (Ctrl+N)");
         if (btnEdit != null) btnEdit.setToolTipText("Sửa (Ctrl+E)");
@@ -437,10 +473,8 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
                 b.setPreferredSize(textBtnSize);
                 b.setMinimumSize(textBtnSize);
                 b.setMaximumSize(textBtnSize);
-                b.setHorizontalTextPosition(SwingConstants.CENTER);
-                b.setVerticalTextPosition(SwingConstants.BOTTOM);
-                b.setMargin(new Insets(2,6,2,6));
-                // shorten overly long phrases to simple words
+                b.setMargin(new Insets(Math.round(2*sc), Math.round(6*sc), Math.round(2*sc), Math.round(6*sc)));
+                // shorten labels như trước...
                 String txt = b.getText();
                 if (txt != null) {
                     if (txt.contains("Thêm")) b.setText("Thêm");
@@ -481,11 +515,38 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
         }
         // small cosmetic tune for clear button (so nó aligns with text-mode)
         if (btnClearSearch != null) {
-            btnClearSearch.setPreferredSize(new Dimension(30, 26));
-            btnClearSearch.setMinimumSize(new Dimension(30, 26));
-            btnClearSearch.setMaximumSize(new Dimension(30, 26));
+            Dimension clearSize = new Dimension(Math.round(30 * sc), Math.round(26 * sc));
+            btnClearSearch.setPreferredSize(clearSize);
+            btnClearSearch.setMinimumSize(clearSize);
+            btnClearSearch.setMaximumSize(clearSize);
+            btnClearSearch.setFont(btnClearSearch.getFont().deriveFont(btnClearSearch.getFont().getSize2D() * sc));
         }
+    // txtSearch sizing + font
+    if (txtSearch != null) {
+        Dimension pref = txtSearch.getPreferredSize();
+        txtSearch.setPreferredSize(new Dimension(Math.max(pref.width, Math.round(200 * sc)), Math.round(pref.height * sc)));
+        txtSearch.setFont(txtSearch.getFont().deriveFont(txtSearch.getFont().getSize2D() * sc));
+    }
 
+    // pageSizeCombo sizing + font
+    if (pageSizeCombo != null) {
+        pageSizeCombo.setPreferredSize(new Dimension(Math.round(90 * sc), Math.round(pageSizeCombo.getPreferredSize().height * sc)));
+        pageSizeCombo.setFont(pageSizeCombo.getFont().deriveFont(pageSizeCombo.getFont().getSize2D() * sc));
+    }
+
+    // gotoPageSpinner sizing + editor font
+    if (gotoPageSpinner != null) {
+        Dimension sp = gotoPageSpinner.getPreferredSize();
+        gotoPageSpinner.setPreferredSize(new Dimension(Math.round(60 * sc), Math.round(sp.height * sc)));
+        JComponent editor = gotoPageSpinner.getEditor();
+        if (editor != null) editor.setFont(editor.getFont().deriveFont(editor.getFont().getSize2D() * sc));
+    }
+
+    // toolbar preferred height
+    if (jToolBar1 != null) {
+        int h = Math.max(48, Math.round(44 * sc));
+        jToolBar1.setPreferredSize(new Dimension(jToolBar1.getPreferredSize().width, h));
+    }
         // force UI refresh
         jToolBar1.revalidate();
         jToolBar1.repaint();
@@ -538,6 +599,8 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
             gotoPageSpinner.setModel(new SpinnerNumberModel(pageIndex + 1, 1, Math.max(1, pageIndex + 1), 1));
             gotoPageSpinner.setValue(pageIndex + 1);
         }
+        
+        
 
         // tắt selection khi không có bản ghi
         boolean enabled = displayedList.size() > 0;
@@ -547,10 +610,20 @@ public class QuanLyBanDocPanel extends javax.swing.JPanel {
 
 
 
+    private String normalizeKey(String s) {
+        if (s == null) return null;
+        String normalized = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD)
+                                 .replaceAll("\\p{M}", ""); // remove diacritics
+        normalized = normalized.toUpperCase().trim().replaceAll("\\s+", ""); // uppercase + remove spaces
+        // keep only letters/digits (an toàn)
+        normalized = normalized.replaceAll("[^A-Z0-9]", "");
+        return normalized;
+    }
 
 
     
     public QuanLyBanDocPanel() throws Exception {
+        applyGlobalUIScale(uiScale);
         initComponents();
         initUIEnhancements();
         cur = new BanDocController();

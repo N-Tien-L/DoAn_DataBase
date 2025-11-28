@@ -17,9 +17,33 @@ public class BanDocController {
         return dsBanDoc;
     }
     
-    public List<BanDoc> getPageById(int pageSizeRequest, String searchText, Integer lastId) throws Exception {
-        return dao.getPageById(pageSizeRequest, searchText, lastId);
+    // Thêm / thay thế method getPageById trong BanDocController
+    // Controller: đảm bảo bọc wildcard cho "contains" và chuẩn hoá searchBy
+    // Thay / thêm method này trong BanDocController
+    public List<BanDoc> getPageById(int limit, String searchBy, String searchText, Integer lastId) throws Exception {
+        BanDocDAO dao = new BanDocDAO();
+
+        // canonical searchBy: trim, uppercase, no spaces
+        String canonical = (searchBy == null) ? null : searchBy.trim().toUpperCase().replaceAll("\\s+", "");
+
+        // normalize searchText: null nếu rỗng, ngược lại trim
+        if (searchText != null) {
+            searchText = searchText.trim();
+            if (searchText.isEmpty()) searchText = null;
+        }
+
+        // Với tất cả trường text (HOTEN, EMAIL, SDT, DIACHI) và cả ID bây giờ -> tìm "contains"
+        if (searchText != null) {
+            // nếu caller chưa bọc wildcard, bọc thành %text% để tìm contains
+            if (!searchText.contains("%")) {
+                searchText = "%" + searchText + "%";
+            }
+        }
+
+        // gửi canonical và searchText (đã bọc %...% nếu không null) xuống DAO
+        return dao.getPageById(limit, canonical, searchText, lastId);
     }
+
 
     public Boolean add(BanDoc cur) throws Exception {
         

@@ -10,6 +10,7 @@ import com.mycompany.quanlythuvien.model.BanDoc;
 import com.mycompany.quanlythuvien.dao.ChiTietPhieuMuonDAO;
 import com.mycompany.quanlythuvien.dao.SachDAO;
 import java.awt.*;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -72,30 +73,46 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
     private ArrayList<Object> cachePhieuPhat = null;
     private ArrayList<Object> cachePhieuMuon = null;
     private int getColumnIndexForMuon(String by) {
-        if (by == null) return 0;
-        switch (by.trim()) {
-            case "ID Phiếu Mượn": return 0;
-            case "Email Thủ Thư Lập": return 1;
-            case "Ngày Mượn": return 2;
-            case "Hạn Trả": return 3;
-            case "Mã Bản Sao": return MA_BAN_SAO_COL; // đã có constant = 4
-            case "Ngày Trả": return 5;
-            case "Tình Trạng Khi Trả": return 6;
-            case "Email Thủ Thư Nhận": return 7;
+        String k = normalizeKey(by);
+        switch (k) {
+            case "ID PHIEU MUON":
+            case "ID PHIẾU MƯỢN": return 0;
+            case "EMAIL THU THU LAP":
+            case "EMAIL THỦ THƯ LẬP": return 1;
+            case "NGAY MUON":
+            case "NGÀY MƯỢN": return 2;
+            case "HAN TRA":
+            case "HẠN TRẢ": return 3;
+            case "MA BAN SAO":
+            case "MÃ BẢN SAO": return MA_BAN_SAO_COL;
+            case "NGAY TRA":
+            case "NGÀY TRẢ": return 5;
+            case "TINH TRANG KHI TRA":
+            case "TÌNH TRẠNG KHI TRẢ": return 6;
+            case "EMAIL THU THU NHAN":
+            case "EMAIL THỦ THƯ NHẬN": return 7;
             default: return 0;
         }
     }
     private int getColumnIndexForPhat(String by) {
-        if (by == null) return 0;
-        switch (by.trim()) {
-            case "ID Phiếu Phạt": return ID_PHAT_COL; // =0
-            case "ID Phiếu Mượn": return 1;
-            case "Email Thủ Thư Lập": return 2;
-            case "Ngày Mượn": return 3;
-            case "Loại Phạt": return 4;
-            case "Số Tiền": return 5;
-            case "Ngày Ghi Nhận": return 6;
-            case "Trạng Thái Đóng": return 7;
+        String k = normalizeKey(by);
+        switch (k) {
+            case "ID PHIEU PHAT":
+            case "ID PHIẾU PHẠT": return ID_PHAT_COL;
+            case "ID PHIEU MUON":
+            case "ID PHIẾU MƯỢN": return 1;
+            case "EMAIL THU THU LAP":
+            case "EMAIL THỦ THƯ LẬP": return 2;
+            case "NGAY MUON":
+            case "NGÀY MƯỢN": return 3;
+            case "LOAI PHAT":
+            case "LOẠI PHẠT": return 4;
+            case "SO TIEN":
+            case "SỐ TIỀN": return 5;
+            case "NGAY GHI NHAN":
+            case "NGÀY GHI NHẬN": return 6;
+            case "TRANG THAI DONG":
+            case "TRẠNG THÁI ĐÓNG": return 7;
             default: return 0;
         }
     }
@@ -904,6 +921,17 @@ public class ChiTietPhieuBanDocPanel extends javax.swing.JPanel {
         setThongKePhieuMuonBanDoc(cur.getIdBD());
         setThongKePhieuPhatBanDoc(cur.getIdBD());
     }
+    private String normalizeKey(String s) {
+        if (s == null) return "";
+        // bỏ dấu, xóa khoảng trắng thừa, chuyển uppercase
+        String n = Normalizer.normalize(s.trim(), Normalizer.Form.NFD)
+                             .replaceAll("\\p{M}", ""); // remove diacritics
+        n = n.replaceAll("\\s+", " ").toUpperCase();
+        return n;
+    }
+    
+
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

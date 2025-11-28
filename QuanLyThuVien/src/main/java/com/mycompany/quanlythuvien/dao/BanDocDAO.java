@@ -7,12 +7,13 @@ import com.mycompany.quanlythuvien.util.DBConnector;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class BanDocDAO {
+
+    // ---------------- SQL constants ----------------
     private static final String SQL_ADD =
         "INSERT INTO BANDOC (HoTen, Email, DiaChi, SDT) VALUES (?, ?, ?, ?)";
 
@@ -68,22 +69,7 @@ public class BanDocDAO {
     private static final String SQL_GET_MABANSAO_BY_IDPHAT =
         "SELECT p.MaBanSao FROM PHAT p WHERE p.IdPhat = ?";
 
-    private static final String SQL_GET_ALL_PHIEUMUON_BANDOC =
-        "SELECT pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, pm.HanTra, " +
-        "ct.MaBanSao, ct.NgayTraThucTe, ct.TinhTrangKhiTra, ct.EmailNguoiNhan " +
-        "FROM PHIEUMUON pm " +
-        "JOIN CT_PM ct ON pm.IdPM = ct.IdPM " +
-        "WHERE pm.IdBD = ? " +
-        "ORDER BY pm.NgayMuon DESC";
-
-    private static final String SQL_GET_ALL_PHIEUPHAT_BANDOC =
-        "SELECT p.IdPhat, pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, " +
-        "p.LoaiPhat, p.SoTien, p.NgayGhiNhan, p.TrangThai " +
-        "FROM PHIEUMUON pm " +
-        "JOIN PHAT p ON pm.IdPM = p.IdPM " +
-        "WHERE pm.IdBD = ? " +
-        "ORDER BY p.NgayGhiNhan DESC";
-    // PHIEU MUON
+    // PHIEU MUON paging
     private static final String SQL_PHIEU_MUON_PAGE_NOSEARCH =
         "SELECT TOP (%d) pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, pm.HanTra, " +
         "ct.MaBanSao, ct.NgayTraThucTe, ct.TinhTrangKhiTra, ct.EmailNguoiNhan " +
@@ -99,7 +85,7 @@ public class BanDocDAO {
         "AND (? IS NULL OR pm.IdPM > ?) " +
         "ORDER BY pm.IdPM ASC";
 
-    // PHIEU PHAT
+    // PHIEU PHAT paging
     private static final String SQL_PHIEU_PHAT_PAGE_NOSEARCH =
         "SELECT TOP (%d) p.IdPhat, pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, " +
         "p.LoaiPhat, p.SoTien, p.NgayGhiNhan, p.TrangThai " +
@@ -115,23 +101,178 @@ public class BanDocDAO {
         "AND (? IS NULL OR p.IdPhat > ?) " +
         "ORDER BY p.IdPhat ASC";
 
-    // BAN DOC paging by IdBD
-    private static final String SQL_BANDOC_PAGE_NOSEARCH =
+    // SQL constants (giữ nguyên)
+    private static final String SQL_BANDOC_PAGE_SEARCH_COLUMN =
         "SELECT TOP (%d) IdBD, HoTen, Email, DiaChi, SDT " +
         "FROM BANDOC " +
-        "WHERE (? IS NULL OR IdBD > ?) " +
-        "ORDER BY IdBD ASC";
-
-    private static final String SQL_BANDOC_PAGE_SEARCH =
-        "SELECT TOP (%d) IdBD, HoTen, Email, DiaChi, SDT " +
-        "FROM BANDOC " +
-        "WHERE (Email LIKE ? OR HoTen LIKE ? OR SDT LIKE ? OR DiaChi LIKE ? OR CAST(IdBD AS VARCHAR(50)) LIKE ?) " +
+        "WHERE %s LIKE ? " +
         "AND (? IS NULL OR IdBD > ?) " +
         "ORDER BY IdBD ASC";
 
+    private static final String SQL_BANDOC_PAGE_SEARCH_ID =
+        "SELECT TOP (%d) IdBD, HoTen, Email, DiaChi, SDT " +
+        "FROM BANDOC " +
+        "WHERE CAST(IdBD AS VARCHAR(50)) LIKE ? " +
+        "AND (? IS NULL OR IdBD > ?) " +
+        "ORDER BY IdBD ASC";
+
+    // ---------- helpers ----------
+    private static String removeControlAndTrim(String s) {
+        if (s == null) return null;
+        // remove control chars (tabs, newlines, zero-width, etc.)
+        s = s.replaceAll("\\p{C}", ""); // \p{C} = invisible/control chars
+        // replace NBSP, collapse whitespace
+        s = s.replace('\u00A0', ' ');
+        s = s.replaceAll("\\s+", " ").trim();
+        return s;
+    }
+
+    private static String removeDiacritics(String s) {
+        if (s == null) return null;
+        String tmp = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD);
+        return tmp.replaceAll("\\p{M}", "");
+    }
+
+    private static String digitsOnly(String s) {
+        if (s == null) return "";
+        return s.replaceAll("[^0-9]", "");
+    }
+
+    // robust normalizeSearchBy: trả về canonical token: ID / HOTEN / EMAIL / SDT / DIACHI
+    private static String normalizeSearchByRobust(String raw) {
+        if (raw == null) return null;
+        // 1) remove control chars & trim
+        String t = removeControlAndTrim(raw);
+        if (t.isEmpty()) return null;
+
+        // 2) replace Đ/đ with D (explicit)
+        t = t.replace('\u0110', 'D').replace('\u0111', 'D');
+
+        // 3) remove diacritics and uppercase
+        t = removeDiacritics(t).toUpperCase();
+
+        // 4) remove not-letter/digit so we get a compact token
+        String compact = t.replaceAll("[^A-Z0-9]", "");
+
+        // 5) map by 'contains' rules (catch partial/missing letters like "IACHI", "ST", ...)
+        if (compact.contains("ID") || compact.contains("IDBD") || compact.contains("MABANDOC") || compact.contains("MASO")) {
+            return "ID";
+        }
+        if (compact.contains("HOTEN") || compact.contains("HOVATEN") || compact.contains("TEN")) {
+            return "HOTEN";
+        }
+        if (compact.contains("EMAIL") || compact.contains("MAIL")) {
+            return "EMAIL";
+        }
+        // phone: accept SDT, SĐT, DT, PHONE and common short forms like ST or single letters often used
+        // use equals/contains to catch "ST", "SĐT", "SDT", "S D T", "DT", "PHONE"
+        if (compact.contains("SDT") || compact.contains("DT") || compact.contains("PHONE") || compact.equals("ST") || compact.contains("ST")) {
+            return "SDT";
+        }
+        // address: DIACHI or parts like IACHI, CHI, ADDRESS
+        if (compact.contains("DIACHI") || compact.contains("IACHI") || compact.contains("CHI") || compact.contains("ADDRESS")) {
+            return "DIACHI";
+        }
+
+        // fallback: return compact (caller can choose default)
+        return compact;
+    }
+
+    // normalize search text for LIKE
+    private static String normalizeSearchText(String raw) {
+        if (raw == null) return null;
+        String t = removeControlAndTrim(raw);
+        return t;
+    }
+
+    // ---------- main method ----------
+    public List<BanDoc> getPageById(int limit, String searchBy, String searchText, Integer lastId) throws SQLException, Exception {
+        List<BanDoc> result = new ArrayList<>();
+
+        String token = normalizeSearchByRobust(searchBy); // robust token
+        if (token == null) token = "HOTEN"; // default fallback
+
+        boolean isId = "ID".equals(token);
+        boolean isHoten = "HOTEN".equals(token);
+        boolean isEmail = "EMAIL".equals(token);
+        boolean isSdt = "SDT".equals(token);
+        boolean isDiaChi = "DIACHI".equals(token);
+
+        boolean hasSearch = (searchText != null && !searchText.trim().isEmpty());
+        String cleanedText = hasSearch ? normalizeSearchText(searchText) : "";
+
+        String sql;
+        String col = null;
+
+        if (isId) {
+            sql = String.format(SQL_BANDOC_PAGE_SEARCH_ID, limit);
+        } else {
+            if (isHoten) col = "HoTen";
+            else if (isEmail) col = "Email";
+            else if (isSdt) {
+                // DB-side normalize: remove spaces, dashes, parentheses so digits-only LIKE works.
+                // Nếu DB cột SDT chứa dấu +, bạn có thể thêm REPLACE(SDT, '+', '') nữa.
+                col = "REPLACE(REPLACE(REPLACE(REPLACE(SDT, ' ', ''), '-', ''), '(', ''), ')', '')";
+            }
+            else if (isDiaChi) col = "DiaChi";
+            else col = "HoTen"; // fallback
+
+            sql = String.format(SQL_BANDOC_PAGE_SEARCH_COLUMN, limit, col);
+        }
+
+        // prepare param for LIKE
+        String likeParam;
+        if (!hasSearch) {
+            likeParam = "%";
+        } else if (isSdt) {
+            // for phone, use digits-only matching (DB side normalized via REPLACE)
+            String digits = digitsOnly(cleanedText);
+            if (digits.isEmpty()) {
+                // nếu user nhập toàn ký tự đặc biệt mà không có số nào -> không tìm gì
+                likeParam = "%"; // hoặc bạn có thể chọn return empty list; mình giữ wildcard để show all
+            } else {
+                likeParam = "%" + digits + "%";
+            }
+        } else {
+            likeParam = "%" + cleanedText + "%";
+        }
+
+        // DEBUG logs (remove in production)
+        System.out.println("DEBUG normalizeSearchByRobust(raw)='" + searchBy + "' -> token=" + token + " col=" + col + " isId=" + isId);
+        System.out.println("DEBUG cleanedText='" + cleanedText + "' likeParam='" + likeParam + "' lastId=" + lastId);
+        System.out.println("DEBUG SQL: " + sql);
+
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            // bind params
+            ps.setString(1, likeParam);
+            if (lastId == null) {
+                ps.setNull(2, java.sql.Types.INTEGER);
+                ps.setNull(3, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(2, lastId);
+                ps.setInt(3, lastId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    BanDoc b = new BanDoc();
+                    b.setIdBD(rs.getInt("IdBD"));
+                    b.setHoTen(rs.getString("HoTen"));
+                    b.setEmail(rs.getString("Email"));
+                    b.setDiaChi(rs.getString("DiaChi"));
+                    b.setSdt(rs.getString("SDT"));
+                    result.add(b);
+                }
+            }
+        }
+
+        return result;
+    }
 
 
-    // ---------------------- Methods ----------------------
+    // ---------------------- Paging & list methods ----------------------
 
     public ArrayList<Object> getPhieuMuonPageByBanDoc(int idBD, int pageSizeRequest, Integer lastIdPM, String searchText) throws Exception {
         ArrayList<Object> result = new ArrayList<>();
@@ -145,17 +286,15 @@ public class BanDocDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             int idx = 1;
-            // common first param: IdBD
             ps.setInt(idx++, idBD);
 
             if (hasSearch) {
                 String like = "%" + searchText.trim() + "%";
-                ps.setString(idx++, like); // pm.EmailNguoiLap LIKE ?
-                ps.setString(idx++, like); // CAST(pm.IdPM AS VARCHAR(50)) LIKE ?
-                ps.setString(idx++, like); // CAST(ct.MaBanSao AS VARCHAR(50)) LIKE ?
+                ps.setString(idx++, like);
+                ps.setString(idx++, like);
+                ps.setString(idx++, like);
             }
 
-            // lastId cursor param: (? IS NULL OR pm.IdPM > ?)
             if (lastIdPM == null) {
                 ps.setNull(idx++, java.sql.Types.INTEGER);
                 ps.setNull(idx++, java.sql.Types.INTEGER);
@@ -197,10 +336,10 @@ public class BanDocDAO {
 
             if (hasSearch) {
                 String like = "%" + searchText.trim() + "%";
-                ps.setString(idx++, like); // CAST(p.IdPhat AS VARCHAR(50)) LIKE ?
-                ps.setString(idx++, like); // CAST(pm.IdPM AS VARCHAR(50)) LIKE ?
-                ps.setString(idx++, like); // pm.EmailNguoiLap LIKE ?
-                ps.setString(idx++, like); // p.LoaiPhat LIKE ?
+                ps.setString(idx++, like);
+                ps.setString(idx++, like);
+                ps.setString(idx++, like);
+                ps.setString(idx++, like);
             }
 
             if (lastIdPhat == null) {
@@ -227,50 +366,9 @@ public class BanDocDAO {
         return result;
     }
 
-    public List<BanDoc> getPageById(int pageSizeRequest, String searchText, Integer lastId) throws SQLException, Exception {
-        List<BanDoc> result = new ArrayList<>();
 
-        boolean hasSearch = (searchText != null && !searchText.trim().isEmpty());
-        String sql = hasSearch
-            ? String.format(SQL_BANDOC_PAGE_SEARCH, pageSizeRequest)
-            : String.format(SQL_BANDOC_PAGE_NOSEARCH, pageSizeRequest);
+    // ---------------------- CRUD + helpers ----------------------
 
-        try (Connection conn = DBConnector.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            int idx = 1;
-
-            if (hasSearch) {
-                String like = "%" + searchText.trim() + "%";
-                ps.setString(idx++, like); // Email LIKE ?
-                ps.setString(idx++, like); // HoTen LIKE ?
-                ps.setString(idx++, like); // SDT LIKE ?
-                ps.setString(idx++, like); // DiaChi LIKE ?
-                ps.setString(idx++, like); // CAST(IdBD AS VARCHAR(50)) LIKE ?
-            }
-
-            if (lastId == null) {
-                ps.setNull(idx++, java.sql.Types.INTEGER);
-                ps.setNull(idx++, java.sql.Types.INTEGER);
-            } else {
-                ps.setInt(idx++, lastId);
-                ps.setInt(idx++, lastId);
-            }
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    BanDoc b = new BanDoc();
-                    b.setIdBD(rs.getInt("IdBD"));
-                    b.setHoTen(rs.getString("HoTen"));
-                    b.setEmail(rs.getString("Email"));
-                    b.setDiaChi(rs.getString("DiaChi"));
-                    b.setSdt(rs.getString("SDT"));
-                    result.add(b);
-                }
-            }
-        }
-        return result;
-    }
     public Boolean deleteDAO(BanDoc cur) throws Exception {
         if (cur == null) return false;
 
@@ -282,12 +380,10 @@ public class BanDocDAO {
             return affected > 0;
 
         } catch (SQLException ex) {
-            // phân tích lỗi ràng buộc (thường là FK khi xóa)
             Map<String, String> violations = parseConstraintExceptionOnDelete(ex);
             if (!violations.isEmpty()) {
                 throw new BanDocException(violations);
             }
-            // không phải ràng buộc, ném lại để caller xử lý
             throw ex;
         }
     }
@@ -328,14 +424,11 @@ public class BanDocDAO {
             ps.setString(4, cur.getSdt());
 
             int affected = ps.executeUpdate();
-            if (affected == 0) {
-                return false;
-            }
+            if (affected == 0) return false;
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
-                    int generatedId = keys.getInt(1);
-                    cur.setIdBD(generatedId);
+                    cur.setIdBD(keys.getInt(1));
                 }
             }
 
@@ -364,10 +457,8 @@ public class BanDocDAO {
                 bd.setEmail(rs.getString("Email"));
                 bd.setDiaChi(rs.getString("DiaChi"));
                 bd.setSdt(rs.getString("SDT"));
-
                 dsBanDoc.add(bd);
             }
-
             return true;
 
         } catch (SQLException ex) {
@@ -398,12 +489,9 @@ public class BanDocDAO {
         return null;
     }
 
-
     public BanDoc findByEmail(String email) throws Exception {
-        if (email == null || email.trim().isEmpty()) {
-            return null;
-        }
-        
+        if (email == null || email.trim().isEmpty()) return null;
+
         String sql = "SELECT * FROM BANDOC WHERE Email = ?";
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -427,21 +515,18 @@ public class BanDocDAO {
         return null;
     }
 
+    // ---------------------- Aggregate helpers ----------------------
+
     public int getSoLanMuonCuaBanDoc(int IdBD) throws Exception {
         int soPhieu = 0;
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement ps = conn.prepareStatement(SQL_SOLAN_MUON)) {
 
             ps.setInt(1, IdBD);
-
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    soPhieu = rs.getInt(1);
-                }
+                if (rs.next()) soPhieu = rs.getInt(1);
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
+        } catch (SQLException ex) { ex.printStackTrace(); }
         return soPhieu;
     }
 
@@ -451,15 +536,10 @@ public class BanDocDAO {
              PreparedStatement ps = conn.prepareStatement(SQL_SOSACH_DANG_MUON)) {
 
             ps.setInt(1, IdBD);
-
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    ans = rs.getInt(1);
-                }
+                if (rs.next()) ans = rs.getInt(1);
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
+        } catch (SQLException ex) { ex.printStackTrace(); }
         return ans;
     }
 
@@ -469,15 +549,10 @@ public class BanDocDAO {
              PreparedStatement ps = conn.prepareStatement(SQL_SOSACH_DA_MUON)) {
 
             ps.setInt(1, IdBD);
-
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    ans = rs.getInt(1);
-                }
+                if (rs.next()) ans = rs.getInt(1);
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
+        } catch (SQLException ex) { ex.printStackTrace(); }
         return ans;
     }
 
@@ -487,15 +562,10 @@ public class BanDocDAO {
              PreparedStatement ps = conn.prepareStatement(SQL_SOPHIEU_PHAT)) {
 
             ps.setInt(1, IdBD);
-
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    ans = rs.getInt(1);
-                }
+                if (rs.next()) ans = rs.getInt(1);
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
+        } catch (SQLException ex) { ex.printStackTrace(); }
         return ans;
     }
 
@@ -505,15 +575,10 @@ public class BanDocDAO {
              PreparedStatement ps = conn.prepareStatement(SQL_SOTIEN_PHAT_CHUA_DONG)) {
 
             ps.setInt(1, IdBD);
-
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    ans = (int) Math.round(rs.getDouble(1));
-                }
+                if (rs.next()) ans = (int) Math.round(rs.getDouble(1));
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
+        } catch (SQLException ex) { ex.printStackTrace(); }
         return ans;
     }
 
@@ -523,15 +588,10 @@ public class BanDocDAO {
              PreparedStatement ps = conn.prepareStatement(SQL_SOTIEN_PHAT_DA_DONG)) {
 
             ps.setInt(1, IdBD);
-
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    ans = (int) Math.round(rs.getDouble(1));
-                }
+                if (rs.next()) ans = (int) Math.round(rs.getDouble(1));
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
+        } catch (SQLException ex) { ex.printStackTrace(); }
         return ans;
     }
 
@@ -551,9 +611,7 @@ public class BanDocDAO {
                     ans.add(rs.getInt("NamXuatBan"));
                 }
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        } catch (Exception ex) { ex.printStackTrace(); }
         return ans;
     }
 
@@ -573,9 +631,7 @@ public class BanDocDAO {
                     ans.add(rs.getInt("NamXuatBan"));
                 }
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        } catch (Exception ex) { ex.printStackTrace(); }
         return ans;
     }
 
@@ -585,124 +641,35 @@ public class BanDocDAO {
 
             ps.setInt(1, IdPhat);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("MaBanSao");
-                }
+                if (rs.next()) return rs.getInt("MaBanSao");
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        } catch (Exception ex) { ex.printStackTrace(); }
         return Integer.MIN_VALUE;
     }
 
-    public ArrayList<Object> getAllPhieuMuonBanDoc(BanDoc x) throws Exception {
-        ArrayList<Object> ans = new ArrayList<>();
-        try (Connection con = DBConnector.getConnection();
-             PreparedStatement ps = con.prepareStatement(SQL_GET_ALL_PHIEUMUON_BANDOC)) {
+    // ---------------------- Constraint parsers ----------------------
 
-            ps.setInt(1, x.getIdBD());
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    int idPM = rs.getInt("IdPM");
-                    String EmailNguoiLap = rs.getString("EmailNguoiLap");
-
-                    Date sqlNgayMuon = rs.getDate("NgayMuon");
-                    LocalDate ngayMuon = sqlNgayMuon != null ? sqlNgayMuon.toLocalDate() : null;
-
-                    Date sqlHanTra = rs.getDate("HanTra");
-                    LocalDate HanTra = sqlHanTra != null ? sqlHanTra.toLocalDate() : null;
-
-                    int maBanSao = rs.getInt("MaBanSao");
-
-                    Date sqlNgayTra = rs.getDate("NgayTraThucTe");
-                    LocalDate ngayTraThucTe = sqlNgayTra != null ? sqlNgayTra.toLocalDate() : null;
-
-                    String tinhTrang = rs.getString("TinhTrangKhiTra");
-
-                    String emailNguoiNhan = rs.getString("EmailNguoiNhan");
-
-                    ans.add(idPM);
-                    ans.add(EmailNguoiLap);
-                    ans.add(ngayMuon);
-                    ans.add(HanTra);
-                    ans.add(maBanSao);
-                    ans.add(ngayTraThucTe);
-                    ans.add(tinhTrang);
-                    ans.add(emailNguoiNhan);
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return ans;
-    }
-
-    public ArrayList<Object> getAllPhieuPhatBanDoc(BanDoc x) throws Exception {
-        ArrayList<Object> ans = new ArrayList<>();
-        try (Connection con = DBConnector.getConnection();
-             PreparedStatement ps = con.prepareStatement(SQL_GET_ALL_PHIEUPHAT_BANDOC)) {
-
-            ps.setInt(1, x.getIdBD());
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    int idPhat = rs.getInt("IdPhat");
-                    int idPM = rs.getInt("IdPM");
-                    String emailNguoiLap = rs.getString("EmailNguoiLap");
-
-                    Date sqlNgayMuon = rs.getDate("NgayMuon");
-                    LocalDate ngayMuon = sqlNgayMuon != null ? sqlNgayMuon.toLocalDate() : null;
-
-                    String loaiPhat = rs.getString("LoaiPhat");
-                    double soTien = rs.getDouble("SoTien");
-
-                    Date sqlNgayGhi = rs.getDate("NgayGhiNhan");
-                    LocalDate ngayGhiNhan = sqlNgayGhi != null ? sqlNgayGhi.toLocalDate() : null;
-
-                    String trangThai = rs.getString("TrangThai");
-
-                    ans.add(idPhat);
-                    ans.add(idPM);
-                    ans.add(emailNguoiLap);
-                    ans.add(ngayMuon);
-                    ans.add(loaiPhat);
-                    ans.add(soTien);
-                    ans.add(ngayGhiNhan);
-                    ans.add(trangThai);
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return ans;
-    }
     private Map<String,String> parseConstraintException(SQLException ex) {
         Map<String,String> map = new HashMap<>();
         String msg = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
 
-        // NOT NULL HoTen
         if (msg.contains("cannot insert the value null") && msg.contains("hoten")) {
             map.put("HoTen", "Họ Tên không được để trống.");
         }
-        // Unique Email
         if (msg.contains("email") && (msg.contains("unique") || msg.contains("uq") || msg.contains("duplicate"))) {
             map.put("Email", "Email đã tồn tại (phải là duy nhất).");
         } else if (msg.contains("email") && msg.contains("varchar") && msg.contains("too long")) {
             map.put("Email", "Email vượt quá độ dài tối đa.");
         }
-        // Unique SDT
         if (msg.contains("sdt") && (msg.contains("unique") || msg.contains("uq") || msg.contains("duplicate"))) {
             map.put("SDT", "Số điện thoại đã tồn tại (phải là duy nhất).");
         }
-        // FK CreatedBy
         if (msg.contains("fk_bandoc_createdby") || (msg.contains("createdby") && msg.contains("reference"))) {
             map.put("CreatedBy", "Người tạo (CreatedBy) không tồn tại trong bảng TAIKHOAN.");
         }
 
-        // nếu SQLState chỉ rõ integrity constraint
         String sqlState = ex.getSQLState();
         if ((sqlState != null && sqlState.startsWith("23")) && map.isEmpty()) {
-            // generic integrity error, thêm message tổng quát
             map.put("database", "Ràng buộc dữ liệu vi phạm: " + ex.getMessage());
         }
 
@@ -712,7 +679,6 @@ public class BanDocDAO {
     private Map<String,String> parseConstraintExceptionOnDelete(SQLException ex) {
         Map<String,String> map = new HashMap<>();
         String msg = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
-        // Thường là foreign key reference khi xóa
         if (msg.contains("reference") || msg.contains("conflicted with the reference constraint") || msg.contains("foreign key")) {
             map.put("delete", "Không thể xóa bạn đọc này vì có tham chiếu (ví dụ: phiếu mượn/phiếu phạt). Hãy xóa/tách các bản ghi liên quan trước.");
         }
@@ -720,4 +686,3 @@ public class BanDocDAO {
         return parseConstraintException(ex);
     }
 }
-
