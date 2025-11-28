@@ -101,36 +101,75 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         // Top: search controls
         JPanel top = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(4,4,4,4);
+        c.insets = new Insets(8,8,8,8);
         c.anchor = GridBagConstraints.WEST;
+        
+        // Set font size lớn hơn cho tất cả components
+        Font labelFont = new Font("Segoe UI", Font.PLAIN, 16);
+        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 15);
 
         // Email bạn đọc
-        c.gridx = 0; c.gridy = 0; top.add(new JLabel("Email Bạn đọc:"), c);
+        JLabel lblEmailBanDoc = new JLabel("Email Bạn đọc:");
+        lblEmailBanDoc.setFont(labelFont);
+        c.gridx = 0; c.gridy = 0; top.add(lblEmailBanDoc, c);
         cbEmailBanDoc.setEditable(true);
+        cbEmailBanDoc.setFont(fieldFont);
+        cbEmailBanDoc.setPreferredSize(new Dimension(250, 32));
         c.gridx = 1; c.fill = GridBagConstraints.HORIZONTAL; c.weightx = 0.4; top.add(cbEmailBanDoc, c);
 
         // Email người lập
-        c.gridx = 2; c.gridy = 0; c.weightx = 0; c.fill = GridBagConstraints.NONE; top.add(new JLabel("Email Người lập:"), c);
+        JLabel lblEmailNguoiLap = new JLabel("Email Người lập:");
+        lblEmailNguoiLap.setFont(labelFont);
+        c.gridx = 2; c.gridy = 0; c.weightx = 0; c.fill = GridBagConstraints.NONE; top.add(lblEmailNguoiLap, c);
         cbEmailNguoiLap.setEditable(true);
+        cbEmailNguoiLap.setFont(fieldFont);
+        cbEmailNguoiLap.setPreferredSize(new Dimension(250, 32));
         c.gridx = 3; c.fill = GridBagConstraints.HORIZONTAL; c.weightx = 0.4; top.add(cbEmailNguoiLap, c);
 
         // Date from (format dd-MM-yyyy)
-        c.gridx = 0; c.gridy = 1; c.weightx = 0; c.fill = GridBagConstraints.NONE; top.add(new JLabel("Từ ngày (dd-MM-yyyy):"), c);
+        JLabel lblFromDate = new JLabel("Từ ngày (dd-MM-yyyy):");
+        lblFromDate.setFont(labelFont);
+        c.gridx = 0; c.gridy = 1; c.weightx = 0; c.fill = GridBagConstraints.NONE; top.add(lblFromDate, c);
+        tfFromDate.setFont(fieldFont);
+        tfFromDate.setPreferredSize(new Dimension(180, 32));
         c.gridx = 1; c.fill = GridBagConstraints.HORIZONTAL; top.add(tfFromDate, c);
 
         // Date to (format dd-MM-yyyy)
-        c.gridx = 2; c.fill = GridBagConstraints.NONE; top.add(new JLabel("Đến ngày (dd-MM-yyyy):"), c);
+        JLabel lblToDate = new JLabel("Đến ngày (dd-MM-yyyy):");
+        lblToDate.setFont(labelFont);
+        c.gridx = 2; c.fill = GridBagConstraints.NONE; top.add(lblToDate, c);
+        tfToDate.setFont(fieldFont);
+        tfToDate.setPreferredSize(new Dimension(180, 32));
         c.gridx = 3; c.fill = GridBagConstraints.HORIZONTAL; top.add(tfToDate, c);
 
         // Row buttons (search/reset)
         c.gridx = 0; c.gridy = 2; c.gridwidth = 4; c.fill = GridBagConstraints.NONE; c.anchor = GridBagConstraints.WEST;
-        JPanel rowBtns = new JPanel(new FlowLayout(FlowLayout.LEFT,4,0)); rowBtns.add(btnSearch); rowBtns.add(btnReset); rowBtns.add(spinner);
+        JPanel rowBtns = new JPanel(new FlowLayout(FlowLayout.LEFT,8,4));
+        
+        Font buttonFont = new Font("Segoe UI", Font.BOLD, 15);
+        btnSearch.setFont(buttonFont);
+        btnSearch.setPreferredSize(new Dimension(120, 36));
+        btnReset.setFont(buttonFont);
+        btnReset.setPreferredSize(new Dimension(100, 36));
+        
+        rowBtns.add(btnSearch); rowBtns.add(btnReset); rowBtns.add(spinner);
         spinner.setVisible(false); spinner.setIndeterminate(true);
+        spinner.setPreferredSize(new Dimension(150, 30));
         top.add(rowBtns, c);
 
         // Row: New / Edit / Delete
         c.gridx = 0; c.gridy = 3; c.gridwidth = 4; c.fill = GridBagConstraints.HORIZONTAL; c.anchor = GridBagConstraints.CENTER;
-        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT,8,0));
+        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT,10,4));
+        
+        btnNew.setFont(buttonFont);
+        btnNew.setPreferredSize(new Dimension(120, 36));
+        btnEdit.setFont(buttonFont);
+        btnEdit.setPreferredSize(new Dimension(120, 36));
+        btnDelete.setFont(buttonFont);
+        btnDelete.setPreferredSize(new Dimension(100, 36));
+        btnViewDetail.setFont(buttonFont);
+        btnViewDetail.setPreferredSize(new Dimension(140, 36));
+        
         row2.add(btnNew); row2.add(btnEdit); row2.add(btnDelete); row2.add(btnViewDetail);
         top.add(row2, c);
 
@@ -173,6 +212,14 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         };
         table.setModel(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        // Tăng font size và row height cho table
+        Font tableFont = new Font("Segoe UI", Font.PLAIN, 15);
+        table.setFont(tableFont);
+        table.setRowHeight(32);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
+        table.getTableHeader().setPreferredSize(new Dimension(0, 40));
+        
         table.getSelectionModel().addListSelectionListener((ListSelectionListener) e -> {
             boolean sel = table.getSelectedRow() >= 0 && !isNoDataRow(table.getSelectedRow());
             btnEdit.setEnabled(sel);
@@ -180,7 +227,7 @@ public class QuanLyPhieuMuonPanel extends JPanel {
             btnViewDetail.setEnabled(sel);
         });
         table.setFillsViewportHeight(true);
-        table.setPreferredScrollableViewportSize(new Dimension(800, 220));
+        table.setPreferredScrollableViewportSize(new Dimension(1100, 380));
         JScrollPane sp = new JScrollPane(table);
 
         // Create a panel that contains the table at top and pagination immediately below it
@@ -193,15 +240,23 @@ public class QuanLyPhieuMuonPanel extends JPanel {
 
         // Bottom: paging controls placed directly under the table so it is always visible
         JPanel bottom = new JPanel(new BorderLayout());
-        JPanel leftPaging = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel leftPaging = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 8));
+        
+        Font pagingFont = new Font("Segoe UI", Font.BOLD, 15);
+        btnPrev.setFont(pagingFont);
+        btnPrev.setPreferredSize(new Dimension(100, 36));
+        btnNext.setFont(pagingFont);
+        btnNext.setPreferredSize(new Dimension(100, 36));
+        lblPageInfo.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        
         leftPaging.add(btnPrev);
         leftPaging.add(lblPageInfo);
         leftPaging.add(btnNext);
 
         // give the bottom panel a fixed preferred height so it stays visible and nicely spaced
-        bottom.setPreferredSize(new Dimension(0, 40));
-        bottom.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        bottom.setBorder(BorderFactory.createEmptyBorder(4,8,4,8));
+        bottom.setPreferredSize(new Dimension(0, 55));
+        bottom.setMaximumSize(new Dimension(Integer.MAX_VALUE, 55));
+        bottom.setBorder(BorderFactory.createEmptyBorder(8,12,8,12));
         bottom.add(leftPaging, BorderLayout.WEST);
 
         bottom.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -427,21 +482,37 @@ public class QuanLyPhieuMuonPanel extends JPanel {
     // Create dialog (improved): top = PhieuMuon info, bottom = add MaBanSao queue with checks
     private void openCreateDialog() {
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this), "Tạo mới Phiếu Mượn", Dialog.ModalityType.APPLICATION_MODAL);
-        dlg.setSize(540, 420);
+        dlg.setSize(720, 560);
         dlg.setLocationRelativeTo(this);
-        JPanel p = new JPanel(new GridBagLayout()); GridBagConstraints c = new GridBagConstraints(); c.insets = new Insets(6,6,6,6); c.anchor = GridBagConstraints.WEST;
+        
+        Font labelFont = new Font("Segoe UI", Font.PLAIN, 15);
+        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 14);
+        Font buttonFont = new Font("Segoe UI", Font.BOLD, 14);
+        
+        JPanel p = new JPanel(new GridBagLayout()); 
+        GridBagConstraints c = new GridBagConstraints(); 
+        c.insets = new Insets(10,10,10,10); 
+        c.anchor = GridBagConstraints.WEST;
 
         // Bạn đọc
-        c.gridx=0; c.gridy=0; p.add(new JLabel("Bạn đọc (Email):"), c);
+        JLabel lblBD = new JLabel("Bạn đọc (Email):");
+        lblBD.setFont(labelFont);
+        c.gridx=0; c.gridy=0; p.add(lblBD, c);
         JComboBox<String> cbBD = new JComboBox<>();
-        cbBD.setEditable(true); // Cho phép nhập email trực tiếp
+        cbBD.setEditable(true);
+        cbBD.setFont(fieldFont);
+        cbBD.setPreferredSize(new Dimension(350, 32));
         try { BanDocDAO bdao = new BanDocDAO(); java.util.ArrayList<BanDoc> list = new java.util.ArrayList<>(); bdao.readDAO(list); cbBD.addItem(""); for (BanDoc b: list) cbBD.addItem(b.getEmail()); } catch(Exception ex){ }
         c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; c.weightx=1; p.add(cbBD, c);
 
-        // Email Người lập - ComboBox cho phép nhập và xổ xuống
-        c.gridx=0; c.gridy=1; c.fill = GridBagConstraints.NONE; c.weightx=0; p.add(new JLabel("Email Người lập:"), c);
+        // Email Người lập
+        JLabel lblNguoiLap = new JLabel("Email Người lập:");
+        lblNguoiLap.setFont(labelFont);
+        c.gridx=0; c.gridy=1; c.fill = GridBagConstraints.NONE; c.weightx=0; p.add(lblNguoiLap, c);
         JComboBox<String> cbEmailNguoiLap = new JComboBox<>();
-        cbEmailNguoiLap.setEditable(true); // Cho phép nhập email trực tiếp
+        cbEmailNguoiLap.setEditable(true);
+        cbEmailNguoiLap.setFont(fieldFont);
+        cbEmailNguoiLap.setPreferredSize(new Dimension(350, 32));
         try { 
             TaiKhoanDAO tkDao = new TaiKhoanDAO(); 
             List<TaiKhoan> listTK = tkDao.getAllAccountsSimple(); 
@@ -450,15 +521,23 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         } catch(Exception ex){ }
         c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(cbEmailNguoiLap, c);
 
-        // Ngày mượn - Mặc định now()
-        c.gridx=0; c.gridy=2; c.fill = GridBagConstraints.NONE; p.add(new JLabel("Ngày mượn (dd-MM-yyyy):"), c);
-        JTextField tfN = new JTextField(10);
+        // Ngày mượn
+        JLabel lblNgayMuon = new JLabel("Ngày mượn (dd-MM-yyyy):");
+        lblNgayMuon.setFont(labelFont);
+        c.gridx=0; c.gridy=2; c.fill = GridBagConstraints.NONE; p.add(lblNgayMuon, c);
+        JTextField tfN = new JTextField(15);
+        tfN.setFont(fieldFont);
+        tfN.setPreferredSize(new Dimension(200, 32));
         tfN.setText(dtf.format(LocalDate.now()));
         c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfN, c);
 
-        // Hạn trả - Mặc định 1 tuần sau (7 ngày)
-        c.gridx=0; c.gridy=3; c.fill = GridBagConstraints.NONE; p.add(new JLabel("Hạn trả (dd-MM-yyyy):"), c);
-        JTextField tfH = new JTextField(10);
+        // Hạn trả
+        JLabel lblHanTra = new JLabel("Hạn trả (dd-MM-yyyy):");
+        lblHanTra.setFont(labelFont);
+        c.gridx=0; c.gridy=3; c.fill = GridBagConstraints.NONE; p.add(lblHanTra, c);
+        JTextField tfH = new JTextField(15);
+        tfH.setFont(fieldFont);
+        tfH.setPreferredSize(new Dimension(200, 32));
         tfH.setText(dtf.format(LocalDate.now().plusWeeks(1)));
         c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfH, c);
 
@@ -466,17 +545,38 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         c.gridx=0; c.gridy=4; c.gridwidth=2; p.add(new JSeparator(), c);
 
         // Bottom: MaBanSao input + queue
-        c.gridx=0; c.gridy=5; c.gridwidth=1; c.fill = GridBagConstraints.NONE; p.add(new JLabel("Mã Bản Sao:"), c);
-        JTextField tfMaBanSao = new JTextField(10); c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfMaBanSao, c);
+        JLabel lblMaBanSao = new JLabel("Mã Bản Sao:");
+        lblMaBanSao.setFont(labelFont);
+        c.gridx=0; c.gridy=5; c.gridwidth=1; c.fill = GridBagConstraints.NONE; p.add(lblMaBanSao, c);
+        JTextField tfMaBanSao = new JTextField(15);
+        tfMaBanSao.setFont(fieldFont);
+        tfMaBanSao.setPreferredSize(new Dimension(200, 32));
+        c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfMaBanSao, c);
 
-        JPanel btns = new JPanel(new FlowLayout(FlowLayout.LEFT)); JButton btnThem = new JButton("Thêm"); JButton btnKiemTra = new JButton("Kiểm tra"); btns.add(btnThem); btns.add(btnKiemTra);
+        JPanel btns = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JButton btnThem = new JButton("Thêm");
+        btnThem.setFont(buttonFont);
+        btnThem.setPreferredSize(new Dimension(100, 34));
+        JButton btnKiemTra = new JButton("Kiểm tra");
+        btnKiemTra.setFont(buttonFont);
+        btnKiemTra.setPreferredSize(new Dimension(110, 34));
+        btns.add(btnThem); btns.add(btnKiemTra);
         c.gridx=1; c.gridy=6; p.add(btns, c);
 
         // queue list
-        DefaultListModel<Integer> queueModel = new DefaultListModel<>(); JList<Integer> queueList = new JList<>(queueModel); queueList.setVisibleRowCount(6);
-        // JScrollPane qsp = new JScrollPane(queueList); qsp.setPreferredSize(new Dimension(200,120)); c.gridx=0; c.gridy=7; c.gridwidth=2; p.add(qsp, c);
+        DefaultListModel<Integer> queueModel = new DefaultListModel<>();
+        JList<Integer> queueList = new JList<>(queueModel);
+        queueList.setFont(fieldFont);
+        queueList.setVisibleRowCount(6);
 
-        JPanel bottomBtns = new JPanel(new FlowLayout(FlowLayout.CENTER)); JButton btnSave = new JButton("Tạo mới"); JButton btnCancel = new JButton("Hủy"); bottomBtns.add(btnSave); bottomBtns.add(btnCancel);
+        JPanel bottomBtns = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 8));
+        JButton btnSave = new JButton("Tạo mới");
+        btnSave.setFont(buttonFont);
+        btnSave.setPreferredSize(new Dimension(120, 36));
+        JButton btnCancel = new JButton("Hủy");
+        btnCancel.setFont(buttonFont);
+        btnCancel.setPreferredSize(new Dimension(100, 36));
+        bottomBtns.add(btnSave); bottomBtns.add(btnCancel);
         c.gridx=0; c.gridy=8; c.gridwidth=2; p.add(bottomBtns, c);
 
         dlg.setContentPane(p);
@@ -630,17 +730,26 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         }
 
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this), "Cập nhật Phiếu Mượn #"+idPM, Dialog.ModalityType.APPLICATION_MODAL);
-        dlg.setSize(560,300); 
+        dlg.setSize(750, 400); 
         dlg.setLocationRelativeTo(this);
+        
+        Font labelFont = new Font("Segoe UI", Font.PLAIN, 15);
+        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 14);
+        Font buttonFont = new Font("Segoe UI", Font.BOLD, 14);
+        
         JPanel p = new JPanel(new GridBagLayout()); 
         GridBagConstraints c = new GridBagConstraints(); 
-        c.insets = new Insets(6,6,6,6); 
+        c.insets = new Insets(10,10,10,10); 
         c.anchor = GridBagConstraints.WEST;
 
-        // Email Người lập - ComboBox xổ xuống
-        c.gridx=0; c.gridy=0; p.add(new JLabel("Email Người lập:"), c);
+        // Email Người lập
+        JLabel lblNguoiLap = new JLabel("Email Người lập:");
+        lblNguoiLap.setFont(labelFont);
+        c.gridx=0; c.gridy=0; p.add(lblNguoiLap, c);
         JComboBox<String> cbEmailNguoiLap = new JComboBox<>();
         cbEmailNguoiLap.setEditable(true);
+        cbEmailNguoiLap.setFont(fieldFont);
+        cbEmailNguoiLap.setPreferredSize(new Dimension(350, 32));
         try { 
             TaiKhoanDAO tkDao = new TaiKhoanDAO(); 
             List<TaiKhoan> listTK = tkDao.getAllAccountsSimple(); 
@@ -650,25 +759,37 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         cbEmailNguoiLap.setSelectedItem(pm.getEmailNguoiLap());
         c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(cbEmailNguoiLap, c);
 
-        // Ngày mượn - chỉ hiển thị, không cho phép chỉnh sửa
-        c.gridx=0; c.gridy=1; c.fill = GridBagConstraints.NONE; p.add(new JLabel("Ngày mượn:"), c);
+        // Ngày mượn
+        JLabel lblNgayMuon = new JLabel("Ngày mượn:");
+        lblNgayMuon.setFont(labelFont);
+        c.gridx=0; c.gridy=1; c.fill = GridBagConstraints.NONE; p.add(lblNgayMuon, c);
         JTextField tfN = new JTextField(pm.getNgayMuon()==null? "" : pm.getNgayMuon().format(dtf)); 
         tfN.setEditable(false);
         tfN.setBackground(Color.LIGHT_GRAY);
-        tfN.setColumns(10);
+        tfN.setFont(fieldFont);
+        tfN.setPreferredSize(new Dimension(200, 32));
         c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfN, c);
 
-        // Hạn trả - cho phép chỉnh sửa với validation format
-        c.gridx=0; c.gridy=2; c.fill = GridBagConstraints.NONE; p.add(new JLabel("Hạn trả (dd-MM-yyyy):"), c);
+        // Hạn trả
+        JLabel lblHanTra = new JLabel("Hạn trả (dd-MM-yyyy):");
+        lblHanTra.setFont(labelFont);
+        c.gridx=0; c.gridy=2; c.fill = GridBagConstraints.NONE; p.add(lblHanTra, c);
         JTextField tfH = new JTextField(pm.getHanTra()==null? "" : pm.getHanTra().format(dtf)); 
-        tfH.setColumns(10);
+        tfH.setFont(fieldFont);
+        tfH.setPreferredSize(new Dimension(200, 32));
         c.gridx=1; c.fill = GridBagConstraints.HORIZONTAL; p.add(tfH, c);
 
         // Buttons
-        JPanel btns = new JPanel(new FlowLayout(FlowLayout.CENTER)); 
+        JPanel btns = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 8)); 
         JButton btnUpdate = new JButton("Cập nhật");
-        JButton btnReturnBooks = new JButton("Thực hiện trả sách"); 
-        JButton btnCancel = new JButton("Hủy"); 
+        btnUpdate.setFont(buttonFont);
+        btnUpdate.setPreferredSize(new Dimension(120, 36));
+        JButton btnReturnBooks = new JButton("Thực hiện trả sách");
+        btnReturnBooks.setFont(buttonFont);
+        btnReturnBooks.setPreferredSize(new Dimension(180, 36));
+        JButton btnCancel = new JButton("Hủy");
+        btnCancel.setFont(buttonFont);
+        btnCancel.setPreferredSize(new Dimension(100, 36));
         btns.add(btnUpdate); 
         btns.add(btnReturnBooks);
         btns.add(btnCancel);
@@ -741,32 +862,48 @@ public class QuanLyPhieuMuonPanel extends JPanel {
      */
     private void openReturnBooksDialog(PhieuMuon pm) {
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this), "Thực hiện trả sách - Phiếu Mượn #" + pm.getIdPM(), Dialog.ModalityType.APPLICATION_MODAL);
-        dlg.setSize(900, 550);
+        dlg.setSize(1150, 700);
         dlg.setLocationRelativeTo(this);
+        
+        Font labelFont = new Font("Segoe UI", Font.PLAIN, 15);
+        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 14);
+        Font buttonFont = new Font("Segoe UI", Font.BOLD, 14);
 
-        JPanel content = new JPanel(new BorderLayout(6,6));
-        content.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        JPanel content = new JPanel(new BorderLayout(10,10));
+        content.setBorder(BorderFactory.createEmptyBorder(15,15,15,15));
 
         // Top: Filters và Email người nhận
         JPanel topPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(4,4,4,4);
+        c.insets = new Insets(8,8,8,8);
         c.anchor = GridBagConstraints.WEST;
 
         // Bộ lọc
-        c.gridx=0; c.gridy=0; topPanel.add(new JLabel("Trạng thái trả:"), c);
+        JLabel lblReturned = new JLabel("Trạng thái trả:");
+        lblReturned.setFont(labelFont);
+        c.gridx=0; c.gridy=0; topPanel.add(lblReturned, c);
         JComboBox<String> cbReturned = new JComboBox<>(new String[]{"Tất cả","Đã trả","Chưa trả"});
-        cbReturned.setSelectedItem("Chưa trả"); // Mặc định hiển thị sách chưa trả
+        cbReturned.setSelectedItem("Chưa trả");
+        cbReturned.setFont(fieldFont);
+        cbReturned.setPreferredSize(new Dimension(150, 32));
         c.gridx=1; topPanel.add(cbReturned, c);
 
-        c.gridx=2; topPanel.add(new JLabel("Trạng thái trễ hạn:"), c);
+        JLabel lblOverdue = new JLabel("Trạng thái trễ hạn:");
+        lblOverdue.setFont(labelFont);
+        c.gridx=2; topPanel.add(lblOverdue, c);
         JComboBox<String> cbOverdue = new JComboBox<>(new String[]{"Tất cả","Trễ hạn","Chưa trễ hạn"});
+        cbOverdue.setFont(fieldFont);
+        cbOverdue.setPreferredSize(new Dimension(150, 32));
         c.gridx=3; topPanel.add(cbOverdue, c);
 
         // Email người nhận
-        c.gridx=0; c.gridy=1; topPanel.add(new JLabel("Email Người nhận:"), c);
+        JLabel lblEmailNguoiNhan = new JLabel("Email Người nhận:");
+        lblEmailNguoiNhan.setFont(labelFont);
+        c.gridx=0; c.gridy=1; topPanel.add(lblEmailNguoiNhan, c);
         JComboBox<String> cbEmailNguoiNhan = new JComboBox<>();
         cbEmailNguoiNhan.setEditable(true);
+        cbEmailNguoiNhan.setFont(fieldFont);
+        cbEmailNguoiNhan.setPreferredSize(new Dimension(350, 32));
         try { 
             TaiKhoanDAO tkDao = new TaiKhoanDAO(); 
             List<TaiKhoan> listTK = tkDao.getAllAccountsSimple(); 
@@ -786,6 +923,13 @@ public class QuanLyPhieuMuonPanel extends JPanel {
             }
         };
         JTable tbl = new JTable(model);
+        
+        // Tăng font size và row height
+        Font tableFont = new Font("Segoe UI", Font.PLAIN, 14);
+        tbl.setFont(tableFont);
+        tbl.setRowHeight(32);
+        tbl.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 15));
+        tbl.getTableHeader().setPreferredSize(new Dimension(0, 38));
         
         // Custom cell editor cho cột TinhTrangKhiTra dựa vào tình trạng hiện tại
         tbl.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(new JComboBox<>()) {
@@ -864,17 +1008,26 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         // Bottom: Pagination và buttons
         JPanel bottomPanel = new JPanel(new BorderLayout());
         
-        JPanel pag = new JPanel(new FlowLayout(FlowLayout.CENTER)); 
+        JPanel pag = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 8)); 
         JButton bPrev = new JButton("Trước");
-        JButton bNext = new JButton("Tiếp"); 
-        JLabel lbl = new JLabel(); 
+        bPrev.setFont(buttonFont);
+        bPrev.setPreferredSize(new Dimension(100, 36));
+        JButton bNext = new JButton("Tiếp");
+        bNext.setFont(buttonFont);
+        bNext.setPreferredSize(new Dimension(100, 36));
+        JLabel lbl = new JLabel();
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         pag.add(bPrev); 
         pag.add(lbl); 
         pag.add(bNext);
         
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 10));
         JButton btnSave = new JButton("Trả sách");
+        btnSave.setFont(buttonFont);
+        btnSave.setPreferredSize(new Dimension(120, 38));
         JButton btnClose = new JButton("Đóng");
+        btnClose.setFont(buttonFont);
+        btnClose.setPreferredSize(new Dimension(100, 38));
         btnPanel.add(btnSave);
         btnPanel.add(btnClose);
         
@@ -1054,24 +1207,68 @@ public class QuanLyPhieuMuonPanel extends JPanel {
         try { idPM = Integer.parseInt(idObj.toString()); } catch (NumberFormatException ex) { JOptionPane.showMessageDialog(this, "IdPM không hợp lệ"); return; }
 
         JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this), "Chi tiết Phiếu Mượn #"+idPM, Dialog.ModalityType.APPLICATION_MODAL);
-        dlg.setSize(800, 400);
+        dlg.setSize(1050, 550);
         dlg.setLocationRelativeTo(this);
+        
+        Font labelFont = new Font("Segoe UI", Font.PLAIN, 15);
+        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 14);
+        Font buttonFont = new Font("Segoe UI", Font.BOLD, 14);
 
         // Build dialog content
-        JPanel content = new JPanel(new BorderLayout(6,6));
-        JPanel topFilters = new JPanel();
+        JPanel content = new JPanel(new BorderLayout(10,10));
+        content.setBorder(BorderFactory.createEmptyBorder(12,12,12,12));
+        
+        JPanel topFilters = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 8));
+        
+        JLabel lblReturned = new JLabel("Trạng thái trả:");
+        lblReturned.setFont(labelFont);
+        topFilters.add(lblReturned);
+        
         JComboBox<String> cbReturned = new JComboBox<>(new String[]{"Tất cả","Đã trả","Chưa trả"});
+        cbReturned.setFont(fieldFont);
+        cbReturned.setPreferredSize(new Dimension(140, 32));
+        topFilters.add(cbReturned);
+        
+        JLabel lblOverdue = new JLabel("Trạng thái trễ hạn:");
+        lblOverdue.setFont(labelFont);
+        topFilters.add(lblOverdue);
+        
         JComboBox<String> cbOverdue = new JComboBox<>(new String[]{"Tất cả","Trễ hạn","Chưa trễ hạn"});
-        topFilters.add(new JLabel("Trạng thái trả:")); topFilters.add(cbReturned);
-        topFilters.add(new JLabel("Trạng thái trễ hạn:")); topFilters.add(cbOverdue);
+        cbOverdue.setFont(fieldFont);
+        cbOverdue.setPreferredSize(new Dimension(140, 32));
+        topFilters.add(cbOverdue);
+        
         content.add(topFilters, BorderLayout.NORTH);
 
         String[] cols = {"MaBanSao","EmailNguoiNhan","NgayTraThucTe","TinhTrangKhiTra"};
-        DefaultTableModel model = new DefaultTableModel(cols,0) { @Override public boolean isCellEditable(int r,int c){return false;} };
+        DefaultTableModel model = new DefaultTableModel(cols,0) { 
+            @Override public boolean isCellEditable(int r,int c){return false;} 
+        };
         JTable tbl = new JTable(model);
+        
+        // Tăng font size và row height
+        Font tableFont = new Font("Segoe UI", Font.PLAIN, 14);
+        tbl.setFont(tableFont);
+        tbl.setRowHeight(32);
+        tbl.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 15));
+        tbl.getTableHeader().setPreferredSize(new Dimension(0, 38));
+        
         content.add(new JScrollPane(tbl), BorderLayout.CENTER);
 
-        JPanel pag = new JPanel(new FlowLayout(FlowLayout.CENTER)); JButton bPrev = new JButton("Trước"), bNext = new JButton("Tiếp"); JLabel lbl = new JLabel(); pag.add(bPrev); pag.add(lbl); pag.add(bNext);
+        JPanel pag = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 8));
+        
+        JButton bPrev = new JButton("Trước");
+        bPrev.setFont(buttonFont);
+        bPrev.setPreferredSize(new Dimension(100, 36));
+        
+        JButton bNext = new JButton("Tiếp");
+        bNext.setFont(buttonFont);
+        bNext.setPreferredSize(new Dimension(100, 36));
+        
+        JLabel lbl = new JLabel();
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        
+        pag.add(bPrev); pag.add(lbl); pag.add(bNext);
         content.add(pag, BorderLayout.SOUTH);
 
         dlg.setContentPane(content);
