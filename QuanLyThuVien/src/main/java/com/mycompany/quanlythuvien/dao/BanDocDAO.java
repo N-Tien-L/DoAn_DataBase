@@ -73,17 +73,23 @@ public class BanDocDAO {
     private static final String SQL_PHIEU_MUON_PAGE_NOSEARCH =
         "SELECT TOP (%d) pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, pm.HanTra, " +
         "ct.MaBanSao, ct.NgayTraThucTe, ct.TinhTrangKhiTra, ct.EmailNguoiNhan " +
-        "FROM PHIEUMUON pm LEFT JOIN CT_PM ct ON pm.IdPM = ct.IdPM " +
+        "FROM PHIEUMUON pm JOIN CT_PM ct ON pm.IdPM = ct.IdPM " +
         "WHERE pm.IdBD = ? AND (? IS NULL OR pm.IdPM > ?) " +
+        "GROUP BY pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, pm.HanTra, " +
+        "         ct.MaBanSao, ct.NgayTraThucTe, ct.TinhTrangKhiTra, ct.EmailNguoiNhan " +
         "ORDER BY pm.IdPM ASC";
+
 
     private static final String SQL_PHIEU_MUON_PAGE_SEARCH =
         "SELECT TOP (%d) pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, pm.HanTra, " +
         "ct.MaBanSao, ct.NgayTraThucTe, ct.TinhTrangKhiTra, ct.EmailNguoiNhan " +
-        "FROM PHIEUMUON pm LEFT JOIN CT_PM ct ON pm.IdPM = ct.IdPM " +
+        "FROM PHIEUMUON pm JOIN CT_PM ct ON pm.IdPM = ct.IdPM " +
         "WHERE pm.IdBD = ? AND (pm.EmailNguoiLap LIKE ? OR CAST(pm.IdPM AS VARCHAR(50)) LIKE ? OR CAST(ct.MaBanSao AS VARCHAR(50)) LIKE ?) " +
         "AND (? IS NULL OR pm.IdPM > ?) " +
+        "GROUP BY pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, pm.HanTra, " +
+        "         ct.MaBanSao, ct.NgayTraThucTe, ct.TinhTrangKhiTra, ct.EmailNguoiNhan " +
         "ORDER BY pm.IdPM ASC";
+
 
     // PHIEU PHAT paging
     private static final String SQL_PHIEU_PHAT_PAGE_NOSEARCH =
@@ -91,7 +97,10 @@ public class BanDocDAO {
         "p.LoaiPhat, p.SoTien, p.NgayGhiNhan, p.TrangThai " +
         "FROM PHIEUMUON pm JOIN PHAT p ON pm.IdPM = p.IdPM " +
         "WHERE pm.IdBD = ? AND (? IS NULL OR p.IdPhat > ?) " +
+        "GROUP BY p.IdPhat, pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, " +
+        "         p.LoaiPhat, p.SoTien, p.NgayGhiNhan, p.TrangThai " +
         "ORDER BY p.IdPhat ASC";
+    
 
     private static final String SQL_PHIEU_PHAT_PAGE_SEARCH =
         "SELECT TOP (%d) p.IdPhat, pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, " +
@@ -99,7 +108,12 @@ public class BanDocDAO {
         "FROM PHIEUMUON pm JOIN PHAT p ON pm.IdPM = p.IdPM " +
         "WHERE pm.IdBD = ? AND (CAST(p.IdPhat AS VARCHAR(50)) LIKE ? OR CAST(pm.IdPM AS VARCHAR(50)) LIKE ? OR pm.EmailNguoiLap LIKE ? OR p.LoaiPhat LIKE ?) " +
         "AND (? IS NULL OR p.IdPhat > ?) " +
+        "GROUP BY p.IdPhat, pm.IdPM, pm.EmailNguoiLap, pm.NgayMuon, " +
+        "         p.LoaiPhat, p.SoTien, p.NgayGhiNhan, p.TrangThai " +
         "ORDER BY p.IdPhat ASC";
+
+
+
 
     // SQL constants (giữ nguyên)
     private static final String SQL_BANDOC_PAGE_SEARCH_COLUMN =
