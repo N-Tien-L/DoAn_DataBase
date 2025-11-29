@@ -1,6 +1,5 @@
 package com.mycompany.quanlythuvien.dao;
 
-import com.mycompany.quanlythuvien.model.BanDoc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

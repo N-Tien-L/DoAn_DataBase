@@ -34,9 +34,7 @@ public class SachDAO {
         WHERE S.ISBN > ?
         ORDER BY S.ISBN ASC
     """;
-    
-    private static final String SQL_COUNT_TOTAL = "SELECT COUNT(*) FROM SACH";
-    
+        
     // them sach
     public boolean insert(Sach s, String createdBy) throws Exception {
         // SoLuongTon được quản lý tự động bởi trigger TRG_BANSAO_Update_SoLuongTon
