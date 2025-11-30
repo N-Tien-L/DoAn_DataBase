@@ -53,6 +53,15 @@ public class ThongKePanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(BG_COLOR);
 
+        // Header panel with refresh button
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+        headerPanel.setBackground(BG_COLOR);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        JButton refreshBtn = createRefreshButton();
+        headerPanel.add(refreshBtn);
+
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setFont(FONT_LABEL);
         tabbedPane.setBackground(CARD_COLOR);
@@ -66,10 +75,116 @@ public class ThongKePanel extends JPanel {
         tabbedPane.addTab("Mượn - Trả", IconLoader.loadIconScaled(IconLoader.ICON_BORROW, 16, 16), createMuonTraTab());
         tabbedPane.addTab("Vi Phạm", IconLoader.loadIconScaled(IconLoader.ICON_VIOLATION, 16, 16), createViPhamTab());
 
+        add(headerPanel, BorderLayout.NORTH);
         add(tabbedPane, BorderLayout.CENTER);
     }
 
-    // ============= TAB TỔNG QUAN =============
+    // ============= REFRESH BUTTON =============
+    private JButton createRefreshButton() {
+        JButton btn = new JButton("Làm Mới");
+        btn.setIcon(IconLoader.loadIconScaled(IconLoader.ICON_REFRESH, 16, 16));
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(PRIMARY_COLOR);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setOpaque(true);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+
+        // Hover effect
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                btn.setBackground(new Color(41, 128, 185));
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                btn.setBackground(PRIMARY_COLOR);
+            }
+        });
+
+        // Click handler
+        btn.addActionListener(e -> refreshAllData());
+
+        return btn;
+    }
+
+    private void refreshAllData() {
+        // Disable button while refreshing
+        Component[] components = getComponents();
+        for (Component comp : components) {
+            if (comp instanceof JPanel) {
+                disableComponentsRecursively(comp, true);
+            }
+        }
+
+        // Refresh in background thread
+        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                // Refresh all tabs
+                removeAll();
+                initializePanel();
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    revalidate();
+                    repaint();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                // Enable button after refreshing
+                disableComponentsRecursively(ThongKePanel.this, false);
+            }
+        };
+
+        worker.execute();
+    }
+
+    private void disableComponentsRecursively(Component comp, boolean disable) {
+        comp.setEnabled(!disable);
+        if (comp instanceof Container) {
+            for (Component child : ((Container) comp).getComponents()) {
+                disableComponentsRecursively(child, disable);
+            }
+        }
+    }
+
+    private void initializePanel() {
+        setLayout(new BorderLayout());
+        setBackground(BG_COLOR);
+
+        // Header panel with refresh button
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+        headerPanel.setBackground(BG_COLOR);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        JButton refreshBtn = createRefreshButton();
+        headerPanel.add(refreshBtn);
+
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(FONT_LABEL);
+        tabbedPane.setBackground(CARD_COLOR);
+        tabbedPane.setForeground(Color.BLACK);
+
+        tabbedPane.addTab("Tổng Quan", IconLoader.loadIconScaled(IconLoader.ICON_OVERVIEW, 16, 16),
+                createOverviewTab());
+        tabbedPane.addTab("Bạn Đọc", IconLoader.loadIconScaled(IconLoader.ICON_READERS, 16, 16), createBanDocTab());
+        tabbedPane.addTab("Tài Khoản", IconLoader.loadIconScaled(IconLoader.ICON_ACCOUNT, 16, 16), createTaiKhoanTab());
+        tabbedPane.addTab("Sách", IconLoader.loadIconScaled(IconLoader.ICON_BOOK, 16, 16), createSachTab());
+        tabbedPane.addTab("Mượn - Trả", IconLoader.loadIconScaled(IconLoader.ICON_BORROW, 16, 16), createMuonTraTab());
+        tabbedPane.addTab("Vi Phạm", IconLoader.loadIconScaled(IconLoader.ICON_VIOLATION, 16, 16), createViPhamTab());
+
+        add(headerPanel, BorderLayout.NORTH);
+        add(tabbedPane, BorderLayout.CENTER);
+    }
+
     private JPanel createOverviewTab() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(BG_COLOR);

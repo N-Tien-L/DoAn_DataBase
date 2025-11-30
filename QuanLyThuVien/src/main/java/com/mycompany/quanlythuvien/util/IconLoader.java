@@ -50,4 +50,5 @@ public class IconLoader {
     public static final String ICON_STATS = "stats.png";
     public static final String ICON_PHAT = "phat.png";
     public static final String ICON_ACTIVE_USER = "active_user.png";
+    public static final String ICON_REFRESH = "refresh.png";
 }
