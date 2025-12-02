@@ -116,7 +116,8 @@ CREATE TABLE BANSAO (
     MaBanSao INT IDENTITY(1,1) PRIMARY KEY,
     ISBN VARCHAR(20) NOT NULL,
     SoThuTuTrongKho INT NOT NULL,
-    TinhTrang NVARCHAR(50) NOT NULL,
+    TinhTrang NVARCHAR(50) NOT NULL CHECK (TinhTrang IN (N'Tốt', N'Cũ', N'Rất Cũ', N'Hỏng')),
+    Lendable BIT NOT NULL DEFAULT 1, -- 1: có thể mượn, 0: không thể mượn (đang mượn hoặc tình trạng xấu)
     NgayNhapKho DATE NOT NULL DEFAULT CAST(SYSUTCDATETIME() AS DATE),
     ViTriLuuTru VARCHAR(50),
     CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
@@ -149,7 +150,7 @@ CREATE TABLE CT_PM (
     IdPM INT NOT NULL,
     MaBanSao INT NOT NULL,
     NgayTraThucTe DATE DEFAULT NULL,
-    TinhTrangKhiTra NVARCHAR(50) DEFAULT NULL,
+    TinhTrangKhiTra NVARCHAR(50) DEFAULT NULL CHECK (TinhTrangKhiTra IS NULL OR TinhTrangKhiTra IN (N'Tốt', N'Cũ', N'Rất Cũ', N'Hỏng')),
     EmailNguoiNhan VARCHAR(50) DEFAULT NULL,
     PRIMARY KEY (IdPM, MaBanSao),
     CONSTRAINT FK_CTPM_PM FOREIGN KEY (IdPM) REFERENCES PHIEUMUON(IdPM) ON DELETE CASCADE,
@@ -363,6 +364,99 @@ BEGIN
         ROLLBACK TRANSACTION;
         RETURN;
     END
+END;
+GO
+
+-- =============================================
+-- TRIGGER: Tự động cập nhật BANSAO.Lendable khi TinhTrang thay đổi
+-- =============================================
+CREATE TRIGGER TRG_BANSAO_Update_Lendable
+ON BANSAO
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    -- Cập nhật Lendable = 0 nếu TinhTrang >= 'Rất Cũ' hoặc đang được mượn
+    UPDATE BANSAO
+    SET Lendable = CASE
+        WHEN bs.TinhTrang IN (N'Rất Cũ', N'Hỏng') THEN 0
+        WHEN EXISTS (
+            SELECT 1 FROM CT_PM ct 
+            WHERE ct.MaBanSao = bs.MaBanSao 
+            AND ct.TinhTrangKhiTra IS NULL
+        ) THEN 0
+        ELSE 1
+    END
+    FROM BANSAO bs
+    INNER JOIN inserted i ON bs.MaBanSao = i.MaBanSao;
+END;
+GO
+
+-- =============================================
+-- TRIGGER: Tự động cập nhật BANSAO.Lendable và TinhTrang khi trả sách
+-- =============================================
+CREATE TRIGGER TRG_CT_PM_Update_Lendable
+ON CT_PM
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    -- Khi cập nhật TinhTrangKhiTra (trả sách)
+    IF UPDATE(TinhTrangKhiTra)
+    BEGIN
+        -- Cập nhật TinhTrang của BANSAO theo TinhTrangKhiTra
+        UPDATE BANSAO
+        SET TinhTrang = i.TinhTrangKhiTra
+        FROM BANSAO bs
+        INNER JOIN inserted i ON bs.MaBanSao = i.MaBanSao
+        WHERE i.TinhTrangKhiTra IS NOT NULL;
+        
+        -- Cập nhật Lendable sau khi trả sách
+        UPDATE BANSAO
+        SET Lendable = CASE
+            WHEN bs.TinhTrang IN (N'Rất Cũ', N'Hỏng') THEN 0
+            WHEN EXISTS (
+                SELECT 1 FROM CT_PM ct 
+                WHERE ct.MaBanSao = bs.MaBanSao 
+                AND ct.TinhTrangKhiTra IS NULL
+            ) THEN 0
+            ELSE 1
+        END
+        FROM BANSAO bs
+        INNER JOIN inserted i ON bs.MaBanSao = i.MaBanSao;
+    END
+END;
+GO
+
+-- =============================================
+-- TRIGGER: Tự động cập nhật BANSAO.Lendable khi tạo/xóa phiếu mượn
+-- =============================================
+CREATE TRIGGER TRG_CT_PM_Insert_Delete_Lendable
+ON CT_PM
+AFTER INSERT, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    -- Cập nhật Lendable cho các bản sao bị ảnh hưởng
+    UPDATE BANSAO
+    SET Lendable = CASE
+        WHEN bs.TinhTrang IN (N'Rất Cũ', N'Hỏng') THEN 0
+        WHEN EXISTS (
+            SELECT 1 FROM CT_PM ct 
+            WHERE ct.MaBanSao = bs.MaBanSao 
+            AND ct.TinhTrangKhiTra IS NULL
+        ) THEN 0
+        ELSE 1
+    END
+    FROM BANSAO bs
+    WHERE bs.MaBanSao IN (
+        SELECT MaBanSao FROM inserted
+        UNION
+        SELECT MaBanSao FROM deleted
+    );
 END;
 GO
 
